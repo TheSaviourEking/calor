@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -928,7 +928,7 @@ model CouplesLink {
   sharedWishlist Boolean @default(true)
   sharedOrders   Boolean @default(false)
   notes         String?
-  
+
   // Phase 7: Couples Wellness
   goals         CoupleGoal[]
   connectionScores ConnectionScore[]
@@ -1044,40 +1044,40 @@ model SupportTicket {
   // For guest tickets
   guestEmail  String?
   guestName   String?
-  
+
   subject     String
   categoryId  String?
   category    SupportTicketCategory? @relation(fields: [categoryId], references: [id])
-  
+
   status      String   @default("open") // "open", "in_progress", "waiting_customer", "waiting_third_party", "resolved", "closed"
   priority    String   @default("normal") // "low", "normal", "high", "urgent"
-  
+
   // Related entities
   orderId     String?  // If ticket is about an order
   productId   String?  // If ticket is about a product
-  
+
   // Assignment
   assignedToId String? // Admin customer ID
   assignedTo  Customer? @relation("AssignedTickets", fields: [assignedToId], references: [id])
   assignedAt  DateTime?
-  
+
   // Timestamps
   firstResponseAt DateTime?
   resolvedAt  DateTime?
   closedAt    DateTime?
-  
+
   // Metrics
   responseCount Int  @default(0)
   customerSatisfaction Int? // 1-5 rating when closed
-  
+
   // Tags and notes
   tags        String?  // JSON array
   internalNotes String? // Admin-only notes
-  
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   messages    TicketMessage[]
-  
+
   @@index([status])
   @@index([customerId])
   @@index([assignedToId])
@@ -1088,18 +1088,18 @@ model TicketMessage {
   id          String   @id @default(cuid())
   ticketId    String
   ticket      SupportTicket @relation(fields: [ticketId], references: [id])
-  
+
   senderType  String   // "customer", "admin", "system"
   senderId    String?  // Customer ID (for admin responses)
   senderName  String?  // Display name
-  
+
   content     String
   attachments String?  // JSON: array of file URLs
-  
+
   isInternal  Boolean  @default(false) // Internal note (not visible to customer)
-  
+
   createdAt   DateTime @default(now())
-  
+
   @@index([ticketId])
 }
 
@@ -1109,20 +1109,20 @@ model SupportTicketCategory {
   slug        String   @unique
   description String?
   iconName    String?  // Lucide icon name
-  
+
   // Auto-assignment
   autoAssignToId String? // Auto-assign tickets in this category
   autoAssignTo   Customer? @relation("AutoAssignedTickets", fields: [autoAssignToId], references: [id])
-  
+
   // SLA
   responseTimeHours Int?  // Target response time
   resolutionTimeHours Int? // Target resolution time
-  
+
   isActive    Boolean  @default(true)
   sortOrder   Int      @default(0)
-  
+
   tickets     SupportTicket[]
-  
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -1149,7 +1149,7 @@ model AuditLog {
   // Result
   success     Boolean  @default(true)
   errorMessage String?
-  
+
   createdAt   DateTime @default(now())
 
   @@index([adminId])
@@ -1167,46 +1167,46 @@ model EmailCampaign {
   name          String
   subject       String
   previewText   String?
-  
+
   // Content
   contentHtml   String
   contentText   String?  // Plain text version
-  
+
   // Targeting
   targetSegment String?  // "all", "customers", "newsletter", "custom"
   targetFilters String?  // JSON: filter criteria
   recipientCount Int     @default(0)
-  
+
   // Scheduling
   status        String   @default("draft") // "draft", "scheduled", "sending", "sent", "cancelled"
   scheduledFor  DateTime?
   sentAt        DateTime?
-  
+
   // Analytics
   deliveredCount Int    @default(0)
   openCount     Int      @default(0)
   clickCount    Int      @default(0)
   bounceCount   Int      @default(0)
   unsubscribeCount Int   @default(0)
-  
+
   // AB Testing
   isABTest      Boolean  @default(false)
   abVariant     String?  // "a", "b", or null for main
   abParentId    String?  // Reference to parent campaign
   abPercentage  Int?     // Percentage for test
-  
+
   // Tracking
   trackingEnabled Boolean @default(true)
   utmSource     String?
   utmMedium     String?
   utmCampaign   String?
-  
+
   createdBy     String?  // Admin customer ID
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-  
+
   recipients    CampaignRecipient[]
-  
+
   @@index([status])
   @@index([scheduledFor])
 }
@@ -1215,27 +1215,27 @@ model CampaignRecipient {
   id            String   @id @default(cuid())
   campaignId    String
   campaign      EmailCampaign @relation(fields: [campaignId], references: [id])
-  
+
   email         String
   customerId    String?  // If recipient is a customer
-  
+
   // Delivery status
   status        String   @default("pending") // "pending", "sent", "delivered", "opened", "clicked", "bounced", "unsubscribed"
   sentAt        DateTime?
   deliveredAt   DateTime?
   openedAt      DateTime?
   clickedAt     DateTime?
-  
+
   // Tracking
   openCount     Int      @default(0)
   clickCount    Int      @default(0)
-  
+
   // Error tracking
   errorMessage  String?
   bounceReason  String?
-  
+
   createdAt     DateTime @default(now())
-  
+
   @@unique([campaignId, email])
   @@index([campaignId])
   @@index([email])
@@ -1829,7 +1829,7 @@ model SmartToyBrand {
   supportsPatterns Boolean @default(false)  // Custom patterns
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
-  
+
   toyModels       SmartToyModel[]
 }
 
@@ -1848,7 +1848,7 @@ model SmartToyModel {
   supportsPatterns Boolean @default(false)
   isActive        Boolean  @default(true)
   createdAt       DateTime @default(now())
-  
+
   @@unique([brandId, modelCode])
   connectedToys   CustomerSmartToy[]
 }
@@ -1860,27 +1860,27 @@ model CustomerSmartToy {
   customer        Customer @relation(fields: [customerId], references: [id])
   toyModelId      String
   toyModel        SmartToyModel @relation(fields: [toyModelId], references: [id])
-  
+
   // Connection details
   nickname        String?  // User's nickname for toy
   deviceId        String?  // Encrypted device identifier
   lastConnected   DateTime?
   connectionCount Int      @default(0)
   totalSessionTime Int     @default(0)  // Total usage in minutes
-  
+
   // Settings
   favoritePatterns String? // JSON: array of pattern IDs
   defaultIntensity Int     @default(5)
-  
+
   // Privacy
   shareWithPartner Boolean @default(false)  // Allow partner control
-  
+
   isActive        Boolean  @default(true)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
-  
+
   sessions        ToySession[]
-  
+
   @@unique([customerId, deviceId])
   @@index([customerId])
 }
@@ -1896,14 +1896,14 @@ model VibrationPattern {
   duration        Int      // Total duration in seconds
   category        String   // "wave", "pulse", "random", "rhythm", "custom"
   intensity       String   @default("medium")  // "gentle", "medium", "intense"
-  
+
   isPublic        Boolean  @default(false)  // Share with community
   isFeatured      Boolean  @default(false)  // Featured pattern
   useCount        Int      @default(0)
   likeCount       Int      @default(0)
-  
+
   createdAt       DateTime @default(now())
-  
+
   sessions        ToySession[]
 }
 
@@ -1916,26 +1916,26 @@ model ToySession {
   smartToy        CustomerSmartToy? @relation(fields: [smartToyId], references: [id])
   patternId       String?
   pattern         VibrationPattern? @relation(fields: [patternId], references: [id])
-  
+
   // Session details
   startedAt       DateTime @default(now())
   endedAt         DateTime?
   duration        Int      @default(0)  // In seconds
-  
+
   // Partner play
   partnerId       String?  // If shared with partner
   isRemoteControl Boolean  @default(false)  // Partner controlled
-  
+
   // Analytics
   avgIntensity    Float?
   peakIntensity   Int?
   patternChanges  Int      @default(0)
-  
+
   // Associated challenge (if applicable)
   challengeCompletionId String?
-  
+
   createdAt       DateTime @default(now())
-  
+
   @@index([customerId])
   @@index([startedAt])
 }
@@ -1948,32 +1948,32 @@ model Challenge {
   title           String
   description     String
   icon            String   // Emoji or icon name
-  
+
   // Challenge type
   type            String   // "daily", "weekly", "special", "milestone"
   category        String   // "exploration", "communication", "wellness", "shopping"
-  
+
   // Requirements
   requirementType String   // "toy_session", "purchase", "mood_entry", "challenge", "login"
   requirementValue Int     // Number required to complete
   points          Int      // Points awarded
-  
+
   // Rewards
   rewardType      String   // "points", "badge", "discount", "product"
   rewardValue     String?  // JSON: reward details
-  
+
   // Availability
   isActive        Boolean  @default(true)
   startsAt        DateTime?
   endsAt          DateTime?
-  
+
   // Stats
   completionCount  Int      @default(0)
-  
+
   sortOrder       Int      @default(0)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
-  
+
   completions     ChallengeCompletion[]
 }
 
@@ -1984,19 +1984,19 @@ model ChallengeCompletion {
   challenge       Challenge @relation(fields: [challengeId], references: [id])
   customerId      String
   customer        Customer @relation(fields: [customerId], references: [id])
-  
+
   progress        Int      @default(0)
   completed       Boolean  @default(false)
   completedAt     DateTime?
   pointsEarned    Int      @default(0)
-  
+
   // Verification
   verifiedAt      DateTime?
   verificationData String? // JSON: proof of completion
-  
+
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
-  
+
   @@unique([challengeId, customerId])
   @@index([customerId])
   @@index([completed])
@@ -2007,22 +2007,22 @@ model UserStreak {
   id              String   @id @default(cuid())
   customerId      String   @unique
   customer        Customer @relation(fields: [customerId], references: [id])
-  
+
   // Current streak
   currentStreak   Int      @default(0)
   lastActivityAt  DateTime?
   streakType      String   @default("daily_login")  // Type of streak
-  
+
   // Records
   longestStreak   Int      @default(0)
   totalDays       Int      @default(0)
-  
+
   // Rewards milestone tracking
   lastRewardAt    Int      @default(0)  // Streak count when last rewarded
-  
+
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
-  
+
   @@index([currentStreak])
 }
 
@@ -2034,26 +2034,26 @@ model Achievement {
   description     String
   icon            String   // Emoji or icon name
   imageUrl        String?
-  
+
   // Achievement type
   category        String   // "exploration", "loyalty", "social", "wellness", "milestone"
   tier            String   @default("bronze")  // "bronze", "silver", "gold", "platinum"
-  
+
   // Requirements
   requirementType String   // "streak", "purchases", "points", "sessions", "referrals"
   requirementValue Int
-  
+
   // Rewards
   pointsAwarded   Int      @default(0)
   unlocksFeature  String?  // Feature unlocked by achievement
-  
+
   // Display
   isSecret        Boolean  @default(false)  // Hidden until unlocked
   isRare          Boolean  @default(false)
   sortOrder       Int      @default(0)
-  
+
   createdAt       DateTime @default(now())
-  
+
   userAchievements UserAchievement[]
 }
 
@@ -2064,10 +2064,10 @@ model UserAchievement {
   achievement     Achievement @relation(fields: [achievementId], references: [id])
   customerId      String
   customer        Customer @relation(fields: [customerId], references: [id])
-  
+
   earnedAt        DateTime @default(now())
   isDisplayed     Boolean  @default(true)  // Show on profile
-  
+
   @@unique([achievementId, customerId])
   @@index([customerId])
 }
@@ -2092,7 +2092,7 @@ model DailyCheckIn {
   rewardClaimed   Boolean  @default(false)
   rewardType      String?
   rewardValue     Int?
-  
+
   @@index([customerId, checkedAt])
 }
 
@@ -2103,31 +2103,31 @@ model CoupleGoal {
   id              String   @id @default(cuid())
   couplesLinkId   String
   couplesLink     CouplesLink @relation(fields: [couplesLinkId], references: [id])
-  
+
   title           String
   description     String?
   icon            String?
-  
+
   // Goal details
   category        String   // "intimacy", "communication", "adventure", "wellness"
   targetDate      DateTime?
   isRecurring     Boolean  @default(false)
   recurrence      String?  // "weekly", "monthly"
-  
+
   // Progress
   progress        Int      @default(0)  // 0-100 percentage
   completed       Boolean  @default(false)
   completedAt     DateTime?
-  
+
   // Rewards
   pointsReward    Int      @default(0)
-  
+
   createdBy       String   // Customer ID who created
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
-  
+
   milestones      CoupleMilestone[]
-  
+
   @@index([couplesLinkId])
 }
 
@@ -2136,14 +2136,14 @@ model CoupleMilestone {
   id              String   @id @default(cuid())
   goalId          String
   goal            CoupleGoal @relation(fields: [goalId], references: [id])
-  
+
   title           String
   description     String?
   targetValue     Int      @default(1)
   currentValue    Int      @default(0)
   completed       Boolean  @default(false)
   completedAt     DateTime?
-  
+
   sortOrder       Int      @default(0)
   createdAt       DateTime @default(now())
 }
@@ -2153,22 +2153,22 @@ model ConnectionScore {
   id              String   @id @default(cuid())
   couplesLinkId   String
   couplesLink     CouplesLink @relation(fields: [couplesLinkId], references: [id])
-  
+
   // Score breakdown (0-100 each)
   overallScore    Float    @default(0)
   communicationScore Float @default(0)
   intimacyScore   Float    @default(0)
   adventureScore  Float    @default(0)
   wellnessScore   Float    @default(0)
-  
+
   // Factors
   activitiesTogether Int   @default(0)
   challengesCompleted Int  @default(0)
   sessionsShared  Int      @default(0)
-  
+
   calculatedAt    DateTime @default(now())
   createdAt       DateTime @default(now())
-  
+
   @@index([couplesLinkId])
 }
 
@@ -2179,29 +2179,29 @@ model WellnessEntry {
   id              String   @id @default(cuid())
   customerId      String
   customer        Customer @relation(fields: [customerId], references: [id])
-  
+
   // Date and type
   entryDate       DateTime @default(now())
   entryType       String   // "morning", "evening", "session", "milestone"
-  
+
   // Mood and energy
   mood            Int?     // 1-10 scale
   energy          Int?     // 1-10 scale
   stress          Int?     // 1-10 scale
-  
+
   // Activity tracking
   activities      String?  // JSON: ["toy", "partner", "solo", "exercise"]
   duration        Int?     // Minutes
-  
+
   // Notes
   notes           String?
-  
+
   // AI insights
   aiInsight       String?
   recommendations String?  // JSON: product/activity recommendations
-  
+
   createdAt       DateTime @default(now())
-  
+
   @@unique([customerId, entryDate, entryType])
   @@index([customerId])
   @@index([entryDate])
@@ -2212,28 +2212,28 @@ model WellnessProfile {
   id              String   @id @default(cuid())
   customerId      String   @unique
   customer        Customer @relation(fields: [customerId], references: [id])
-  
+
   // Time preferences
   preferredTime   String?  // "morning", "afternoon", "evening", "night"
   avgSessionDuration Int?  // Average preferred session length
-  
+
   // Intensity preferences
   preferredIntensity String? // "gentle", "medium", "intense"
   patternPreferences String? // JSON: preferred pattern types
-  
+
   // Category interests
   categoryScores  String?  // JSON: { "vibrators": 8, "couples": 7 }
-  
+
   // Goals
   goals           String?  // JSON: ["relaxation", "exploration", "pleasure"]
-  
+
   // AI recommendations
   lastRecommendation String?
   recommendationScore Float?
-  
+
   // Privacy
   shareWithPartner Boolean @default(false)
-  
+
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
@@ -2243,22 +2243,22 @@ model PartnerActivity {
   id              String   @id @default(cuid())
   couplesLinkId   String
   couplesLink     CouplesLink @relation(fields: [couplesLinkId], references: [id])
-  
+
   // Activity details
   activityType    String   // "remote_control", "shared_session", "gift", "challenge"
   initiatedBy     String   // Customer ID
-  
+
   // Details
   title           String
   description     String?
   metadata        String?  // JSON: activity-specific data
-  
+
   // Duration/impact
   duration        Int?     // Minutes
   enjoymentRating Int?     // 1-10 from each partner
-  
+
   createdAt       DateTime @default(now())
-  
+
   @@index([couplesLinkId])
 }
 
@@ -2267,20 +2267,20 @@ model LeaderboardEntry {
   id              String   @id @default(cuid())
   customerId      String
   customer        Customer @relation(fields: [customerId], references: [id])
-  
+
   // Period
   periodType      String   // "daily", "weekly", "monthly", "all_time"
   periodStart     DateTime
-  
+
   // Scores
   points          Int      @default(0)
   challengesCompleted Int  @default(0)
   streakDays      Int      @default(0)
-  
+
   rank            Int?
-  
+
   createdAt       DateTime @default(now())
-  
+
   @@unique([customerId, periodType, periodStart])
   @@index([periodType, periodStart])
 }
@@ -2294,26 +2294,26 @@ model Product3DModel {
   id              String   @id @default(cuid())
   productId       String   @unique
   product         Product  @relation(fields: [productId], references: [id])
-  
+
   // Model files
   modelUrl        String   // URL to GLB/GLTF file
   modelType       String   @default("glb") // "glb", "gltf", "obj"
   thumbnailUrl    String?
-  
+
   // Animations
   animations      String?  // JSON: [{ name, duration }]
-  
+
   // AR Support
   arSupported     Boolean  @default(false)
   arScale         Float?   // Scale factor for AR
-  
+
   // Status
   isProcessing    Boolean  @default(false)
   isReady         Boolean  @default(false)
-  
+
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
-  
+
   hotspots        ProductHotspot[]
 }
 
@@ -2322,27 +2322,27 @@ model ProductHotspot {
   id              String   @id @default(cuid())
   modelId         String
   model           Product3DModel @relation(fields: [modelId], references: [id])
-  
+
   // Position
   positionX       Float    // Normalized 0-1
   positionY       Float
   positionZ       Float?
-  
+
   // Content
   label           String
   description     String?
   iconType        String?  // Lucide icon name
-  
+
   // Media
   imageUrl        String?
   videoUrl        String?
-  
+
   // Animation trigger
   animationName   String?
-  
+
   sortOrder       Int      @default(0)
   isActive        Boolean  @default(true)
-  
+
   createdAt       DateTime @default(now())
 }
 
@@ -2351,20 +2351,20 @@ model ProductConfiguration {
   id              String   @id @default(cuid())
   productId       String
   product         Product  @relation(fields: [productId], references: [id])
-  
+
   // Configuration type
   configType      String   // "color", "size", "material", "accessory"
-  
+
   // Options
   name            String   // Display name
   description     String?
   options         String   // JSON: [{ value, label, priceModifier, image, inStock }]
-  
+
   // UI Settings
   displayType     String   @default("select") // "select", "radio", "color", "slider"
   isRequired      Boolean  @default(false)
   sortOrder       Int      @default(0)
-  
+
   isActive        Boolean  @default(true)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -2376,25 +2376,25 @@ model SavedConfiguration {
   customerId      String?
   customer        Customer? @relation(fields: [customerId], references: [id])
   sessionId       String?  // For guest users
-  
+
   productId       String
   product         Product  @relation(fields: [productId], references: [id])
-  
+
   // Configuration
   configuration   String   // JSON: { color: "red", size: "M", ... }
   configurationName String?
-  
+
   // Price calculation
   basePrice       Int      // Base price at time of save
   totalPrice      Int      // Total including modifiers
-  
+
   // Metadata
   isPublic        Boolean  @default(false)
   likesCount      Int      @default(0)
-  
+
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
-  
+
   @@index([productId])
   @@index([customerId])
 }
@@ -2406,43 +2406,43 @@ model ProductExperience {
   product         Product  @relation(fields: [productId], references: [id])
   customerId      String?
   customer        Customer? @relation(fields: [customerId], references: [id])
-  
+
   // For guest submissions
   guestName       String?
   guestEmail      String?
-  
+
   // Content
   title           String
   content         String
   experienceType  String   @default("story") // "story", "tip", "unboxing", "review"
-  
+
   // Media
   images          String?  // JSON array of image URLs
   videoUrl        String?
-  
+
   // Ratings (optional)
   rating          Int?     // 1-5
   enjoymentRating Int?     // 1-10
-  
+
   // Tags
   tags            String?  // JSON array
-  
+
   // Moderation
   isApproved      Boolean  @default(false)
   isFeatured      Boolean  @default(false)
   isPublic        Boolean  @default(true)
-  
+
   // Engagement
   viewsCount      Int      @default(0)
   likesCount      Int      @default(0)
   commentsCount   Int      @default(0)
-  
+
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
-  
+
   likes           ExperienceLike[]
   comments        ExperienceComment[]
-  
+
   @@index([productId])
   @@index([customerId])
   @@index([isApproved, isFeatured])
@@ -2456,9 +2456,9 @@ model ExperienceLike {
   customerId      String?
   customer        Customer? @relation(fields: [customerId], references: [id])
   sessionId       String?
-  
+
   createdAt       DateTime @default(now())
-  
+
   @@unique([experienceId, customerId])
   @@unique([experienceId, sessionId])
 }
@@ -2470,14 +2470,14 @@ model ExperienceComment {
   experience      ProductExperience @relation(fields: [experienceId], references: [id])
   customerId      String?
   customer        Customer? @relation(fields: [customerId], references: [id])
-  
+
   guestName       String?
   content         String
-  
+
   isApproved      Boolean  @default(true)
-  
+
   createdAt       DateTime @default(now())
-  
+
   @@index([experienceId])
 }
 
@@ -2486,38 +2486,38 @@ model SensoryProfile {
   id              String   @id @default(cuid())
   productId       String   @unique
   product         Product  @relation(fields: [productId], references: [id])
-  
+
   // Texture
   textureType     String?  // "smooth", "textured", "ribbed", "realistic"
   textureIntensity Int?    // 1-10
   surfaceFeel     String?  // "silky", "velvety", "matte", "glossy"
   firmness        String?  // "soft", "medium", "firm"
   flexibility     String?  // "rigid", "semi-flexible", "flexible"
-  
+
   // Vibration (if applicable)
   vibrationLevels Int?     // Number of intensity levels
   vibrationPatterns Int?   // Number of patterns
   motorType       String?  // "rumbly", "buzzy", "thumpy"
   maxIntensity    Int?     // 1-10
   noiseLevel      String?  // "silent", "quiet", "moderate", "loud"
-  
+
   // Temperature
   temperatureResponsive Boolean @default(false)
   warmingSupported Boolean @default(false)
   coolingSupported Boolean @default(false)
-  
+
   // Sound
   soundProfile    String?  // JSON: { ambiance: "...", sounds: [...] }
-  
+
   // Weight and size feel
   weight          Int?     // grams
   weightFeel      String?  // "light", "medium", "heavy"
   gripFeel        String?  // "ergonomic", "straight", "curved"
-  
+
   // Material sensations
   warmingSensation Boolean @default(false)
   coolingSensation Boolean @default(false)
-  
+
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
@@ -2527,7 +2527,7 @@ model SizeVisualization {
   id              String   @id @default(cuid())
   productId       String   @unique
   product         Product  @relation(fields: [productId], references: [id])
-  
+
   // Dimensions
   length          Float?   // cm
   width           Float?   // cm
@@ -2535,13 +2535,13 @@ model SizeVisualization {
   diameter        Float?   // cm (for cylindrical)
   insertableLength Float?  // cm
   circumference   Float?   // cm
-  
+
   // Comparison items
   comparisons     String?  // JSON: [{ name, length, image, category }]
-  
+
   // Visual guide
   silhouettes     String?  // JSON: hand/phone comparisons
-  
+
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
@@ -2551,24 +2551,24 @@ model ProductFeature {
   id              String   @id @default(cuid())
   productId       String
   product         Product  @relation(fields: [productId], references: [id])
-  
+
   // Feature details
   name            String
   description     String
   category        String   // "power", "controls", "material", "design", "connectivity"
-  
+
   // Media
   iconType        String?  // Lucide icon
   imageUrl        String?
   videoUrl        String?
-  
+
   // Benefits
   benefits        String?  // JSON array
-  
+
   // Importance
   isKeyFeature    Boolean  @default(false)
   sortOrder       Int      @default(0)
-  
+
   isActive        Boolean  @default(true)
   createdAt       DateTime @default(now())
 }
@@ -2583,51 +2583,51 @@ model GiftRegistry {
   slug            String   @unique  // Public sharing URL
   customerId      String
   customer        Customer @relation(fields: [customerId], references: [id])
-  
+
   // Registry Details
   title           String
   description     String?
   registryType    String   // "wedding", "anniversary", "birthday", "baby", "housewarming", "custom"
-  
+
   // Event Information
   eventDate       DateTime?
   eventLocation   String?
   eventNotes      String?
-  
+
   // Theme & Styling
   theme           String   @default("classic")  // "classic", "romantic", "modern", "minimalist", "bold"
   primaryColor    String?  // Hex color for customization
   coverImage      String?  // URL to cover image
-  
+
   // Privacy Settings
   isPublic        Boolean  @default(true)
   password        String?  // Optional password protection
-  
+
   // Features
   allowGiftMessages Boolean @default(true)
   allowPartialPurchases Boolean @default(true)
   allowThankYouNotes Boolean @default(true)
   showPurchaserInfo Boolean @default(false)  // Who bought what
-  
+
   // Status
   status          String   @default("draft")  // "draft", "active", "completed", "archived"
   publishedAt     DateTime?
   expiresAt       DateTime?
-  
+
   // Stats
   viewCount       Int      @default(0)
-  
+
   // Timestamps
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
-  
+
   // Relations
   items           RegistryItem[]
   guests          RegistryGuest[]
   events          RegistryEvent[]
   purchases       RegistryPurchase[]
   thankYouNotes   ThankYouNote[]
-  
+
   @@index([customerId])
   @@index([slug])
   @@index([status])
@@ -2638,44 +2638,44 @@ model RegistryItem {
   id              String   @id @default(cuid())
   registryId      String
   registry        GiftRegistry @relation(fields: [registryId], references: [id], onDelete: Cascade)
-  
+
   // Product reference (optional - can be custom item)
   productId       String?
   product         Product? @relation(fields: [productId], references: [id])
-  
+
   // Item details (for custom items or override product info)
   name            String
   description     String?
   imageUrl        String?
-  
+
   // Pricing
   price           Int      // In cents
   originalPrice   Int?     // If on sale
-  
+
   // Quantity
   quantity        Int      @default(1)  // Total desired
   purchasedCount  Int      @default(0)  // How many purchased
-  
+
   // Priority
   priority        String   @default("medium")  // "must_have", "high", "medium", "low", "nice_to_have"
-  
+
   // Category for grouping
   category        String?  // "Essentials", "Luxury", "Fun", etc.
-  
+
   // Notes
   notes           String?  // Personal notes about why they want this
-  
+
   // Sorting
   sortOrder       Int      @default(0)
-  
+
   // Timestamps
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
-  
+
   // Relations
   purchases       RegistryPurchase[]
   contributions   RegistryContribution[]
-  
+
   @@index([registryId])
   @@index([productId])
 }
@@ -2685,25 +2685,25 @@ model RegistryGuest {
   id              String   @id @default(cuid())
   registryId      String
   registry        GiftRegistry @relation(fields: [registryId], references: [id], onDelete: Cascade)
-  
+
   // Guest info
   email           String
   name            String?
   phone           String?
-  
+
   // Invitation status
   invitedAt       DateTime?
   viewedAt        DateTime?
   rsvpStatus      String   @default("pending")  // "pending", "attending", "declined"
   rsvpAt          DateTime?
-  
+
   // Guest notes
   notes           String?  // Dietary restrictions, etc.
-  
+
   // Timestamps
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
-  
+
   @@unique([registryId, email])
   @@index([registryId])
 }
@@ -2715,30 +2715,30 @@ model RegistryPurchase {
   registry        GiftRegistry @relation(fields: [registryId], references: [id], onDelete: Cascade)
   registryItemId  String
   registryItem    RegistryItem @relation(fields: [registryItemId], references: [id], onDelete: Cascade)
-  
+
   // Purchaser info
   purchaserName   String
   purchaserEmail  String
   purchaserPhone  String?
-  
+
   // Purchase details
   quantity        Int      @default(1)
   amountCents     Int      // Amount paid
-  
+
   // Gift options
   giftMessage     String?
   isAnonymous     Boolean  @default(false)
-  
+
   // Order reference
   orderId         String?  // Link to actual order
-  
+
   // Thank you tracking
   thankedAt       DateTime?
   thankYouNoteId  String?
-  
+
   // Timestamps
   purchasedAt     DateTime @default(now())
-  
+
   @@index([registryId])
   @@index([registryItemId])
   @@index([purchaserEmail])
@@ -2749,25 +2749,25 @@ model ThankYouNote {
   id              String   @id @default(cuid())
   registryId      String
   registry        GiftRegistry @relation(fields: [registryId], references: [id], onDelete: Cascade)
-  
+
   // Recipient (who gave the gift)
   recipientName   String
   recipientEmail  String
-  
+
   // Note content
   message         String
-  
+
   // Associated purchases
   purchaseIds     String?  // JSON array of purchase IDs
-  
+
   // Status
   isSent          Boolean  @default(false)
   sentAt          DateTime?
-  
+
   // Timestamps
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
-  
+
   @@index([registryId])
   @@index([recipientEmail])
 }
@@ -2777,34 +2777,34 @@ model RegistryEvent {
   id              String   @id @default(cuid())
   registryId      String
   registry        GiftRegistry @relation(fields: [registryId], references: [id], onDelete: Cascade)
-  
+
   // Event details
   name            String   // "Bridal Shower", "Bachelor Party", "Wedding Day"
   eventType       String   // "shower", "party", "ceremony", "reception", "other"
   description     String?
-  
+
   // Date & Location
   date            DateTime
   endDate         DateTime?
   location        String?
   venue           String?
   address         String?
-  
+
   // Host info
   hostName        String?
   hostContact     String?
-  
+
   // RSVP settings
   requiresRsvp    Boolean  @default(true)
   rsvpDeadline    DateTime?
-  
+
   // Notes
   notes           String?
-  
+
   // Timestamps
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
-  
+
   @@index([registryId])
   @@index([date])
 }
@@ -2814,23 +2814,23 @@ model RegistryContribution {
   id              String   @id @default(cuid())
   registryItemId  String
   registryItem    RegistryItem @relation(fields: [registryItemId], references: [id], onDelete: Cascade)
-  
+
   // Contributor
   contributorName String
   contributorEmail String
-  
+
   // Contribution
   amountCents     Int
-  
+
   // Message
   message         String?
-  
+
   // Order reference
   orderId         String?
-  
+
   // Timestamp
   createdAt       DateTime @default(now())
-  
+
   @@index([registryItemId])
   @@index([contributorEmail])
 }
@@ -2864,7 +2864,7 @@ model CustomerSegment {
   slug            String   @unique
   name            String
   description     String?
-  
+
   // RFM Score Ranges (for auto-classification)
   // Recency: days since last order
   recencyMin      Int?     // Lower bound (days)
@@ -2875,30 +2875,30 @@ model CustomerSegment {
   // Monetary: total spent in cents
   monetaryMin     Int?
   monetaryMax     Int?
-  
+
   // Segment type: "rfm", "behavioral", "custom"
   type            String   @default("rfm")
-  
+
   // Segment characteristics
   color           String   @default("terracotta")  // UI color
   iconName        String   @default("Users")       // Lucide icon
   priority        Int      @default(0)             // Display order
-  
+
   // Suggested actions
   suggestedActions String? // JSON: array of suggested marketing actions
-  
+
   // Stats (cached)
   customerCount   Int      @default(0)
   totalRevenue    Int      @default(0)  // In cents
   avgOrderValue   Int      @default(0)  // In cents
-  
+
   isActive        Boolean  @default(true)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
-  
+
   members         SegmentMember[]
   campaigns       SegmentCampaign[]
-  
+
   @@index([type])
   @@index([priority])
 }
@@ -2910,31 +2910,31 @@ model SegmentMember {
   segment         CustomerSegment @relation(fields: [segmentId], references: [id], onDelete: Cascade)
   customerId      String
   customer        Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  
+
   // RFM Scores at time of assignment
   recencyScore    Int      // 1-5 (5 = most recent)
   frequencyScore  Int      // 1-5 (5 = most frequent)
   monetaryScore   Int      // 1-5 (5 = highest spend)
   rfmScore        String   // Combined: "555", "123", etc.
-  
+
   // Customer metrics at time of assignment
   daysSinceLastOrder Int
   totalOrders      Int
   totalSpentCents  Int
   avgOrderCents    Int
-  
+
   // Engagement metrics
   lastEmailOpenAt DateTime?
   lastEmailClickAt DateTime?
   emailOpenRate   Float    @default(0)
   emailClickRate  Float    @default(0)
-  
+
   // Lifecycle
   assignedAt      DateTime @default(now())
   previousSegmentId String?
   changedAt       DateTime?
   changeReason    String?
-  
+
   @@unique([segmentId, customerId])
   @@index([customerId])
   @@index([rfmScore])
@@ -2945,37 +2945,37 @@ model SegmentCampaign {
   id              String   @id @default(cuid())
   segmentId       String
   segment         CustomerSegment @relation(fields: [segmentId], references: [id])
-  
+
   // Campaign details
   name            String
   description     String?
   type            String   // "email", "promo", "notification", "retarget"
-  
+
   // Content
   subject         String?  // Email subject
   content         String?  // JSON: campaign content config
   offerCode       String?  // Associated promo code
-  
+
   // Schedule
   scheduledAt     DateTime?
   sentAt          DateTime?
-  
+
   // Stats
   recipientsCount Int      @default(0)
   opensCount      Int      @default(0)
   clicksCount     Int      @default(0)
   conversionsCount Int     @default(0)
   revenueCents    Int      @default(0)
-  
+
   openRate        Float    @default(0)
   clickRate       Float    @default(0)
   conversionRate  Float    @default(0)
-  
+
   status          String   @default("draft") // "draft", "scheduled", "sending", "sent", "completed"
-  
+
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
-  
+
   @@index([segmentId])
   @@index([status])
 }
@@ -2985,39 +2985,39 @@ model CustomerRFM {
   id              String   @id @default(cuid())
   customerId      String   @unique
   customer        Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  
+
   // Calculated RFM Scores (1-5 each)
   recencyScore    Int      @default(0)
   frequencyScore  Int      @default(0)
   monetaryScore   Int      @default(0)
   rfmScore        String   @default("000")
-  
+
   // Raw Values
   daysSinceLastOrder Int   @default(0)
   totalOrders      Int      @default(0)
   totalSpentCents  Int      @default(0)
   avgOrderCents    Int      @default(0)
-  
+
   // Percentile ranks (for scoring)
   recencyPercentile Float  @default(0)
   frequencyPercentile Float @default(0)
   monetaryPercentile Float @default(0)
-  
+
   // Lifecycle stage
   lifecycleStage  String   @default("new") // "new", "active", "champion", "at_risk", "churned", "lost"
-  
+
   // Predictions
   churnRisk       Float    @default(0)  // 0-1 probability
   predictedLTV    Int      @default(0)  // Predicted lifetime value in cents
   nextPurchaseDays Int?    // Predicted days until next purchase
-  
+
   // Engagement
   emailEngagementScore Float @default(0)
   siteEngagementScore Float  @default(0)
-  
+
   // Last calculation
   calculatedAt    DateTime @default(now())
-  
+
   @@index([rfmScore])
   @@index([lifecycleStage])
   @@index([churnRisk])
@@ -3033,22 +3033,22 @@ model AdminUser {
   name      String
   role      String   @default("admin") // "superadmin", "admin", "support", "content"
   isActive  Boolean  @default(true)
-  
+
   // Link to existing customer if they also shop
   customerId String?  @unique
   customer   Customer? @relation(fields: [customerId], references: [id])
-  
+
   // Security
   passwordHash String
   twoFactorEnabled Boolean @default(false)
   twoFactorSecret String?
-  
+
   // Tracking
   lastLoginAt DateTime?
   lastLoginIp String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
+
   // Audit trail relation
   // auditLogs   AuditLog[] // Assuming we add adminUser to AuditLog instead of adminId string, but keeping simple for now
 }
@@ -3063,7 +3063,7 @@ model AgeVerificationLog {
   status          String   // "passed", "failed", "pending"
   dateOfBirth     DateTime?
   verifiedAt      DateTime @default(now())
-  
+
   @@index([sessionId])
   @@index([ipAddress])
 }
@@ -3080,7 +3080,7 @@ model AbandonedCartEmailLog {
   openedAt        DateTime?
   clickedAt       DateTime?
   converted       Boolean  @default(false)
-  
+
   @@index([cartId])
   @@index([email])
 }
@@ -3093,10 +3093,10 @@ model RegionalPrice {
   priceCents      Int
   compareAtPriceCents Int?
   isActive        Boolean  @default(true)
-  
+
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
-  
+
   @@unique([productId, countryCode])
   @@index([productId])
   @@index([countryCode])

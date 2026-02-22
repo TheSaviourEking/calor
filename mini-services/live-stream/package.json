@@ -8,11 +8,11 @@
   "dependencies": {
     "socket.io": "^4.7.2",
     "cors": "^2.8.5",
-    "@prisma/client": "^5.7.0"
+    "@prisma/client": "^6.11.1"
   },
   "devDependencies": {
+    "prisma": "^6.11.1",
     "@types/node": "^20.0.0",
-    "prisma": "^5.7.0",
     "typescript": "^5.0.0"
   }
 }
