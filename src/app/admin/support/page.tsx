@@ -1,5 +1,4 @@
 import { db } from '@/lib/db'
-import ClientWrapper from '@/components/layout/ClientWrapper'
 import AdminSupportClient from './AdminSupportClient'
 
 async function getTicketsWithStats() {
@@ -88,9 +87,5 @@ async function getTicketsWithStats() {
 
 export default async function AdminSupportPage() {
   const data = await getTicketsWithStats()
-  return (
-    <ClientWrapper>
-      <AdminSupportClient initialData={data} />
-    </ClientWrapper>
-  )
+  return <AdminSupportClient initialData={data} />
 }

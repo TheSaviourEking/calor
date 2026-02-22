@@ -1,5 +1,6 @@
 import { db } from '@/lib/db'
 import Link from 'next/link'
+import { notFound } from 'next/navigation'
 
 interface BlogPost {
   id: string
@@ -32,7 +33,7 @@ interface BlogCategory {
   _count: { posts: number }
 }
 
-async function getBlogPost(slug: string): Promise<BlogPost | null> {
+async function getBlogPost(slug: string): Promise<BlogPost> {
   const post = await db.blogPost.findUnique({
     where: { slug, published: true },
     include: {
@@ -41,7 +42,7 @@ async function getBlogPost(slug: string): Promise<BlogPost | null> {
     },
   })
 
-  if (!post) return null
+  if (!post) notFound()
 
   // Increment view count
   await db.blogPost.update({
@@ -99,29 +100,16 @@ export default async function BlogPostPage({
   const { slug } = await params
   const post = await getBlogPost(slug)
 
-  if (!post) {
-    return (
-      <div className="min-h-screen pt-20 bg-cream flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="font-display text-charcoal text-2xl mb-4">Post not found</h1>
-          <Link href="/blog" className="font-body text-terracotta hover:underline">
-            Back to blog
-          </Link>
-        </div>
-      </div>
-    )
-  }
-
   const [relatedPosts, categories] = await Promise.all([
     getRelatedPosts(post.id, post.category?.id || null),
     getCategories(),
   ])
 
   return (
-    <BlogPostClient 
-      post={post} 
-      relatedPosts={relatedPosts} 
-      categories={categories} 
+    <BlogPostClient
+      post={post}
+      relatedPosts={relatedPosts}
+      categories={categories}
     />
   )
 }
@@ -174,7 +162,7 @@ function BlogPostClient({
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-charcoal/50 to-transparent" />
         </div>
-        
+
         <div className="absolute bottom-0 left-0 right-0 p-8 lg:p-16">
           <div className="max-w-4xl mx-auto">
             {post.category && (

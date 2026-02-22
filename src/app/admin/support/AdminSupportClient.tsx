@@ -134,15 +134,6 @@ export default function AdminSupportClient({ initialData }: { initialData: Initi
 
   return (
     <div className="space-y-6">
-      {/* Back Link */}
-      <Link
-        href="/admin"
-        className="inline-flex items-center gap-2 text-warm-gray hover:text-terracotta transition-colors font-body text-sm"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        Back to Dashboard
-      </Link>
-
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -176,11 +167,10 @@ export default function AdminSupportClient({ initialData }: { initialData: Initi
             <button
               key={status}
               onClick={() => setStatusFilter(statusFilter === status ? 'all' : status)}
-              className={`p-4 border transition-colors ${
-                statusFilter === status
-                  ? 'border-terracotta bg-terracotta/5'
-                  : 'border-sand bg-warm-white hover:border-terracotta/50'
-              }`}
+              className={`p-4 border transition-colors ${statusFilter === status
+                ? 'border-terracotta bg-terracotta/5'
+                : 'border-sand bg-warm-white hover:border-terracotta/50'
+                }`}
             >
               <div className="flex items-center gap-2 mb-2">
                 <StatusIcon className="w-4 h-4 text-terracotta" />

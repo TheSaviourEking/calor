@@ -4,8 +4,8 @@ import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { format } from 'date-fns'
-import { 
-  ArrowLeft, Package, RefreshCw, Check, Clock, AlertCircle, 
+import {
+  ArrowLeft, Package, RefreshCw, Check, Clock, AlertCircle,
   Loader2, ChevronRight, Shield, Heart, Truck
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -63,49 +63,27 @@ const refundMethods = [
   { value: 'exchange', label: 'Exchange', description: 'Exchange for a different item' }
 ]
 
-function ReturnsContent() {
+function ReturnsContent({
+  initialOrders,
+  initialReturns
+}: {
+  initialOrders: Order[],
+  initialReturns: ReturnRequest[]
+}) {
   const searchParams = useSearchParams()
   const orderId = searchParams.get('orderId')
-  
-  const [orders, setOrders] = useState<Order[]>([])
-  const [returns, setReturns] = useState<ReturnRequest[]>([])
-  const [loading, setLoading] = useState(true)
+
+  const [orders, setOrders] = useState<Order[]>(initialOrders)
+  const [returns, setReturns] = useState<ReturnRequest[]>(initialReturns)
   const [step, setStep] = useState<'select' | 'form' | 'success'>('select')
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [submitting, setSubmitting] = useState(false)
-  
+
   // Form state
   const [reason, setReason] = useState('')
   const [reasonDetails, setReasonDetails] = useState('')
   const [refundMethod, setRefundMethod] = useState('original')
   const [selectedItems, setSelectedItems] = useState<Array<{ orderItemId: string; quantity: number; condition: string }>>([])
-
-  useEffect(() => {
-    fetchData()
-  }, [])
-
-  const fetchData = async () => {
-    try {
-      const [ordersRes, returnsRes] = await Promise.all([
-        fetch('/api/orders'),
-        fetch('/api/returns')
-      ])
-      
-      if (ordersRes.ok) {
-        const data = await ordersRes.json()
-        setOrders(data.orders || [])
-      }
-      
-      if (returnsRes.ok) {
-        const data = await returnsRes.json()
-        setReturns(data.returns || [])
-      }
-    } catch (error) {
-      console.error('Failed to fetch data:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const handleSelectOrder = (order: Order) => {
     setSelectedOrder(order)
@@ -118,8 +96,8 @@ function ReturnsContent() {
   }
 
   const handleItemQuantityChange = (orderItemId: string, quantity: number) => {
-    setSelectedItems(prev => 
-      prev.map(item => 
+    setSelectedItems(prev =>
+      prev.map(item =>
         item.orderItemId === orderItemId ? { ...item, quantity } : item
       ).filter(item => item.quantity > 0)
     )
@@ -183,14 +161,6 @@ function ReturnsContent() {
     return icons[status] || Clock
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen pt-20 bg-cream flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-terracotta" />
-      </div>
-    )
-  }
-
   if (step === 'success') {
     return (
       <div className="min-h-screen pt-20 bg-cream">
@@ -207,7 +177,7 @@ function ReturnsContent() {
               You'll receive an email with instructions on how to proceed.
             </p>
             <div className="flex gap-4 justify-center">
-              <button 
+              <button
                 onClick={() => {
                   setStep('select')
                   setSelectedOrder(null)
@@ -232,7 +202,7 @@ function ReturnsContent() {
     <div className="min-h-screen pt-20 bg-cream">
       <div className="max-w-4xl mx-auto px-6 py-16">
         {/* Back Link */}
-        <Link 
+        <Link
           href="/account/orders"
           className="inline-flex items-center gap-2 font-body text-warm-gray text-sm mb-8 hover:text-terracotta"
         >
@@ -241,14 +211,14 @@ function ReturnsContent() {
         </Link>
 
         {/* Header */}
-        <h1 
+        <h1
           className="font-display text-charcoal mb-4"
           style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', fontWeight: 300 }}
         >
           Returns & Exchanges
         </h1>
         <p className="font-body text-warm-gray mb-12">
-          Our satisfaction guarantee ensures you love every purchase. If you're not completely satisfied, 
+          Our satisfaction guarantee ensures you love every purchase. If you're not completely satisfied,
           we'll make it right.
         </p>
 
@@ -291,9 +261,8 @@ function ReturnsContent() {
                 return (
                   <div key={ret.id} className="bg-warm-white p-4 flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      <div className={`w-10 h-10 flex items-center justify-center ${
-                        ret.status === 'completed' ? 'bg-green-100' : 'bg-sand'
-                      }`}>
+                      <div className={`w-10 h-10 flex items-center justify-center ${ret.status === 'completed' ? 'bg-green-100' : 'bg-sand'
+                        }`}>
                         <StatusIcon className={`h-5 w-5 ${getStatusColor(ret.status)}`} />
                       </div>
                       <div>
@@ -323,11 +292,11 @@ function ReturnsContent() {
             <h2 className="font-display text-charcoal text-xl mb-4" style={{ fontWeight: 400 }}>
               Select an Order to Return
             </h2>
-            
+
             {orders.length === 0 ? (
               <div className="bg-warm-white border border-sand p-8 text-center">
                 <p className="font-body text-warm-gray">No orders found.</p>
-                <Link 
+                <Link
                   href="/shop"
                   className="mt-4 inline-block bg-charcoal text-cream px-6 py-3 font-body text-sm uppercase tracking-wider hover:bg-terracotta transition-colors"
                 >
@@ -369,7 +338,7 @@ function ReturnsContent() {
               <h2 className="font-display text-charcoal text-xl" style={{ fontWeight: 400 }}>
                 Return Items from Order #{selectedOrder.reference}
               </h2>
-              <button 
+              <button
                 onClick={() => setStep('select')}
                 className="font-body text-warm-gray text-sm hover:text-terracotta"
               >
@@ -384,13 +353,12 @@ function ReturnsContent() {
                 {selectedOrder.items.map((item) => {
                   const selectedItem = selectedItems.find(si => si.orderItemId === item.id)
                   const isSelected = !!selectedItem
-                  
+
                   return (
-                    <div 
+                    <div
                       key={item.id}
-                      className={`p-4 border ${
-                        isSelected ? 'border-terracotta bg-terracotta/5' : 'border-sand'
-                      }`}
+                      className={`p-4 border ${isSelected ? 'border-terracotta bg-terracotta/5' : 'border-sand'
+                        }`}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -443,11 +411,10 @@ function ReturnsContent() {
               <h3 className="font-body text-charcoal mb-4">Reason for Return</h3>
               <div className="space-y-2">
                 {returnReasons.map((r) => (
-                  <label 
+                  <label
                     key={r.value}
-                    className={`flex items-center gap-3 p-3 border cursor-pointer ${
-                      reason === r.value ? 'border-terracotta bg-terracotta/5' : 'border-sand hover:border-terracotta/50'
-                    }`}
+                    className={`flex items-center gap-3 p-3 border cursor-pointer ${reason === r.value ? 'border-terracotta bg-terracotta/5' : 'border-sand hover:border-terracotta/50'
+                      }`}
                   >
                     <input
                       type="radio"
@@ -461,7 +428,7 @@ function ReturnsContent() {
                   </label>
                 ))}
               </div>
-              
+
               <div className="mt-4">
                 <label className="font-body text-charcoal text-sm block mb-2">
                   Additional Details (optional)
@@ -480,11 +447,10 @@ function ReturnsContent() {
               <h3 className="font-body text-charcoal mb-4">Refund Method</h3>
               <div className="space-y-2">
                 {refundMethods.map((method) => (
-                  <label 
+                  <label
                     key={method.value}
-                    className={`flex items-start gap-3 p-4 border cursor-pointer ${
-                      refundMethod === method.value ? 'border-terracotta bg-terracotta/5' : 'border-sand hover:border-terracotta/50'
-                    }`}
+                    className={`flex items-start gap-3 p-4 border cursor-pointer ${refundMethod === method.value ? 'border-terracotta bg-terracotta/5' : 'border-sand hover:border-terracotta/50'
+                      }`}
                   >
                     <input
                       type="radio"
@@ -525,14 +491,20 @@ function ReturnsContent() {
   )
 }
 
-export default function ReturnsClient() {
+export default function ReturnsClient({
+  initialOrders,
+  initialReturns
+}: {
+  initialOrders: Order[]
+  initialReturns: ReturnRequest[]
+}) {
   return (
     <Suspense fallback={
       <div className="min-h-screen pt-20 bg-cream flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-terracotta" />
       </div>
     }>
-      <ReturnsContent />
+      <ReturnsContent initialOrders={initialOrders} initialReturns={initialReturns} />
     </Suspense>
   )
 }

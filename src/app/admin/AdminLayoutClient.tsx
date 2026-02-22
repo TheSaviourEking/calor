@@ -5,8 +5,11 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
     Package, ShoppingBag, Users, MessageSquare,
-    BarChart3, Mail, Menu, X, Target, Code
+    BarChart3, Mail, Menu, X, Target, Code, LogOut, User,
+    Beaker, Activity
 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useAuthStore } from '@/stores/auth'
 
 const adminNavItems = [
     { href: '/admin', label: 'Dashboard', icon: Package },
@@ -18,6 +21,8 @@ const adminNavItems = [
     { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
     { href: '/admin/campaigns', label: 'Email Campaigns', icon: Mail },
     { href: '/admin/changelog', label: 'Dev Changelog', icon: Code },
+    { href: '/admin/email-test', label: 'Email Test', icon: Beaker },
+    { href: '/admin/wellness-test', label: 'Wellness Test', icon: Activity },
 ]
 
 export default function AdminLayoutClient({
@@ -27,6 +32,8 @@ export default function AdminLayoutClient({
 }) {
     const [sidebarOpen, setSidebarOpen] = useState(false)
     const pathname = usePathname()
+    const router = useRouter()
+    const { logout } = useAuthStore()
 
     const isActive = (href: string) => {
         if (href === '/admin') {
@@ -58,8 +65,8 @@ export default function AdminLayoutClient({
                                     key={item.href}
                                     href={item.href}
                                     className={`flex items-center gap-3 px-4 py-3 font-body text-sm transition-colors ${active
-                                            ? 'bg-terracotta/10 text-terracotta'
-                                            : 'text-warm-gray hover:bg-warm-white/5'
+                                        ? 'bg-terracotta/10 text-terracotta'
+                                        : 'text-warm-gray hover:bg-warm-white/5'
                                         }`}
                                 >
                                     <Icon className="w-5 h-5" />
@@ -68,6 +75,28 @@ export default function AdminLayoutClient({
                             )
                         })}
                     </nav>
+
+                    {/* Quick Links / Actions */}
+                    <div className="pt-6 mt-6 border-t border-warm-white/10 flex flex-col space-y-2">
+                        <Link
+                            href="/account"
+                            className="flex items-center gap-3 px-4 py-3 font-body text-sm text-charcoal bg-sand/90 hover:bg-sand rounded-md transition-colors"
+                        >
+                            <User className="w-5 h-5 flex-shrink-0" />
+                            Customer Account
+                        </Link>
+
+                        <button
+                            onClick={() => {
+                                logout()
+                                router.push('/')
+                            }}
+                            className="flex items-center gap-3 px-4 py-3 font-body text-sm text-warm-gray hover:text-cream transition-colors text-left mt-2"
+                        >
+                            <LogOut className="w-5 h-5 flex-shrink-0" />
+                            Log Out
+                        </button>
+                    </div>
                 </div>
             </aside>
 

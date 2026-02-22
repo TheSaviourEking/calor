@@ -30,7 +30,7 @@ async function getTicketWithDetails(id: string) {
     },
   })
 
-  if (!ticket) return null
+  if (!ticket) notFound()
 
   // Get related order if exists
   let relatedOrder = null

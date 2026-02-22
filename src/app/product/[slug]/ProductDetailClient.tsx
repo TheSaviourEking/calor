@@ -115,12 +115,16 @@ interface ProductDetailClientProps {
   product: Product;
   relatedProducts?: RelatedProduct[];
   packagingPhotos?: PackagingPhoto[];
+  initialReviews?: any[];
+  initialReviewSummary?: any;
 }
 
 export default function ProductDetailClient({
   product,
   relatedProducts = [],
   packagingPhotos = [],
+  initialReviews,
+  initialReviewSummary,
 }: ProductDetailClientProps) {
   const [quantity, setQuantity] = useState(1);
   const [selectedVariant, setSelectedVariant] = useState(product.variants[0]);
@@ -155,12 +159,12 @@ export default function ProductDetailClient({
   // Parse safety info
   const safetyInfo: SafetyInfo = product.safetyInfo
     ? (() => {
-        try {
-          return JSON.parse(product.safetyInfo);
-        } catch {
-          return {};
-        }
-      })()
+      try {
+        return JSON.parse(product.safetyInfo);
+      } catch {
+        return {};
+      }
+    })()
     : {};
 
   // Check login status and existing alerts
@@ -377,11 +381,10 @@ export default function ProductDetailClient({
                 {product.images.map((image, idx) => (
                   <div
                     key={image.id}
-                    className={`w-16 h-16 bg-gradient-to-br from-cream to-sand cursor-pointer transition-opacity ${
-                      activeMediaIndex === idx
+                    className={`w-16 h-16 bg-gradient-to-br from-cream to-sand cursor-pointer transition-opacity ${activeMediaIndex === idx
                         ? "ring-2 ring-terracotta opacity-100"
                         : "opacity-60 hover:opacity-100"
-                    }`}
+                      }`}
                     onClick={() => setActiveMediaIndex(idx)}
                   />
                 ))}
@@ -544,13 +547,12 @@ export default function ProductDetailClient({
                       key={variant.id}
                       onClick={() => setSelectedVariant(variant)}
                       disabled={variant.stock === 0}
-                      className={`px-4 py-2 font-body text-sm border transition-colors ${
-                        selectedVariant?.id === variant.id
+                      className={`px-4 py-2 font-body text-sm border transition-colors ${selectedVariant?.id === variant.id
                           ? "border-charcoal bg-charcoal text-cream"
                           : variant.stock === 0
                             ? "border-sand bg-sand/50 text-warm-gray/50 cursor-not-allowed"
                             : "border-sand hover:border-terracotta"
-                      }`}
+                        }`}
                     >
                       {variant.name}
                       {variant.stock === 0 && " (Out of stock)"}
@@ -666,11 +668,10 @@ export default function ProductDetailClient({
                 </button>
                 <button
                   onClick={handleWishlistToggle}
-                  className={`w-14 h-14 flex items-center justify-center border transition-colors ${
-                    isInWishlistState
+                  className={`w-14 h-14 flex items-center justify-center border transition-colors ${isInWishlistState
                       ? "border-terracotta bg-terracotta/10"
                       : "border-sand hover:border-terracotta"
-                  }`}
+                    }`}
                   aria-label={
                     isInWishlistState
                       ? "Remove from wishlist"
@@ -718,80 +719,80 @@ export default function ProductDetailClient({
               {(product.materialInfo ||
                 product.cleaningGuide ||
                 Object.keys(safetyInfo).length > 0) && (
-                <AccordionItem
-                  title="Safety & Care"
-                  isOpen={activeAccordion === "safety"}
-                  onToggle={() =>
-                    setActiveAccordion(
-                      activeAccordion === "safety" ? null : "safety",
-                    )
-                  }
-                >
-                  <div className="space-y-4">
-                    {safetyInfo.certifications &&
-                      safetyInfo.certifications.length > 0 && (
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <Shield className="w-4 h-4 text-terracotta" />
-                          {safetyInfo.certifications.map((cert) => (
-                            <span
-                              key={cert}
-                              className="px-2 py-1 bg-sand/50 font-body text-xs text-warm-gray"
-                            >
-                              {cert}
-                            </span>
-                          ))}
+                  <AccordionItem
+                    title="Safety & Care"
+                    isOpen={activeAccordion === "safety"}
+                    onToggle={() =>
+                      setActiveAccordion(
+                        activeAccordion === "safety" ? null : "safety",
+                      )
+                    }
+                  >
+                    <div className="space-y-4">
+                      {safetyInfo.certifications &&
+                        safetyInfo.certifications.length > 0 && (
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <Shield className="w-4 h-4 text-terracotta" />
+                            {safetyInfo.certifications.map((cert) => (
+                              <span
+                                key={cert}
+                                className="px-2 py-1 bg-sand/50 font-body text-xs text-warm-gray"
+                              >
+                                {cert}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                      {safetyInfo.bodySafe && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Check className="w-4 h-4 text-terracotta" />
+                          <span className="font-body text-warm-gray">
+                            Body-safe materials
+                          </span>
                         </div>
                       )}
 
-                    {safetyInfo.bodySafe && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Check className="w-4 h-4 text-terracotta" />
-                        <span className="font-body text-warm-gray">
-                          Body-safe materials
-                        </span>
-                      </div>
-                    )}
+                      {safetyInfo.phthalateFree && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Check className="w-4 h-4 text-terracotta" />
+                          <span className="font-body text-warm-gray">
+                            Phthalate-free
+                          </span>
+                        </div>
+                      )}
 
-                    {safetyInfo.phthalateFree && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Check className="w-4 h-4 text-terracotta" />
-                        <span className="font-body text-warm-gray">
-                          Phthalate-free
-                        </span>
-                      </div>
-                    )}
+                      {product.cleaningGuide && (
+                        <div>
+                          <p className="font-body text-charcoal text-sm mb-1">
+                            Cleaning
+                          </p>
+                          <p className="font-body text-warm-gray text-sm">
+                            {product.cleaningGuide}
+                          </p>
+                        </div>
+                      )}
 
-                    {product.cleaningGuide && (
-                      <div>
-                        <p className="font-body text-charcoal text-sm mb-1">
-                          Cleaning
-                        </p>
-                        <p className="font-body text-warm-gray text-sm">
-                          {product.cleaningGuide}
-                        </p>
-                      </div>
-                    )}
-
-                    {safetyInfo.warnings && safetyInfo.warnings.length > 0 && (
-                      <div className="p-3 bg-sand/30">
-                        <p className="font-body text-charcoal text-sm mb-2">
-                          Important Notes
-                        </p>
-                        <ul className="list-disc list-inside space-y-1">
-                          {safetyInfo.warnings.map((warning, i) => (
-                            <li
-                              key={i}
-                              className="font-body text-warm-gray text-sm"
-                            >
-                              {warning}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                </AccordionItem>
-              )}
+                      {safetyInfo.warnings && safetyInfo.warnings.length > 0 && (
+                        <div className="p-3 bg-sand/30">
+                          <p className="font-body text-charcoal text-sm mb-2">
+                            Important Notes
+                          </p>
+                          <ul className="list-disc list-inside space-y-1">
+                            {safetyInfo.warnings.map((warning, i) => (
+                              <li
+                                key={i}
+                                className="font-body text-warm-gray text-sm"
+                              >
+                                {warning}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  </AccordionItem>
+                )}
 
               {/* Usage Guide */}
               {product.usageGuide && (
@@ -882,7 +883,12 @@ export default function ProductDetailClient({
 
         {/* Reviews Section */}
         <div className="mt-16 pt-16 border-t border-sand">
-          <ReviewsSection productId={product.id} productName={product.name} />
+          <ReviewsSection
+            productId={product.id}
+            productName={product.name}
+            initialReviews={initialReviews}
+            initialReviewSummary={initialReviewSummary}
+          />
         </div>
       </div>
 

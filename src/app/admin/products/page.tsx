@@ -1,5 +1,6 @@
 import { db } from '@/lib/db'
 import AdminProductsClient from './AdminProductsClient'
+import { serialise } from '@/lib/serialise'
 
 async function getProductsWithVariants() {
   const products = await db.product.findMany({
@@ -25,6 +26,6 @@ export default async function AdminProductsPage() {
     getProductsWithVariants(),
     getCategories(),
   ])
-  
-  return <AdminProductsClient initialProducts={products} categories={categories} />
+
+  return <AdminProductsClient initialProducts={serialise(products)} categories={serialise(categories)} />
 }

@@ -2,13 +2,13 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { 
-  User, 
-  Package, 
-  Heart, 
-  Star, 
-  Bell, 
-  Shield, 
+import {
+  User,
+  Package,
+  Heart,
+  Star,
+  Bell,
+  Shield,
   MonitorSmartphone,
   Users,
   Gift,
@@ -20,8 +20,11 @@ import {
   Sparkles,
   Activity,
   Flame,
-  Gamepad2
+  Gamepad2,
+  LogOut
 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useAuthStore } from '@/stores/auth'
 
 const accountLinks = [
   { label: 'Wellness Dashboard', href: '/account/wellness', icon: Flame, highlight: true },
@@ -46,9 +49,11 @@ const accountLinks = [
 
 export default function AccountNav() {
   const pathname = usePathname()
+  const router = useRouter()
+  const { logout, customer } = useAuthStore()
 
   return (
-    <div className="bg-warm-white border border-sand p-4">
+    <div className="flex flex-col h-full">
       <div className="flex items-center gap-3 mb-6 pb-4 border-b border-sand">
         <div className="w-10 h-10 bg-terracotta/10 flex items-center justify-center">
           <User className="w-5 h-5 text-terracotta" />
@@ -60,24 +65,23 @@ export default function AccountNav() {
           <p className="font-body text-warm-gray text-xs">Manage your preferences</p>
         </div>
       </div>
-      
+
       <nav className="space-y-1">
         {accountLinks.map((link) => {
           const isActive = pathname === link.href
           const Icon = link.icon
           const isHighlight = 'highlight' in link && link.highlight
-          
+
           return (
             <Link
               key={link.href}
               href={link.href}
-              className={`flex items-center gap-3 px-3 py-2 transition-colors ${
-                isActive
-                  ? 'bg-terracotta/10 text-terracotta'
-                  : isHighlight
-                    ? 'bg-terracotta text-cream hover:bg-terracotta/90'
-                    : 'text-warm-gray hover:bg-sand/50 hover:text-charcoal'
-              }`}
+              className={`flex items-center gap-3 px-3 py-2 transition-colors ${isActive
+                ? 'bg-terracotta/10 text-terracotta'
+                : isHighlight
+                  ? 'bg-terracotta text-cream hover:bg-terracotta/90'
+                  : 'text-warm-gray hover:bg-sand/50 hover:text-charcoal'
+                }`}
             >
               <Icon className="w-4 h-4" />
               <span className="font-body text-sm">{link.label}</span>
@@ -85,6 +89,38 @@ export default function AccountNav() {
           )
         })}
       </nav>
+
+      {/* Quick Links */}
+      <div className="pt-6 mt-6 border-t border-sand flex flex-col space-y-2 pb-6">
+        {customer?.isAdmin && (
+          <Link
+            href="/admin"
+            className="flex items-center gap-3 px-3 py-2 font-body text-sm text-charcoal bg-sand/30 hover:bg-sand/50 rounded-md transition-colors"
+          >
+            <Shield className="w-5 h-5 flex-shrink-0" />
+            Admin Dashboard
+          </Link>
+        )}
+
+        <Link
+          href="/shop"
+          className="flex items-center gap-3 px-3 py-2 font-body text-sm text-warm-gray hover:text-terracotta transition-colors"
+        >
+          <Package className="w-5 h-5 flex-shrink-0" />
+          Continue Shopping
+        </Link>
+
+        <button
+          onClick={() => {
+            logout()
+            router.push('/')
+          }}
+          className="flex items-center gap-3 px-3 py-2 font-body text-sm text-warm-gray hover:text-terracotta transition-colors text-left"
+        >
+          <LogOut className="w-5 h-5 flex-shrink-0" />
+          Log Out
+        </button>
+      </div>
     </div>
   )
 }
