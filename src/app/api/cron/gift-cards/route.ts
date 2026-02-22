@@ -9,8 +9,8 @@ export async function POST(request: NextRequest) {
   try {
     // Verify cron authorization
     const cronKey = request.headers.get('x-cron-key')
-    const expectedKey = process.env.CRON_SECRET_KEY
-    
+    // Simple authentication
+    const expectedKey = process.env.CRON_SECRET
     if (!expectedKey || cronKey !== expectedKey) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -19,9 +19,10 @@ export async function POST(request: NextRequest) {
     }
 
     const now = new Date()
-    
+
     // Find gift cards scheduled for delivery now or in the past that haven't been delivered
-    const scheduledGiftCards = await db.giftCard.findMany({ take: 50,
+    const scheduledGiftCards = await db.giftCard.findMany({
+      take: 50,
       where: {
         scheduledDelivery: {
           lte: now,
@@ -36,7 +37,7 @@ export async function POST(request: NextRequest) {
 
     console.log(`[CRON] Found ${scheduledGiftCards.length} gift cards to deliver`)
 
-    const results = []
+    const results: any[] = []
 
     for (const giftCard of scheduledGiftCards) {
       try {
@@ -44,7 +45,7 @@ export async function POST(request: NextRequest) {
         const result = await sendGiftCardEmail({
           recipientEmail: giftCard.recipientEmail,
           recipientName: giftCard.recipientName || 'Valued Customer',
-          senderName: giftCard.senderName || giftCard.purchaser 
+          senderName: giftCard.senderName || giftCard.purchaser
             ? `${giftCard.purchaser.firstName} ${giftCard.purchaser.lastName}`
             : 'A Friend',
           code: giftCard.code,
@@ -58,7 +59,7 @@ export async function POST(request: NextRequest) {
             where: { id: giftCard.id },
             data: { isDelivered: true },
           })
-          
+
           results.push({
             id: giftCard.id,
             code: giftCard.code,

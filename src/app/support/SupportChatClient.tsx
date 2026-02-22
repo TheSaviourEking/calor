@@ -19,7 +19,7 @@ export default function SupportChatClient() {
   const [isTyping, setIsTyping] = useState(false)
   const [isMinimized, setIsMinimized] = useState(false)
   const [showWelcome, setShowWelcome] = useState(true)
-  
+
   const socketRef = useRef<Socket | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -28,7 +28,8 @@ export default function SupportChatClient() {
   }, [])
 
   const initSocket = useCallback((existingSessionId?: string) => {
-    const socket = io('/?XTransformPort=3031', {
+    const url = process.env.NEXT_PUBLIC_SUPPORT_CHAT_URL || '/?XTransformPort=3031'
+    const socket = io(url, {
       path: '/socket.io',
       transports: ['websocket', 'polling'],
     })
@@ -37,7 +38,7 @@ export default function SupportChatClient() {
 
     socket.on('connect', () => {
       setIsConnected(true)
-      
+
       if (existingSessionId) {
         socket.emit('rejoin_session', { sessionId: existingSessionId })
       } else {
@@ -113,19 +114,19 @@ export default function SupportChatClient() {
     })
 
     setInputMessage('')
-    
+
     // Emit typing stopped
     socketRef.current.emit('typing', { sessionId, isTyping: false })
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputMessage(e.target.value)
-    
+
     // Emit typing indicator
     if (socketRef.current && sessionId) {
-      socketRef.current.emit('typing', { 
-        sessionId, 
-        isTyping: e.target.value.length > 0 
+      socketRef.current.emit('typing', {
+        sessionId,
+        isTyping: e.target.value.length > 0
       })
     }
   }
@@ -228,24 +229,22 @@ export default function SupportChatClient() {
                 className={`flex ${msg.isFromCustomer ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-[80%] p-4 ${
-                    msg.isFromCustomer
-                      ? 'bg-charcoal text-cream'
-                      : 'bg-sand/50 text-charcoal'
-                  }`}
+                  className={`max-w-[80%] p-4 ${msg.isFromCustomer
+                    ? 'bg-charcoal text-cream'
+                    : 'bg-sand/50 text-charcoal'
+                    }`}
                 >
                   <p className="font-body text-sm">{msg.message}</p>
                   <p
-                    className={`font-body text-xs mt-1 ${
-                      msg.isFromCustomer ? 'text-cream/60' : 'text-warm-gray'
-                    }`}
+                    className={`font-body text-xs mt-1 ${msg.isFromCustomer ? 'text-cream/60' : 'text-warm-gray'
+                      }`}
                   >
                     {formatTime(msg.timestamp)}
                   </p>
                 </div>
               </div>
             ))}
-            
+
             {isTyping && (
               <div className="flex justify-start">
                 <div className="bg-sand/50 p-4">
@@ -257,7 +256,7 @@ export default function SupportChatClient() {
                 </div>
               </div>
             )}
-            
+
             <div ref={messagesEndRef} />
           </div>
 

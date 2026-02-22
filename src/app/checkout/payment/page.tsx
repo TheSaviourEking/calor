@@ -23,7 +23,7 @@ import Link from "next/link";
 
 // Stripe public key (test mode)
 const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY || "pk_test_placeholder",
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "pk_test_placeholder",
 );
 
 const paymentMethods = [
@@ -390,18 +390,16 @@ export default function PaymentPage() {
                     key={method.id}
                     type="button"
                     onClick={() => handleMethodSelect(method.id)}
-                    className={`w-full flex items-center gap-4 p-4 border transition-colors ${
-                      selectedMethod === method.id
+                    className={`w-full flex items-center gap-4 p-4 border transition-colors ${selectedMethod === method.id
                         ? "border-terracotta bg-terracotta/5"
                         : "border-sand hover:border-terracotta/50"
-                    }`}
+                      }`}
                   >
                     <div
-                      className={`w-5 h-5 border flex items-center justify-center ${
-                        selectedMethod === method.id
+                      className={`w-5 h-5 border flex items-center justify-center ${selectedMethod === method.id
                           ? "border-terracotta"
                           : "border-sand"
-                      }`}
+                        }`}
                     >
                       {selectedMethod === method.id && (
                         <Check className="w-3 h-3 text-terracotta" />
