@@ -1,0 +1,83 @@
+version: "3.8"
+services:
+  postgres:
+    image: postgres:latest
+    container_name: calor-db
+    restart: always
+    environment:
+      POSTGRES_USER: calor
+      POSTGRES_PASSWORD: calor123
+      POSTGRES_DB: calor
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U calor"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://calor:calor123@postgres:5432/calor?schema=public
+      - NEXT_PUBLIC_SUPPORT_CHAT_URL=http://localhost:3031
+      - NEXT_PUBLIC_LIVE_STREAM_URL=http://localhost:3032
+    env_file:
+      - .env.local
+    depends_on:
+      postgres:
+        condition: service_healthy
+      support-chat:
+        condition: service_started
+      live-stream:
+        condition: service_started
+
+  support-chat:
+    build:
+      context: ./mini-services/support-chat
+      dockerfile: Dockerfile
+    ports:
+      - "3031:3031"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://calor:calor123@postgres:5432/calor?schema=public
+    env_file:
+      - .env.local
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  live-stream:
+    build:
+      context: .
+      dockerfile: mini-services/live-stream/Dockerfile
+    ports:
+      - "3032:3032"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://calor:calor123@postgres:5432/calor?schema=public
+    env_file:
+      - .env.local
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  livekit:
+    image: livekit/livekit-server:latest
+    command: --dev
+    ports:
+      - "7880:7880"
+      - "7881:7881"
+      - "7882:7882/udp"
+    environment:
+      - "LIVEKIT_KEYS=devkey: secret"
+
+volumes:
+  db_data:
