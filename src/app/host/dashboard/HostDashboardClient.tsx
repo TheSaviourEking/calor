@@ -35,11 +35,13 @@ interface Stream {
 }
 
 interface HostDashboardClientProps {
+  customerId: string
   initialHostProfile?: HostProfile | null
   initialStreams?: Stream[]
 }
 
 export default function HostDashboardClient({
+  customerId,
   initialHostProfile = null,
   initialStreams = []
 }: HostDashboardClientProps) {
@@ -59,12 +61,11 @@ export default function HostDashboardClient({
 
     setCreatingProfile(true)
     try {
-      // For demo, we'll use the first customer as the host
       const res = await fetch('/api/hosts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          customerId: 'demo', // In production, use actual logged-in user
+          customerId,
           displayName: newDisplayName,
         }),
       })
@@ -262,9 +263,9 @@ export default function HostDashboardClient({
                         {stream.title}
                       </h3>
                       <span className={`px-2 py-0.5 text-xs font-body ${stream.status === 'live' ? 'bg-terracotta text-cream' :
-                          stream.status === 'scheduled' ? 'bg-sand text-charcoal' :
-                            stream.status === 'ended' ? 'bg-warm-gray/20 text-warm-gray' :
-                              'bg-warm-gray/10 text-warm-gray'
+                        stream.status === 'scheduled' ? 'bg-sand text-charcoal' :
+                          stream.status === 'ended' ? 'bg-warm-gray/20 text-warm-gray' :
+                            'bg-warm-gray/10 text-warm-gray'
                         }`}>
                         {stream.status}
                       </span>

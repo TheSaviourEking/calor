@@ -10,8 +10,9 @@ export default async function HostDashboardPage() {
     redirect('/account')
   }
 
-  // Fetch host profile (matching /api/hosts/me logic which uses findFirst for demo)
-  const hostProfile = await db.streamHost.findFirst({
+  // Fetch host profile for the logged in user
+  const hostProfile = await db.streamHost.findUnique({
+    where: { customerId: session.customerId },
     include: {
       customer: {
         select: {
@@ -70,6 +71,7 @@ export default async function HostDashboardPage() {
 
   return (
     <HostDashboardClient
+      customerId={session.customerId}
       initialHostProfile={serialise(hostProfile)}
       initialStreams={serialise(streams)}
     />

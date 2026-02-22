@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { 
+import {
   ArrowLeft, Calendar, Clock, Video, Lock, Globe, Users,
   MessageCircle, HelpCircle, Plus, X, Loader2
 } from 'lucide-react'
@@ -26,7 +26,7 @@ export default function CreateStreamClient() {
   const [availableProducts, setAvailableProducts] = useState<Product[]>([])
   const [showProductPicker, setShowProductPicker] = useState(false)
   const [selectedProducts, setSelectedProducts] = useState<Product[]>([])
-  
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -81,11 +81,11 @@ export default function CreateStreamClient() {
     try {
       const scheduledStart = new Date(`${formData.scheduledDate}T${formData.scheduledTime}`)
 
-      // Get host ID (for demo, we'll use the first host)
-      const hostRes = await fetch('/api/hosts')
+      // Get the correct host profile for the logged in user
+      const hostRes = await fetch('/api/hosts/me')
       const hostData = await hostRes.json()
-      
-      if (!hostData.hosts || hostData.hosts.length === 0) {
+
+      if (!hostData.host) {
         toast.error('Please create a host profile first')
         router.push('/host/dashboard')
         return
@@ -95,7 +95,7 @@ export default function CreateStreamClient() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          hostId: hostData.hosts[0].id,
+          hostId: hostData.host.id,
           title: formData.title,
           description: formData.description,
           scheduledStart: scheduledStart.toISOString(),
@@ -146,7 +146,7 @@ export default function CreateStreamClient() {
               <ArrowLeft className="w-5 h-5 text-charcoal" />
             </Link>
             <div>
-              <h1 
+              <h1
                 className="font-display text-charcoal"
                 style={{ fontSize: 'clamp(1.5rem, 3vw, 2rem)', fontWeight: 300 }}
               >
@@ -310,14 +310,12 @@ export default function CreateStreamClient() {
                   <button
                     type="button"
                     onClick={() => setFormData({ ...formData, isPrivate: !formData.isPrivate })}
-                    className={`w-12 h-6 relative transition-colors ${
-                      formData.isPrivate ? 'bg-terracotta' : 'bg-sand'
-                    }`}
+                    className={`w-12 h-6 relative transition-colors ${formData.isPrivate ? 'bg-terracotta' : 'bg-sand'
+                      }`}
                   >
                     <span
-                      className={`absolute top-1 w-4 h-4 bg-cream transition-all ${
-                        formData.isPrivate ? 'left-7' : 'left-1'
-                      }`}
+                      className={`absolute top-1 w-4 h-4 bg-cream transition-all ${formData.isPrivate ? 'left-7' : 'left-1'
+                        }`}
                     />
                   </button>
                 </div>
@@ -341,14 +339,12 @@ export default function CreateStreamClient() {
                   <button
                     type="button"
                     onClick={() => setFormData({ ...formData, allowChat: !formData.allowChat })}
-                    className={`w-12 h-6 relative transition-colors ${
-                      formData.allowChat ? 'bg-terracotta' : 'bg-sand'
-                    }`}
+                    className={`w-12 h-6 relative transition-colors ${formData.allowChat ? 'bg-terracotta' : 'bg-sand'
+                      }`}
                   >
                     <span
-                      className={`absolute top-1 w-4 h-4 bg-cream transition-all ${
-                        formData.allowChat ? 'left-7' : 'left-1'
-                      }`}
+                      className={`absolute top-1 w-4 h-4 bg-cream transition-all ${formData.allowChat ? 'left-7' : 'left-1'
+                        }`}
                     />
                   </button>
                 </div>
@@ -362,14 +358,12 @@ export default function CreateStreamClient() {
                   <button
                     type="button"
                     onClick={() => setFormData({ ...formData, allowQuestions: !formData.allowQuestions })}
-                    className={`w-12 h-6 relative transition-colors ${
-                      formData.allowQuestions ? 'bg-terracotta' : 'bg-sand'
-                    }`}
+                    className={`w-12 h-6 relative transition-colors ${formData.allowQuestions ? 'bg-terracotta' : 'bg-sand'
+                      }`}
                   >
                     <span
-                      className={`absolute top-1 w-4 h-4 bg-cream transition-all ${
-                        formData.allowQuestions ? 'left-7' : 'left-1'
-                      }`}
+                      className={`absolute top-1 w-4 h-4 bg-cream transition-all ${formData.allowQuestions ? 'left-7' : 'left-1'
+                        }`}
                     />
                   </button>
                 </div>
@@ -429,7 +423,7 @@ export default function CreateStreamClient() {
                           key={product.id}
                           type="button"
                           onClick={() => handleAddProduct(product)}
-                          disabled={selectedProducts.find(p => p.id === product.id)}
+                          disabled={!!selectedProducts.find(p => p.id === product.id)}
                           className="p-3 border border-sand text-left hover:border-terracotta disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <p className="font-body text-charcoal text-sm truncate">{product.name}</p>
