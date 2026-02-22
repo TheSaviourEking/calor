@@ -1,106 +1,100 @@
 'use client'
 
 import Link from 'next/link'
-import { 
-  Sparkles, Gift, Heart, Bot, Crown, Shield, 
-  Radio, Gamepad2, Box, Zap, Users, ArrowRight
+import {
+  Sparkles, Gift, Heart, Crown, Shield,
+  Video, Focus, Link2
 } from 'lucide-react'
 
 const highlights = [
   {
-    icon: Bot,
-    title: 'AI Recommendations',
-    description: 'Personalized product suggestions powered by AI',
+    icon: Sparkles,
+    title: 'Personalized Curation',
+    description: 'Bespoke product suggestions tailored to your journey.',
     link: '/shop',
-    color: 'bg-purple-500/10'
   },
   {
-    icon: Radio,
-    title: 'Live Shopping',
-    description: 'Watch live demos and get exclusive deals',
+    icon: Video,
+    title: 'Live Experiences',
+    description: 'Immersive demonstrations and exclusive broadcasts.',
     link: '/live',
-    color: 'bg-red-500/10'
   },
   {
-    icon: Gamepad2,
+    icon: Heart,
     title: 'Wellness Platform',
-    description: 'Track habits, earn rewards, connect with partner',
+    description: 'Track habits, earn rewards, and connect deeper.',
     link: '/account/wellness',
-    color: 'bg-green-500/10'
   },
   {
     icon: Crown,
     title: 'VIP Rewards',
-    description: '4 tiers of exclusive benefits and points',
+    description: 'Four tiers of exclusive benefits and elevated service.',
     link: '/account/vip',
-    color: 'bg-yellow-500/10'
   },
   {
     icon: Gift,
     title: 'Gift Registry',
-    description: 'Create registries for any occasion',
+    description: 'Curate wishlists for any occasion or celebration.',
     link: '/registry',
-    color: 'bg-pink-500/10'
   },
   {
-    icon: Box,
-    title: 'AR Try-On',
-    description: 'Experience products with virtual try-on',
+    icon: Focus,
+    title: 'Virtual Try-On',
+    description: 'Experience products through augmented reality.',
     link: '/experience',
-    color: 'bg-blue-500/10'
   },
   {
     icon: Shield,
-    title: 'Discreet Delivery',
-    description: 'Plain packaging, total privacy guaranteed',
+    title: 'Absolute Privacy',
+    description: 'Plain packaging and discreet billing, guaranteed.',
     link: '/account/packaging',
-    color: 'bg-gray-500/10'
   },
   {
-    icon: Users,
+    icon: Link2,
     title: 'Couples Accounts',
-    description: 'Link with partner for shared experience',
+    description: 'Link profiles for a shared intimate experience.',
     link: '/account/couple',
-    color: 'bg-rose-500/10'
   }
 ]
 
 export default function FeaturesShowcase() {
   return (
-    <section className="py-20 bg-cream">
+    <section className="py-20 lg:py-32 bg-cream">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         {/* Header */}
-        <div className="text-center mb-12">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <Sparkles className="w-5 h-5 text-terracotta" />
-            <span className="font-body text-terracotta text-sm uppercase tracking-wider">Platform Features</span>
+        <div className="text-center mb-12 lg:mb-16">
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <span className="w-10 h-px bg-terracotta/40" />
+            <span className="eyebrow">Platform Features</span>
+            <span className="w-10 h-px bg-terracotta/40" />
           </div>
-          <h2 
+          <h2
             className="font-display text-charcoal mb-4"
-            style={{ fontSize: 'clamp(1.75rem, 4vw, 2.5rem)', fontWeight: 300 }}
+            style={{ fontSize: 'clamp(2rem, 3.5vw, 3rem)', fontWeight: 300 }}
           >
-            More Than a Store
+            More than a store
           </h2>
           <p className="font-body text-warm-gray text-lg max-w-2xl mx-auto">
-            CALŌR is a complete wellness platform. Discover features designed to 
-            enhance every aspect of your journey.
+            CALŌR is a complete wellness platform. Discover features designed to
+            enhance every aspect of your intimate life.
           </p>
         </div>
 
         {/* Feature Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 lg:gap-6 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
           {highlights.map((feature) => {
             const Icon = feature.icon
             return (
               <Link
                 key={feature.title}
                 href={feature.link}
-                className="group bg-warm-white border border-sand p-6 hover:border-terracotta/50 transition-all hover:shadow-md"
+                className="group block bg-warm-white p-8 border border-sand hover:border-terracotta transition-all duration-300 hover:-translate-y-1"
               >
-                <div className={`w-12 h-12 flex items-center justify-center ${feature.color} mb-4 group-hover:scale-110 transition-transform`}>
-                  <Icon className="w-6 h-6 text-charcoal" />
-                </div>
-                <h3 className="font-display text-charcoal text-base mb-1 group-hover:text-terracotta transition-colors" style={{ fontWeight: 400 }}>
+                <Icon className="w-8 h-8 text-terracotta/60 mb-6 group-hover:text-terracotta transition-colors" />
+                <h3
+                  className="font-display text-charcoal text-lg mb-2"
+                  style={{ fontWeight: 400 }}
+                >
                   {feature.title}
                 </h3>
                 <p className="font-body text-warm-gray text-sm leading-relaxed">
@@ -115,10 +109,9 @@ export default function FeaturesShowcase() {
         <div className="text-center">
           <Link
             href="/features"
-            className="inline-flex items-center gap-2 px-8 py-3 bg-charcoal text-cream font-body text-sm uppercase tracking-wider hover:bg-charcoal/90 transition-colors group"
+            className="inline-block border border-charcoal text-charcoal px-8 py-4 font-body text-sm tracking-wider uppercase transition-all duration-300 hover:bg-charcoal hover:text-cream"
           >
             Explore All Features
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
       </div>

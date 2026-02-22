@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import ClientWrapper from "@/components/layout/ClientWrapper";
 import CategoryClient from "./CategoryClient";
+import Link from "next/link";
 
 interface PageProps {
   params: Promise<{ category: string }>;

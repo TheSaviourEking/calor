@@ -1,9 +1,7 @@
 import { createServer } from 'http'
 import { Server } from 'socket.io'
-import cors from 'cors'
-import { PrismaClient } from '@prisma/client'
+import { db } from '@/lib/db'
 
-const db = new PrismaClient()
 const PORT = 3032
 
 // In-memory state for active streams
@@ -13,7 +11,7 @@ const viewerSessions = new Map<string, { streamId: string; customerId?: string; 
 const httpServer = createServer()
 const io = new Server(httpServer, {
   cors: {
-    origin: ['http://localhost:3000'],
+    origin: ['http://localhost:3000', 'https://calorco.com'],
     methods: ['GET', 'POST'],
     credentials: true,
   },
@@ -83,7 +81,7 @@ io.on('connection', (socket) => {
 
       // Update viewer count
       const viewerCount = streamViewers.get(streamId)?.size || 0
-      
+
       // Update peak viewers if needed
       if (viewerCount > stream.peakViewers) {
         await db.liveStream.update({
@@ -246,8 +244,8 @@ io.on('connection', (socket) => {
 
       const streamProduct = await db.streamProduct.update({
         where: { streamId_productId: { streamId, productId } },
-        data: { 
-          isPinned: true, 
+        data: {
+          isPinned: true,
           featuredAt: new Date(),
           hostNotes,
         },
@@ -311,7 +309,7 @@ io.on('connection', (socket) => {
       // Increment claim count atomically
       const updatedOffer = await db.streamOffer.update({
         where: { id: offerId },
-        data: { 
+        data: {
           claimedCount: { increment: 1 },
           claimCount: { increment: 1 },
         },

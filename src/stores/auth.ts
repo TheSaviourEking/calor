@@ -30,7 +30,8 @@ export const useAuthStore = create<AuthState>()(
       setCustomer: (customer) => set({
         customer,
         isAuthenticated: !!customer,
-        isLoading: false
+        isLoading: false,
+        hasFetched: true
       }),
 
       logout: () => {
