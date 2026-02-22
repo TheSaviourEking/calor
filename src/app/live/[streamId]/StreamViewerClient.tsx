@@ -5,8 +5,8 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { io, Socket } from 'socket.io-client'
-import { 
-  Users, Heart, Send, ChevronLeft, Share2, Bell, 
+import {
+  Users, Heart, Send, ChevronLeft, Share2, Bell,
   ShoppingCart, Plus, Minus, Check, X, Play, Clock,
   MessageCircle, Sparkles, Zap
 } from 'lucide-react'
@@ -85,7 +85,7 @@ interface Stream {
 export default function StreamViewerClient() {
   const params = useParams()
   const streamId = params.streamId as string
-  
+
   const [stream, setStream] = useState<Stream | null>(null)
   const [products, setProducts] = useState<StreamProduct[]>([])
   const [offers, setOffers] = useState<Offer[]>([])
@@ -93,26 +93,26 @@ export default function StreamViewerClient() {
   const [viewerCount, setViewerCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  
+
   // Chat state
   const [chatInput, setChatInput] = useState('')
   const [guestName, setGuestName] = useState('')
   const [showNameInput, setShowNameInput] = useState(true)
-  
+
   // UI state
   const [activeOffer, setActiveOffer] = useState<Offer | null>(null)
   const [showProducts, setShowProducts] = useState(true)
   const [pinnedMessage, setPinnedMessage] = useState<ChatMessage | null>(null)
-  
+
   const socketRef = useRef<Socket | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const chatContainerRef = useRef<HTMLDivElement>(null)
-  
+
   const { addItem, openCart } = useCartStore()
   const { formatPrice } = useLocaleStore()
 
   // Generate guest ID
-  const guestId = typeof window !== 'undefined' 
+  const guestId = typeof window !== 'undefined'
     ? localStorage.getItem('stream_guest_id') || `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
     : ''
 
@@ -153,7 +153,8 @@ export default function StreamViewerClient() {
     if (!stream || stream.status !== 'live') return
 
     // Connect to WebSocket
-    socketRef.current = io('/?XTransformPort=3032', {
+    const url = process.env.NEXT_PUBLIC_LIVE_STREAM_URL || '/?XTransformPort=3032'
+    socketRef.current = io(url, {
       transports: ['websocket'],
     })
 
@@ -180,7 +181,7 @@ export default function StreamViewerClient() {
 
     // Product featured
     socket.on('product_featured', (data: { product: StreamProduct }) => {
-      setProducts(prev => 
+      setProducts(prev =>
         prev.map(p => ({ ...p, isPinned: p.productId === data.product.productId }))
       )
       toast.info(`Featured: ${data.product.product.name}`)
@@ -198,7 +199,7 @@ export default function StreamViewerClient() {
 
     // Message pinned
     socket.on('message_pinned', (data: { messageId: string }) => {
-      setMessages(prev => 
+      setMessages(prev =>
         prev.map(m => ({ ...m, isPinned: m.id === data.messageId }))
       )
       const pinned = messages.find(m => m.id === data.messageId)
@@ -207,7 +208,7 @@ export default function StreamViewerClient() {
 
     // Reactions
     socket.on('reaction_added', (data: { messageId: string; reactionType: string; count: number }) => {
-      setMessages(prev => 
+      setMessages(prev =>
         prev.map(m => {
           if (m.id === data.messageId) {
             const reactions = m.reactionCounts ? JSON.parse(m.reactionCounts) : {}
@@ -290,9 +291,9 @@ export default function StreamViewerClient() {
     const end = new Date(endsAt)
     const now = new Date()
     const diff = end.getTime() - now.getTime()
-    
+
     if (diff <= 0) return 'Ended'
-    
+
     const minutes = Math.floor(diff / 60000)
     const seconds = Math.floor((diff % 60000) / 1000)
     return `${minutes}:${seconds.toString().padStart(2, '0')}`
@@ -408,17 +409,15 @@ export default function StreamViewerClient() {
                 <div className="flex border-b border-warm-gray/20">
                   <button
                     onClick={() => setShowProducts(true)}
-                    className={`flex-1 py-3 font-body text-sm uppercase tracking-wider ${
-                      showProducts ? 'text-terracotta border-b-2 border-terracotta' : 'text-warm-gray'
-                    }`}
+                    className={`flex-1 py-3 font-body text-sm uppercase tracking-wider ${showProducts ? 'text-terracotta border-b-2 border-terracotta' : 'text-warm-gray'
+                      }`}
                   >
                     Products ({products.length})
                   </button>
                   <button
                     onClick={() => setShowProducts(false)}
-                    className={`flex-1 py-3 font-body text-sm uppercase tracking-wider ${
-                      !showProducts ? 'text-terracotta border-b-2 border-terracotta' : 'text-warm-gray'
-                    }`}
+                    className={`flex-1 py-3 font-body text-sm uppercase tracking-wider ${!showProducts ? 'text-terracotta border-b-2 border-terracotta' : 'text-warm-gray'
+                      }`}
                   >
                     Offers ({offers.length})
                   </button>
@@ -429,8 +428,8 @@ export default function StreamViewerClient() {
                   {showProducts ? (
                     <div className="grid grid-cols-2 gap-4">
                       {products.map((sp) => (
-                        <div 
-                          key={sp.id} 
+                        <div
+                          key={sp.id}
                           className={`bg-warm-gray/10 p-3 ${sp.isPinned ? 'ring-2 ring-terracotta' : ''}`}
                         >
                           <Link href={`/product/${sp.product.slug}`} className="block mb-2">
@@ -473,7 +472,7 @@ export default function StreamViewerClient() {
                   ) : (
                     <div className="space-y-4">
                       {offers.map((offer) => (
-                        <div 
+                        <div
                           key={offer.id}
                           className="bg-warm-gray/10 p-4"
                         >
@@ -589,19 +588,19 @@ export default function StreamViewerClient() {
             )}
 
             {/* Messages */}
-            <div 
+            <div
               ref={chatContainerRef}
               className="flex-1 overflow-y-auto p-4 space-y-3"
             >
               {messages.map((msg) => (
-                <div 
+                <div
                   key={msg.id}
                   className={`${msg.isHighlighted ? 'bg-terracotta/10 p-2 -mx-2' : ''}`}
                 >
                   <div className="flex items-start gap-2">
                     <div className="flex-1">
                       <span className="font-body text-warm-gray text-xs">
-                        {msg.customer 
+                        {msg.customer
                           ? `${msg.customer.firstName} ${msg.customer.lastName}`
                           : msg.guestName || 'Guest'
                         }
@@ -633,7 +632,7 @@ export default function StreamViewerClient() {
             {/* Chat Input */}
             {stream.allowChat && !showNameInput && (
               <div className="p-4 border-t border-warm-gray/20">
-                <form 
+                <form
                   onSubmit={(e) => { e.preventDefault(); sendMessage(); }}
                   className="flex gap-2"
                 >

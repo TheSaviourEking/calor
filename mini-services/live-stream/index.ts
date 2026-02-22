@@ -1,6 +1,8 @@
 import { createServer } from 'http'
 import { Server } from 'socket.io'
-import { db } from '@/lib/db'
+import { PrismaClient } from '@prisma/client'
+
+const db = new PrismaClient()
 
 const PORT = 3032
 

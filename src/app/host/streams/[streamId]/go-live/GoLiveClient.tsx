@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { io, Socket } from 'socket.io-client'
-import { 
+import {
   ArrowLeft, Video, VideoOff, Users, MessageCircle, ShoppingCart,
   Plus, X, Clock, Zap, Eye, Send, Pin, Check, Loader2, Copy
 } from 'lucide-react'
@@ -59,7 +59,7 @@ export default function GoLiveClient() {
   const params = useParams()
   const router = useRouter()
   const streamId = params.streamId as string
-  
+
   const [stream, setStream] = useState<Stream | null>(null)
   const [products, setProducts] = useState<StreamProduct[]>([])
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -67,7 +67,7 @@ export default function GoLiveClient() {
   const [loading, setLoading] = useState(true)
   const [isLive, setIsLive] = useState(false)
   const [ending, setEnding] = useState(false)
-  
+
   // Offer form
   const [showOfferForm, setShowOfferForm] = useState(false)
   const [offerForm, setOfferForm] = useState({
@@ -80,7 +80,7 @@ export default function GoLiveClient() {
     productId: '',
   })
   const [creatingOffer, setCreatingOffer] = useState(false)
-  
+
   const socketRef = useRef<Socket | null>(null)
 
   // Fetch stream data
@@ -112,7 +112,8 @@ export default function GoLiveClient() {
   useEffect(() => {
     if (!isLive || !stream) return
 
-    socketRef.current = io('/?XTransformPort=3032', {
+    const url = process.env.NEXT_PUBLIC_LIVE_STREAM_URL || '/?XTransformPort=3032'
+    socketRef.current = io(url, {
       transports: ['websocket'],
     })
 
@@ -142,7 +143,7 @@ export default function GoLiveClient() {
   const goLive = async () => {
     try {
       const res = await fetch(`/api/streams/${streamId}/start`, { method: 'POST' })
-      
+
       if (res.ok) {
         setIsLive(true)
         toast.success('You are now live!')
@@ -162,7 +163,7 @@ export default function GoLiveClient() {
     setEnding(true)
     try {
       const res = await fetch(`/api/streams/${streamId}/end`, { method: 'POST' })
-      
+
       if (res.ok) {
         setIsLive(false)
         toast.success('Stream ended')
@@ -297,9 +298,8 @@ export default function GoLiveClient() {
                 {stream.title}
               </h1>
               <div className="flex items-center gap-3">
-                <span className={`flex items-center gap-1 px-2 py-0.5 text-xs font-body ${
-                  isLive ? 'bg-terracotta text-cream' : 'bg-warm-gray/20 text-warm-gray'
-                }`}>
+                <span className={`flex items-center gap-1 px-2 py-0.5 text-xs font-body ${isLive ? 'bg-terracotta text-cream' : 'bg-warm-gray/20 text-warm-gray'
+                  }`}>
                   {isLive && <span className="w-1.5 h-1.5 bg-cream animate-pulse" />}
                   {isLive ? 'LIVE' : 'OFFLINE'}
                 </span>
@@ -390,11 +390,10 @@ export default function GoLiveClient() {
               </div>
               <div className="flex gap-3 overflow-x-auto pb-2">
                 {products.map((sp) => (
-                  <div 
+                  <div
                     key={sp.id}
-                    className={`flex-shrink-0 w-40 bg-warm-gray/10 p-2 ${
-                      sp.isPinned ? 'ring-2 ring-terracotta' : ''
-                    }`}
+                    className={`flex-shrink-0 w-40 bg-warm-gray/10 p-2 ${sp.isPinned ? 'ring-2 ring-terracotta' : ''
+                      }`}
                   >
                     <div className="aspect-square bg-sand/20 mb-2 relative">
                       {sp.product.images[0] && (
@@ -440,14 +439,14 @@ export default function GoLiveClient() {
                 </div>
               ) : (
                 messages.map((msg) => (
-                  <div 
+                  <div
                     key={msg.id}
                     className={`p-2 ${msg.isHighlighted ? 'bg-terracotta/10' : ''}`}
                   >
                     <div className="flex items-start justify-between">
                       <div>
                         <span className="font-body text-warm-gray text-xs">
-                          {msg.customer 
+                          {msg.customer
                             ? `${msg.customer.firstName} ${msg.customer.lastName}`
                             : msg.guestName || 'Guest'
                           }
