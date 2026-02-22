@@ -1,0 +1,217 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  /* CALŌR Brand Colors */
+  --color-warm-white: #FAF8F5;
+  --color-cream: #F7F2EC;
+  --color-sand: #E8DDD0;
+  --color-blush: #F0E0D6;
+  --color-terracotta: #C4785A;
+  --color-terracotta-light: #D4896B;
+  --color-ember: #A0522D;
+  --color-charcoal: #2C2420;
+  --color-mid-gray: #6B5D56;
+  --color-warm-gray: #8B7D74;
+  --color-gold: #C9A96E;
+  
+  /* System colors mapped to brand */
+  --color-background: var(--warm-white);
+  --color-foreground: var(--charcoal);
+  --color-card: var(--cream);
+  --color-card-foreground: var(--charcoal);
+  --color-popover: var(--warm-white);
+  --color-popover-foreground: var(--charcoal);
+  --color-primary: var(--charcoal);
+  --color-primary-foreground: var(--cream);
+  --color-secondary: var(--cream);
+  --color-secondary-foreground: var(--charcoal);
+  --color-muted: var(--sand);
+  --color-muted-foreground: var(--mid-gray);
+  --color-accent: var(--terracotta);
+  --color-accent-foreground: var(--warm-white);
+  --color-destructive: var(--ember);
+  --color-border: var(--sand);
+  --color-input: var(--sand);
+  --color-ring: var(--terracotta);
+  
+  /* Fonts */
+  --font-display: var(--font-cormorant);
+  --font-body: var(--font-dm-sans);
+  --font-sans: var(--font-dm-sans);
+  
+  /* Border radius - sharp is elegant */
+  --radius-none: 0;
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+  --radius-xl: 0;
+  --radius: 0;
+  
+  /* Animation easing */
+  --ease-apple: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+:root {
+  --warm-white: #FAF8F5;
+  --cream: #F7F2EC;
+  --sand: #E8DDD0;
+  --blush: #F0E0D6;
+  --terracotta: #C4785A;
+  --terracotta-light: #D4896B;
+  --ember: #A0522D;
+  --charcoal: #2C2420;
+  --mid-gray: #6B5D56;
+  --warm-gray: #8B7D74;
+  --gold: #C9A96E;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    @apply bg-warm-white text-charcoal antialiased;
+    font-family: var(--font-dm-sans), sans-serif;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-cormorant), serif;
+    font-weight: 300;
+  }
+}
+
+/* Typography utilities */
+.font-display {
+  font-family: var(--font-cormorant), serif;
+}
+
+.font-body {
+  font-family: var(--font-dm-sans), sans-serif;
+}
+
+/* Eyebrow text style */
+.eyebrow {
+  font-family: var(--font-dm-sans), sans-serif;
+  font-weight: 400;
+  font-size: 0.7rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--terracotta);
+}
+
+/* Marquee animation */
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 25s linear infinite;
+}
+
+/* Spin animation for rotating elements */
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 20s linear infinite;
+}
+
+/* Scroll indicator pulse */
+@keyframes scroll-pulse {
+  0% {
+    transform: scaleY(0);
+    transform-origin: top;
+    opacity: 1;
+  }
+  50% {
+    transform: scaleY(1);
+    transform-origin: top;
+    opacity: 1;
+  }
+  51% {
+    transform: scaleY(1);
+    transform-origin: bottom;
+    opacity: 1;
+  }
+  100% {
+    transform: scaleY(0);
+    transform-origin: bottom;
+    opacity: 0;
+  }
+}
+
+.animate-scroll-pulse {
+  animation: scroll-pulse 2s ease-in-out infinite;
+}
+
+/* Shimmer loading effect */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, #E8DDD0 25%, #F0E8E0 50%, #E8DDD0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--cream);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--sand);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--mid-gray);
+}
+
+/* Selection */
+::selection {
+  background: var(--terracotta);
+  color: var(--warm-white);
+}

@@ -1,0 +1,666 @@
+=== 1.1 Server Component Violations ===
+--- Browser APIs in Server Components ---
+src/app/product/[slug]/ProductDetailClient.tsx:227:      window.location.href = "/account";
+src/app/product/[slug]/ProductDetailClient.tsx:255:      window.location.href = "/account";
+src/app/checkout/payment/page.tsx:109:        return_url: `${window.location.origin}/checkout/confirmation?order_id=${orderId}`,
+src/app/checkout/payment/page.tsx:166:    const stored = sessionStorage.getItem("calor_checkout");
+src/app/checkout/payment/page.tsx:326:      window.location.href = cryptoUrl;
+src/app/checkout/payment/page.tsx:333:    sessionStorage.removeItem("calor_checkout");
+src/app/checkout/CheckoutClient.tsx:239:    sessionStorage.setItem("calor_checkout", JSON.stringify(checkoutData));
+src/stores/age-gate.ts:17:      localStorage.setItem('calor_age_verified', 'true')
+src/components/ui/sidebar.tsx:86:      document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
+src/components/ui/sidebar.tsx:108:    window.addEventListener("keydown", handleKeyDown)
+src/components/ui/sidebar.tsx:109:    return () => window.removeEventListener("keydown", handleKeyDown)
+src/hooks/use-mobile.ts:9:    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
+src/hooks/use-mobile.ts:11:      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
+src/hooks/use-mobile.ts:14:    setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
+--- React hooks in Server Components ---
+src/app/product/[slug]/ProductDetailClient.tsx:3:import { useState, useEffect } from "react";
+src/app/product/[slug]/ProductDetailClient.tsx:125:  const [quantity, setQuantity] = useState(1);
+src/app/product/[slug]/ProductDetailClient.tsx:126:  const [selectedVariant, setSelectedVariant] = useState(product.variants[0]);
+src/app/product/[slug]/ProductDetailClient.tsx:127:  const [activeAccordion, setActiveAccordion] = useState<string | null>(
+src/app/product/[slug]/ProductDetailClient.tsx:130:  const [isLoggedIn, setIsLoggedIn] = useState(false);
+src/app/product/[slug]/ProductDetailClient.tsx:131:  const [hasStockAlert, setHasStockAlert] = useState(false);
+src/app/product/[slug]/ProductDetailClient.tsx:132:  const [hasPriceAlert, setHasPriceAlert] = useState(false);
+src/app/product/[slug]/ProductDetailClient.tsx:133:  const [targetPrice, setTargetPrice] = useState("");
+src/app/product/[slug]/ProductDetailClient.tsx:134:  const [selectedVideo, setSelectedVideo] = useState<ProductVideo | null>(null);
+src/app/product/[slug]/ProductDetailClient.tsx:135:  const [activeMediaIndex, setActiveMediaIndex] = useState(0);
+src/app/product/[slug]/ProductDetailClient.tsx:167:  useEffect(() => {
+src/app/checkout/payment/page.tsx:3:import { useState, useEffect, useCallback } from "react";
+src/app/checkout/payment/page.tsx:95:  const [isProcessing, setIsProcessing] = useState(false);
+src/app/checkout/payment/page.tsx:96:  const [error, setError] = useState<string | null>(null);
+src/app/checkout/payment/page.tsx:150:  const [selectedMethod, setSelectedMethod] = useState("card");
+src/app/checkout/payment/page.tsx:151:  const [isProcessing, setIsProcessing] = useState(false);
+src/app/checkout/payment/page.tsx:152:  const [checkoutData, setCheckoutData] = useState<CheckoutData | null>(null);
+src/app/checkout/payment/page.tsx:153:  const [orderId, setOrderId] = useState<string | null>(null);
+src/app/checkout/payment/page.tsx:154:  const [clientSecret, setClientSecret] = useState<string | null>(null);
+src/app/checkout/payment/page.tsx:155:  const [bankDetails, setBankDetails] = useState<BankDetails | null>(null);
+src/app/checkout/payment/page.tsx:156:  const [cryptoUrl, setCryptoUrl] = useState<string | null>(null);
+src/app/checkout/payment/page.tsx:157:  const [error, setError] = useState<string | null>(null);
+src/app/checkout/payment/page.tsx:165:  useEffect(() => {
+src/app/checkout/payment/page.tsx:179:  const createOrder = useCallback(
+src/app/checkout/payment/page.tsx:231:  const initializePayment = useCallback(
+src/app/checkout/payment/page.tsx:324:  useEffect(() => {
+src/app/checkout/CheckoutClient.tsx:3:import { useState, useEffect } from "react";
+src/app/checkout/CheckoutClient.tsx:59:  const [formData, setFormData] = useState({
+src/app/checkout/CheckoutClient.tsx:73:  const [isGift, setIsGift] = useState(false);
+src/app/checkout/CheckoutClient.tsx:74:  const [giftMessage, setGiftMessage] = useState("");
+src/app/checkout/CheckoutClient.tsx:77:  const [selectedWrapping, setSelectedWrapping] = useState<string | null>(
+src/app/checkout/CheckoutClient.tsx:80:  const [isAnonymousGift, setIsAnonymousGift] = useState(false);
+src/app/checkout/CheckoutClient.tsx:81:  const [recipientEmail, setRecipientEmail] = useState("");
+src/app/checkout/CheckoutClient.tsx:82:  const [senderName, setSenderName] = useState("");
+src/app/checkout/CheckoutClient.tsx:85:  const [promoInput, setPromoInput] = useState("");
+src/app/checkout/CheckoutClient.tsx:86:  const [promoLoading, setPromoLoading] = useState(false);
+src/app/checkout/CheckoutClient.tsx:89:  const [giftCardInput, setGiftCardInput] = useState("");
+src/app/checkout/CheckoutClient.tsx:90:  const [giftCardLoading, setGiftCardLoading] = useState(false);
+src/app/checkout/CheckoutClient.tsx:93:  const [pointsLoading, setPointsLoading] = useState(false);
+src/app/checkout/CheckoutClient.tsx:94:  const [pointsToUse, setPointsToUse] = useState<number>(0);
+src/app/checkout/CheckoutClient.tsx:97:  useEffect(() => {
+src/app/account/security/page.tsx:3:import { useState } from "react";
+src/app/account/security/page.tsx:8:  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+src/app/account/security/page.tsx:9:  const [loginAlerts, setLoginAlerts] = useState(true);
+src/components/ui/slider.tsx:16:  const _values = React.useMemo(
+src/components/ui/input-otp.tsx:46:  const inputOTPContext = React.useContext(OTPInputContext)
+src/components/ui/chart.tsx:28:  const context = React.useContext(ChartContext)
+src/components/ui/chart.tsx:131:  const tooltipLabel = React.useMemo(() => {
+src/components/ui/calendar.tsx:183:  const ref = React.useRef<HTMLButtonElement>(null)
+src/components/ui/calendar.tsx:184:  React.useEffect(() => {
+src/components/ui/toggle-group.tsx:51:  const context = React.useContext(ToggleGroupContext)
+src/components/ui/sidebar.tsx:48:  const context = React.useContext(SidebarContext)
+src/components/ui/sidebar.tsx:70:  const [openMobile, setOpenMobile] = React.useState(false)
+src/components/ui/sidebar.tsx:74:  const [_open, _setOpen] = React.useState(defaultOpen)
+src/components/ui/sidebar.tsx:76:  const setOpen = React.useCallback(
+src/components/ui/sidebar.tsx:92:  const toggleSidebar = React.useCallback(() => {
+src/components/ui/sidebar.tsx:97:  React.useEffect(() => {
+src/components/ui/sidebar.tsx:116:  const contextValue = React.useMemo<SidebarContextProps>(
+src/components/ui/sidebar.tsx:610:  const width = React.useMemo(() => {
+src/components/ui/form.tsx:46:  const fieldContext = React.useContext(FormFieldContext)
+src/components/ui/form.tsx:47:  const itemContext = React.useContext(FormItemContext)
+src/components/ui/carousel.tsx:36:  const context = React.useContext(CarouselContext)
+src/components/ui/carousel.tsx:61:  const [canScrollPrev, setCanScrollPrev] = React.useState(false)
+src/components/ui/carousel.tsx:62:  const [canScrollNext, setCanScrollNext] = React.useState(false)
+src/components/ui/carousel.tsx:64:  const onSelect = React.useCallback((api: CarouselApi) => {
+src/components/ui/carousel.tsx:70:  const scrollPrev = React.useCallback(() => {
+src/components/ui/carousel.tsx:74:  const scrollNext = React.useCallback(() => {
+src/components/ui/carousel.tsx:78:  const handleKeyDown = React.useCallback(
+src/components/ui/carousel.tsx:91:  React.useEffect(() => {
+src/components/ui/carousel.tsx:96:  React.useEffect(() => {
+--- Event handlers in Server Components ---
+=== 1.1 Client Component Violations ===
+--- Prisma/db in Client Components ---
+--- Server-only imports in Client Components ---
+=== 1.2 Potential Client-Side Fetch ===
+src/app/pitch/page.tsx
+src/app/host/streams/[streamId]/go-live/GoLiveClient.tsx
+src/app/host/dashboard/HostDashboardClient.tsx
+src/app/admin/email-test/EmailTestClient.tsx
+src/app/admin/support/[id]/AdminTicketDetailClient.tsx
+src/app/admin/wellness-test/page.tsx
+src/app/admin/campaigns/CampaignsClient.tsx
+src/app/admin/campaigns/[id]/CampaignDetailClient.tsx
+src/app/admin/segments/SegmentsClient.tsx
+src/app/admin/segments/[id]/SegmentDetailClient.tsx
+src/app/admin/analytics/AnalyticsClient.tsx
+src/app/quiz/QuizClient.tsx
+src/app/product/[slug]/ProductDetailClient.tsx
+src/app/checkout/payment/page.tsx
+src/app/checkout/CheckoutClient.tsx
+src/app/subscriptions/SubscriptionsClient.tsx
+src/app/consultations/ConsultationsClient.tsx
+src/app/live/[streamId]/StreamViewerClient.tsx
+src/app/live/LiveHubClient.tsx
+src/app/registry/RegistryDashboard.tsx
+src/app/registry/[slug]/PublicRegistryClient.tsx
+src/app/registry/[slug]/manage/ManageRegistryClient.tsx
+src/app/reset-password/page.tsx
+src/app/returns/ReturnsClient.tsx
+src/app/account/packaging/PackagingClient.tsx
+src/app/account/vip/VIPClient.tsx
+src/app/account/toys/SmartToysClient.tsx
+src/app/account/wellness/WellnessClient.tsx
+src/app/account/referrals/ReferralsClient.tsx
+src/app/account/rewards/RewardsClient.tsx
+src/app/account/loyalty/LoyaltyClient.tsx
+src/app/account/alerts/AlertsClient.tsx
+src/app/account/support/SupportClient.tsx
+src/app/account/support/[id]/TicketDetailClient.tsx
+src/app/account/wishlist/page.tsx
+src/app/account/couple/CoupleClient.tsx
+src/components/experience/SensoryPreview.tsx
+src/components/experience/SizeVisualizer.tsx
+src/components/experience/ExperienceGallery.tsx
+src/components/experience/ProductConfigurator.tsx
+src/components/experience/ProductComparison.tsx
+src/components/chatbot/ChatbotWidget.tsx
+src/components/layout/SearchModal.tsx
+src/components/product/StockIndicator.tsx
+src/components/product/ProductAvailabilityCalendar.tsx
+src/components/checkout/AddressAutocomplete.tsx
+src/components/search/EnhancedSearchBar.tsx
+src/components/search/SearchPage.tsx
+src/components/reviews/ReviewsSection.tsx
+src/components/social-proof/SocialProof.tsx
+--- API routes called by fetch ---
+src/app/pitch/page.tsx:285:      const response = await fetch('/api/pitch-deck')
+src/app/gift-cards/GiftCardsClient.tsx:55:      const response = await fetch('/api/gift-cards', {
+src/app/host/streams/[streamId]/go-live/GoLiveClient.tsx:90:        const res = await fetch(`/api/streams/${streamId}`)
+src/app/host/streams/[streamId]/go-live/GoLiveClient.tsx:144:      const res = await fetch(`/api/streams/${streamId}/start`, { method: 'POST' })
+src/app/host/streams/[streamId]/go-live/GoLiveClient.tsx:164:      const res = await fetch(`/api/streams/${streamId}/end`, { method: 'POST' })
+src/app/host/streams/[streamId]/go-live/GoLiveClient.tsx:200:      const res = await fetch(`/api/streams/${streamId}/offers`, {
+src/app/host/streams/new/CreateStreamClient.tsx:46:      const res = await fetch('/api/products')
+src/app/host/streams/new/CreateStreamClient.tsx:85:      const hostRes = await fetch('/api/hosts')
+src/app/host/streams/new/CreateStreamClient.tsx:94:      const res = await fetch('/api/streams', {
+src/app/host/dashboard/HostDashboardClient.tsx:48:        const profileRes = await fetch('/api/hosts/me')
+src/app/host/dashboard/HostDashboardClient.tsx:55:          const streamsRes = await fetch(`/api/streams?hostId=${profileData.host.id}&limit=10`)
+src/app/host/dashboard/HostDashboardClient.tsx:80:      const res = await fetch('/api/hosts', {
+src/app/admin/customers/AdminCustomersClient.tsx:81:      const response = await fetch(`/api/admin/customers/${customerId}`, {
+src/app/admin/products/AdminProductsClient.tsx:90:      const response = await fetch(`/api/admin/products/${product.id}`, {
+src/app/admin/products/AdminProductsClient.tsx:114:      const response = await fetch(`/api/admin/products/${productId}`, {
+src/app/admin/products/AdminProductsClient.tsx:143:      const response = await fetch(`/api/admin/products/${selectedProduct.id}`, {
+src/app/admin/email-test/EmailTestClient.tsx:60:      const res = await fetch('/api/email/test')
+src/app/admin/email-test/EmailTestClient.tsx:78:      const res = await fetch('/api/email/test', {
+src/app/admin/support/AdminSupportClient.tsx:112:      const response = await fetch('/api/tickets')
+src/app/admin/support/[id]/AdminTicketDetailClient.tsx:124:      const response = await fetch(`/api/tickets/${ticket.id}`, {
+src/app/admin/support/[id]/AdminTicketDetailClient.tsx:145:      const response = await fetch(`/api/tickets/${ticket.id}`, {
+src/app/admin/support/[id]/AdminTicketDetailClient.tsx:166:      const response = await fetch(`/api/tickets/${ticket.id}`, {
+src/app/admin/support/[id]/AdminTicketDetailClient.tsx:188:      const response = await fetch(`/api/tickets/${ticket.id}`, {
+src/app/admin/support/[id]/AdminTicketDetailClient.tsx:210:      const response = await fetch(`/api/tickets/${ticket.id}`, {
+src/app/admin/support/[id]/AdminTicketDetailClient.tsx:233:      const response = await fetch(`/api/tickets/${ticket.id}/messages`, {
+src/app/admin/wellness-test/page.tsx:73:        const res = await fetch('/api/wellness/daily-rewards', { method: 'POST' })
+src/app/admin/wellness-test/page.tsx:84:        const checkRes = await fetch(`/api/admin/customers?page=1&limit=100`)
+src/app/admin/wellness-test/page.tsx:92:        const res = await fetch('/api/auth/register', {
+src/app/admin/wellness-test/page.tsx:111:        const res = await fetch('/api/wellness/checkin', {
+src/app/admin/wellness-test/page.tsx:125:        const res = await fetch('/api/wellness/streaks', {
+src/app/admin/wellness-test/page.tsx:139:        const res = await fetch('/api/wellness/challenges', {
+src/app/admin/wellness-test/page.tsx:164:        const listRes = await fetch(`/api/wellness/challenges?customerId=${testCustomerId}`)
+src/app/admin/wellness-test/page.tsx:172:        const res = await fetch(`/api/wellness/challenges/${challengeId}`, {
+src/app/admin/wellness-test/page.tsx:189:        const res = await fetch('/api/wellness/achievements', {
+src/app/admin/wellness-test/page.tsx:213:        const res = await fetch('/api/wellness/profile', {
+src/app/admin/wellness-test/page.tsx:242:          fetch(`/api/wellness/checkin?customerId=${testCustomerId}`),
+src/app/admin/wellness-test/page.tsx:243:          fetch(`/api/wellness/streaks?customerId=${testCustomerId}`),
+src/app/admin/wellness-test/page.tsx:244:          fetch(`/api/wellness/challenges?customerId=${testCustomerId}`),
+src/app/admin/wellness-test/page.tsx:245:          fetch(`/api/wellness/achievements?customerId=${testCustomerId}`),
+src/app/admin/wellness-test/page.tsx:246:          fetch(`/api/wellness/profile?customerId=${testCustomerId}`),
+src/app/admin/wellness-test/page.tsx:284:      await fetch('/api/wellness/daily-rewards', { method: 'POST' })
+src/app/admin/wellness-test/page.tsx:298:        await fetch('/api/wellness/achievements', {
+src/app/admin/wellness-test/page.tsx:321:        await fetch('/api/wellness/challenges', {
+src/app/admin/wellness-test/page.tsx:338:        await fetch('/api/wellness/toy-brands', {
+src/app/admin/campaigns/CampaignsClient.tsx:74:      const res = await fetch(`/api/admin/campaigns?id=${id}`, { method: 'DELETE' })
+src/app/admin/campaigns/CampaignsClient.tsx:91:      const res = await fetch('/api/admin/campaigns', {
+src/app/admin/campaigns/new/NewCampaignClient.tsx:44:      const res = await fetch('/api/admin/campaigns', {
+src/app/admin/campaigns/[id]/CampaignDetailClient.tsx:68:      const res = await fetch(`/api/admin/campaigns`)
+src/app/admin/campaigns/[id]/CampaignDetailClient.tsx:98:      const res = await fetch('/api/admin/campaigns', {
+src/app/admin/orders/AdminOrdersClient.tsx:106:      const response = await fetch(`/api/admin/orders/${orderId}`, {
+src/app/admin/segments/SegmentsClient.tsx:96:        fetch('/api/admin/rfm'),
+src/app/admin/segments/SegmentsClient.tsx:97:        fetch('/api/admin/segments'),
+src/app/admin/segments/SegmentsClient.tsx:122:      await fetch('/api/admin/rfm', {
+src/app/admin/segments/SegmentsClient.tsx:129:      const res = await fetch('/api/admin/rfm', {
+src/app/admin/segments/[id]/SegmentDetailClient.tsx:99:        fetch(`/api/admin/segments?id=${id}&includeMembers=true`),
+src/app/admin/segments/[id]/SegmentDetailClient.tsx:100:        fetch(`/api/admin/segments/campaigns?segmentId=${id}`),
+src/app/admin/segments/[id]/SegmentDetailClient.tsx:125:      const res = await fetch('/api/admin/segments/campaigns', {
+src/app/admin/analytics/AnalyticsClient.tsx:66:      const res = await fetch(`/api/admin/analytics?period=${period}`)
+src/app/quiz/QuizClient.tsx:54:        const res = await fetch('/api/quiz/questions')
+src/app/quiz/QuizClient.tsx:75:      const res = await fetch('/api/quiz/submit', {
+src/app/quiz/QuizClient.tsx:117:      await fetch('/api/quiz/convert', {
+src/app/subscriptions/SubscriptionsClient.tsx:54:      const res = await fetch('/api/subscriptions/plans')
+src/app/subscriptions/SubscriptionsClient.tsx:70:      const res = await fetch('/api/auth/me')
+src/app/subscriptions/SubscriptionsClient.tsx:73:        const subRes = await fetch('/api/subscriptions')
+src/app/subscriptions/SubscriptionsClient.tsx:103:      const res = await fetch('/api/subscriptions', {
+src/app/subscriptions/SubscriptionsClient.tsx:123:      const res = await fetch('/api/subscriptions', {
+src/app/forgot-password/page.tsx:20:      const res = await fetch('/api/auth/forgot-password', {
+src/app/consultations/ConsultationsClient.tsx:57:      const res = await fetch('/api/consultants')
+src/app/consultations/ConsultationsClient.tsx:78:      const res = await fetch(`/api/consultations?consultantId=${selectedConsultant.id}&date=${selectedDate}`)
+src/app/consultations/ConsultationsClient.tsx:95:      const res = await fetch('/api/consultations', {
+src/app/live/[streamId]/StreamViewerClient.tsx:129:        const res = await fetch(`/api/streams/${streamId}`)
+src/app/live/LiveHubClient.tsx:55:          fetch('/api/streams/live'),
+src/app/live/LiveHubClient.tsx:56:          fetch('/api/streams/schedule'),
+src/app/live/LiveHubClient.tsx:57:          fetch('/api/streams/replays'),
+src/app/registry/RegistryDashboard.tsx:78:      const res = await fetch('/api/registry')
+src/app/registry/RegistryDashboard.tsx:266:                          const res = await fetch(`/api/registry/${registry.id}`, {
+src/app/registry/new/NewRegistryClient.tsx:65:      const res = await fetch('/api/registry', {
+src/app/registry/[slug]/manage/ManageRegistryClient.tsx:135:      const res = await fetch(`/api/registry/slug/${registrySlug}?includeAll=true`)
+src/app/registry/[slug]/manage/ManageRegistryClient.tsx:165:      const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`)
+src/app/registry/[slug]/manage/ManageRegistryClient.tsx:178:      const res = await fetch(`/api/registry/${registry.id}/items`, {
+src/app/registry/[slug]/manage/ManageRegistryClient.tsx:204:      const res = await fetch(`/api/registry/${registry.id}/items?itemId=${itemId}`, {
+src/app/registry/[slug]/manage/ManageRegistryClient.tsx:225:      const res = await fetch(`/api/registry/${registry.id}/guests`, {
+src/app/registry/[slug]/manage/ManageRegistryClient.tsx:252:      const res = await fetch(`/api/registry/${registry.id}/events`, {
+src/app/registry/[slug]/manage/ManageRegistryClient.tsx:271:      const res = await fetch(`/api/registry/${registry.id}`, {
+src/app/registry/[slug]/manage/ManageRegistryClient.tsx:651:                    const res = await fetch(`/api/registry/${registry.id}`, { method: 'DELETE' })
+src/app/reset-password/page.tsx:43:      const res = await fetch('/api/auth/reset-password', {
+src/app/returns/ReturnsClient.tsx:90:        fetch('/api/orders'),
+src/app/returns/ReturnsClient.tsx:91:        fetch('/api/returns')
+src/app/returns/ReturnsClient.tsx:136:      const res = await fetch('/api/returns', {
+src/app/account/packaging/PackagingClient.tsx:47:      const res = await fetch('/api/packaging')
+src/app/account/packaging/PackagingClient.tsx:84:      const res = await fetch('/api/packaging', {
+src/app/account/vip/VIPClient.tsx:72:        const res = await fetch(`/api/vip/progress?customerId=${customer?.id}`)
+src/app/account/toys/SmartToysClient.tsx:112:        const sessionRes = await fetch('/api/auth/me')
+src/app/account/toys/SmartToysClient.tsx:120:          const toysRes = await fetch(`/api/wellness/toys?customerId=${cid}`)
+src/app/account/toys/SmartToysClient.tsx:126:          const patternsRes = await fetch(`/api/wellness/patterns?customerId=${cid}`)
+src/app/account/toys/SmartToysClient.tsx:131:          const sessionsRes = await fetch(`/api/wellness/sessions?customerId=${cid}&limit=1`)
+src/app/account/toys/SmartToysClient.tsx:163:      const res = await fetch('/api/wellness/toys', {
+src/app/account/toys/SmartToysClient.tsx:194:      const res = await fetch(`/api/wellness/toys?toyId=${toyId}`, { method: 'DELETE' })
+src/app/account/toys/SmartToysClient.tsx:209:      const res = await fetch('/api/wellness/sessions', {
+src/app/account/toys/SmartToysClient.tsx:236:      const res = await fetch('/api/wellness/sessions', {
+src/app/account/toys/SmartToysClient.tsx:267:      const res = await fetch('/api/wellness/patterns', {
+src/app/account/wellness/WellnessClient.tsx:110:        const sessionRes = await fetch('/api/auth/me')
+src/app/account/wellness/WellnessClient.tsx:119:            fetch(`/api/wellness/streaks?customerId=${customerId}`),
+src/app/account/wellness/WellnessClient.tsx:120:            fetch(`/api/wellness/achievements?customerId=${customerId}`),
+src/app/account/wellness/WellnessClient.tsx:121:            fetch(`/api/wellness/challenges?customerId=${customerId}`),
+src/app/account/wellness/WellnessClient.tsx:122:            fetch(`/api/wellness/checkin?customerId=${customerId}`),
+src/app/account/wellness/WellnessClient.tsx:123:            fetch(`/api/wellness/profile?customerId=${customerId}`),
+src/app/account/wellness/WellnessClient.tsx:158:          const rewardsRes = await fetch('/api/wellness/daily-rewards')
+src/app/account/wellness/WellnessClient.tsx:163:          const coupleGoalsRes = await fetch(`/api/wellness/couple-goals?customerId=${customerId}`)
+src/app/account/wellness/WellnessClient.tsx:185:      const res = await fetch('/api/wellness/checkin', {
+src/app/account/referrals/ReferralsClient.tsx:37:      const res = await fetch('/api/referrals/code')
+src/app/account/rewards/RewardsClient.tsx:52:        const rewardsRes = await fetch(`/api/points/rewards?customerId=${customer?.id}`)
+src/app/account/rewards/RewardsClient.tsx:60:          const loyaltyRes = await fetch(`/api/loyalty?customerId=${customer.id}`)
+src/app/account/rewards/RewardsClient.tsx:86:      const res = await fetch('/api/points/redeem', {
+src/app/account/rewards/RewardsClient.tsx:106:      const rewardsRes = await fetch(`/api/points/rewards?customerId=${customer.id}`)
+src/app/account/loyalty/LoyaltyClient.tsx:39:      const res = await fetch('/api/loyalty')
+src/app/account/alerts/AlertsClient.tsx:63:        fetch('/api/alerts/price-drop'),
+src/app/account/alerts/AlertsClient.tsx:64:        fetch('/api/alerts/stock'),
+src/app/account/alerts/AlertsClient.tsx:65:        fetch('/api/alerts/preferences'),
+src/app/account/alerts/AlertsClient.tsx:89:      const res = await fetch('/api/alerts/price-drop', {
+src/app/account/alerts/AlertsClient.tsx:105:      const res = await fetch('/api/alerts/stock', {
+src/app/account/alerts/AlertsClient.tsx:122:      const res = await fetch('/api/alerts/preferences', {
+src/app/account/sessions/RevokeSessionButton.tsx:16:      const res = await fetch('/api/sessions/revoke', {
+src/app/account/support/SupportClient.tsx:95:        fetch('/api/tickets'),
+src/app/account/support/SupportClient.tsx:96:        fetch('/api/tickets/categories')
+src/app/account/support/SupportClient.tsx:111:      const ordersRes = await fetch('/api/orders?limit=10')
+src/app/account/support/SupportClient.tsx:134:      const res = await fetch('/api/tickets', {
+src/app/account/support/[id]/TicketDetailClient.tsx:97:      const res = await fetch(`/api/tickets/${ticketId}`)
+src/app/account/support/[id]/TicketDetailClient.tsx:125:      const res = await fetch(`/api/tickets/${ticketId}/messages`, {
+src/app/account/wishlist/page.tsx:50:        const res = await fetch('/api/wishlist', {
+src/app/account/wishlist/page.tsx:74:        const res = await fetch('/api/wishlist/share')
+src/app/account/wishlist/page.tsx:108:      const res = await fetch('/api/wishlist/share', {
+src/app/account/wishlist/page.tsx:148:      const res = await fetch(`/api/wishlist/share?shareCode=${shareCode}`, {
+src/app/account/couple/CoupleClient.tsx:47:      const res = await fetch('/api/couples')
+src/app/account/couple/CoupleClient.tsx:75:      const res = await fetch('/api/couples', {
+src/app/account/couple/CoupleClient.tsx:98:      const res = await fetch('/api/couples', {
+src/stores/auth.ts:41:        fetch('/api/auth/logout', { method: 'POST' }).catch(() => {})
+src/stores/auth.ts:46:          const res = await fetch('/api/auth/me')
+src/components/experience/SensoryPreview.tsx:66:        const res = await fetch(`/api/experience/sensory?productId=${productId}`)
+src/components/experience/SizeVisualizer.tsx:62:        const res = await fetch(`/api/experience/size-visualizer?productId=${productId}`)
+src/components/experience/ExperienceGallery.tsx:66:        const res = await fetch(`/api/experience/experiences?${params}`)
+src/components/experience/ProductConfigurator.tsx:71:        const res = await fetch(`/api/experience/configurations?productId=${productId}`)
+src/components/experience/ProductComparison.tsx:60:        const res = await fetch(`/api/search?q=${encodeURIComponent(searchQuery)}`)
+src/components/home/Newsletter.tsx:20:      const res = await fetch('/api/newsletter', {
+src/components/chatbot/ChatbotWidget.tsx:42:      const res = await fetch(`/api/chatbot?sessionId=${sid}`)
+src/components/chatbot/ChatbotWidget.tsx:78:      const res = await fetch('/api/chatbot', {
+src/components/layout/SearchModal.tsx:45:    fetch(`/api/search?q=${encodeURIComponent(query)}`, { signal: controller.signal })
+src/components/product/StockIndicator.tsx:34:        const res = await fetch('/api/products/stock', {
+src/components/product/ProductAvailabilityCalendar.tsx:60:      const res = await fetch('/api/alerts/stock', {
+src/components/checkout/AddressAutocomplete.tsx:62:        const res = await fetch(`/api/address/autocomplete?input=${encodeURIComponent(value)}`)
+src/components/checkout/AddressAutocomplete.tsx:103:      const res = await fetch(`/api/address/details?placeId=${prediction.placeId}`)
+src/components/search/EnhancedSearchBar.tsx:86:      const res = await fetch('/api/search/suggestions')
+src/components/search/EnhancedSearchBar.tsx:101:      const res = await fetch(`/api/search/suggestions?q=${encodeURIComponent(q)}`)
+src/components/search/EnhancedSearchBar.tsx:130:    fetch('/api/search/history', {
+src/components/search/SearchPage.tsx:110:        const response = await fetch('/api/search/semantic', {
+src/components/reviews/ReviewsSection.tsx:102:      const response = await fetch(`/api/reviews?productId=${productId}`)
+src/components/reviews/ReviewsSection.tsx:124:      const response = await fetch('/api/reviews', {
+src/components/reviews/ReviewsSection.tsx:158:      const response = await fetch(`/api/reviews/${reviewId}/vote`, {
+src/components/social-proof/SocialProof.tsx:30:        const response = await fetch(`/api/products/${productId}/views`)
+--- useState fetched data ---
+src/app/host/streams/[streamId]/go-live/GoLiveClient.tsx:64:  const [products, setProducts] = useState<StreamProduct[]>([])
+src/app/host/streams/[streamId]/go-live/GoLiveClient.tsx:99:        setProducts(data.stream.products || [])
+src/app/admin/products/AdminProductsClient.tsx:65:  const [products, setProducts] = useState<Product[]>(initialProducts)
+src/app/admin/products/AdminProductsClient.tsx:98:      setProducts(products.map(p => 
+src/app/admin/products/AdminProductsClient.tsx:120:      setProducts(products.filter(p => p.id !== productId))
+src/app/admin/products/AdminProductsClient.tsx:152:      setProducts(products.map(p => 
+src/app/admin/orders/AdminOrdersClient.tsx:75:  const [orders, setOrders] = useState<Order[]>(initialOrders)
+src/app/admin/orders/AdminOrdersClient.tsx:118:      setOrders(orders.map(o => o.id === orderId ? { ...o, ...data.order } : o))
+src/app/live/[streamId]/StreamViewerClient.tsx:90:  const [products, setProducts] = useState<StreamProduct[]>([])
+src/app/live/[streamId]/StreamViewerClient.tsx:138:        setProducts(data.stream.products || [])
+src/app/live/[streamId]/StreamViewerClient.tsx:183:      setProducts(prev => 
+src/app/returns/ReturnsClient.tsx:70:  const [orders, setOrders] = useState<Order[]>([])
+src/app/returns/ReturnsClient.tsx:96:        setOrders(data.orders || [])
+src/app/account/support/SupportClient.tsx:77:  const [orders, setOrders] = useState<Order[]>([])
+src/app/account/support/SupportClient.tsx:114:        setOrders(ordersData.orders || [])
+src/app/account/wishlist/page.tsx:31:  const [products, setProducts] = useState<WishlistProduct[]>([])
+src/app/account/wishlist/page.tsx:44:        setProducts([])
+src/app/account/wishlist/page.tsx:58:          setProducts(data.products || [])
+src/components/experience/ProductComparison.tsx:41:  const [products, setProducts] = useState<Product[]>([])
+src/components/experience/ProductComparison.tsx:77:      setProducts([...products, product])
+src/components/experience/ProductComparison.tsx:85:    setProducts(products.filter(p => p.id !== productId))
+src/components/experience/ProductComparison.tsx:89:    setProducts([])
+src/components/experience/ProductComparison.tsx:95:    setProducts(newProducts)
+src/components/comparison/ComparisonContext.tsx:30:  const [products, setProducts] = useState<ComparisonProduct[]>(() => {
+src/components/comparison/ComparisonContext.tsx:53:    setProducts([...products, product])
+src/components/comparison/ComparisonContext.tsx:57:    setProducts(products.filter(p => p.id !== productId))
+src/components/comparison/ComparisonContext.tsx:65:    setProducts([])
+=== 1.2 Waterfall Fetches ===
+src/app/account/AccountClient.tsx
+src/app/account/alerts/AlertsClient.tsx
+src/app/account/couple/CoupleClient.tsx
+src/app/account/loyalty/LoyaltyClient.tsx
+src/app/account/orders/page.tsx
+src/app/account/packaging/PackagingClient.tsx
+src/app/account/referrals/ReferralsClient.tsx
+src/app/account/rewards/RewardsClient.tsx
+src/app/account/sessions/page.tsx
+src/app/account/support/SupportClient.tsx
+src/app/account/support/[id]/TicketDetailClient.tsx
+src/app/account/toys/SmartToysClient.tsx
+src/app/account/vip/VIPClient.tsx
+src/app/account/wellness/WellnessClient.tsx
+src/app/account/wishlist/page.tsx
+src/app/admin/analytics/AnalyticsClient.tsx
+src/app/admin/campaigns/CampaignsClient.tsx
+src/app/admin/campaigns/[id]/CampaignDetailClient.tsx
+src/app/admin/campaigns/new/NewCampaignClient.tsx
+src/app/admin/customers/page.tsx
+src/app/admin/email-test/EmailTestClient.tsx
+src/app/admin/layout.tsx
+src/app/admin/orders/AdminOrdersClient.tsx
+src/app/admin/orders/page.tsx
+src/app/admin/page.tsx
+src/app/admin/products/AdminProductsClient.tsx
+src/app/admin/products/page.tsx
+src/app/admin/segments/SegmentsClient.tsx
+src/app/admin/segments/[id]/SegmentDetailClient.tsx
+src/app/admin/support/AdminSupportClient.tsx
+src/app/admin/support/[id]/AdminTicketDetailClient.tsx
+src/app/admin/support/[id]/page.tsx
+src/app/admin/support/page.tsx
+src/app/admin/wellness-test/page.tsx
+src/app/api/abandoned-cart/recover/route.ts
+src/app/api/abandoned-cart/route.ts
+src/app/api/address/autocomplete/route.ts
+src/app/api/address/details/route.ts
+src/app/api/admin/analytics/route.ts
+src/app/api/admin/audit-logs/route.ts
+src/app/api/admin/campaigns/route.ts
+src/app/api/admin/customers/[id]/route.ts
+src/app/api/admin/orders/[id]/route.ts
+src/app/api/admin/products/[id]/images/route.ts
+src/app/api/admin/products/[id]/route.ts
+src/app/api/admin/rfm/route.ts
+src/app/api/admin/segments/campaigns/route.ts
+src/app/api/admin/segments/route.ts
+src/app/api/alerts/preferences/route.ts
+src/app/api/alerts/price-drop/route.ts
+src/app/api/alerts/stock/route.ts
+src/app/api/auth/forgot-password/route.ts
+src/app/api/auth/login/route.ts
+src/app/api/auth/me/route.ts
+src/app/api/auth/oauth/apple/route.ts
+src/app/api/auth/oauth/google/route.ts
+src/app/api/auth/register/route.ts
+src/app/api/auth/resend-verification/route.ts
+src/app/api/auth/reset-password/route.ts
+src/app/api/blog/route.ts
+src/app/api/bundles/route.ts
+src/app/api/chatbot/route.ts
+src/app/api/checkout/loyalty-points/route.ts
+src/app/api/checkout/validate-giftcard/route.ts
+src/app/api/checkout/validate-promo/route.ts
+src/app/api/consultants/route.ts
+src/app/api/consultations/route.ts
+src/app/api/couples/route.ts
+src/app/api/cron/gift-cards/route.ts
+src/app/api/cron/price-alerts/route.ts
+src/app/api/cron/stock-alerts/route.ts
+src/app/api/experience/3d-models/route.ts
+src/app/api/experience/configurations/route.ts
+src/app/api/experience/experiences/route.ts
+src/app/api/experience/features/route.ts
+src/app/api/experience/sensory/route.ts
+src/app/api/experience/size-visualizer/route.ts
+src/app/api/flash-sales/route.ts
+src/app/api/gift-cards/check/route.ts
+src/app/api/gift-cards/redeem/route.ts
+src/app/api/gift-cards/route.ts
+src/app/api/hosts/[id]/route.ts
+src/app/api/hosts/route.ts
+src/app/api/images/[id]/route.ts
+src/app/api/loyalty/redeem/route.ts
+src/app/api/newsletter/route.ts
+src/app/api/orders/route.ts
+src/app/api/packaging/route.ts
+src/app/api/payment/bank-transfer/route.ts
+src/app/api/payment/create-intent/route.ts
+src/app/api/payment/crypto-charge/route.ts
+src/app/api/points/redeem/route.ts
+src/app/api/points/rewards/route.ts
+src/app/api/products/[id]/views/route.ts
+src/app/api/products/stock/route.ts
+src/app/api/promotions/check/route.ts
+src/app/api/promotions/route.ts
+src/app/api/quiz/convert/route.ts
+src/app/api/quiz/questions/route.ts
+src/app/api/quiz/submit/route.ts
+src/app/api/recommendations/product/[id]/route.ts
+src/app/api/recommendations/route.ts
+src/app/api/referrals/code/route.ts
+src/app/api/referrals/validate/route.ts
+src/app/api/registry/[id]/events/route.ts
+src/app/api/registry/[id]/guests/route.ts
+src/app/api/registry/[id]/items/route.ts
+src/app/api/registry/[id]/purchases/route.ts
+src/app/api/registry/[id]/route.ts
+src/app/api/registry/route.ts
+src/app/api/registry/slug/[slug]/route.ts
+src/app/api/returns/route.ts
+src/app/api/reviews/[id]/vote/route.ts
+src/app/api/reviews/route.ts
+src/app/api/sessions/revoke/route.ts
+src/app/api/stream-reminders/route.ts
+src/app/api/streams/[id]/chat/route.ts
+src/app/api/streams/[id]/end/route.ts
+src/app/api/streams/[id]/offers/route.ts
+src/app/api/streams/[id]/products/route.ts
+src/app/api/streams/[id]/route.ts
+src/app/api/streams/[id]/start/route.ts
+src/app/api/streams/live/route.ts
+src/app/api/streams/route.ts
+src/app/api/subscriptions/plans/route.ts
+src/app/api/subscriptions/route.ts
+src/app/api/tickets/[id]/messages/route.ts
+src/app/api/tickets/[id]/route.ts
+src/app/api/tickets/categories/route.ts
+src/app/api/tickets/route.ts
+src/app/api/vip/progress/route.ts
+src/app/api/vip/tiers/route.ts
+src/app/api/wellness/achievements/route.ts
+src/app/api/wellness/challenges/[id]/route.ts
+src/app/api/wellness/challenges/route.ts
+src/app/api/wellness/checkin/route.ts
+src/app/api/wellness/couple-goals/route.ts
+src/app/api/wellness/daily-rewards/route.ts
+src/app/api/wellness/patterns/route.ts
+src/app/api/wellness/profile/route.ts
+src/app/api/wellness/sessions/route.ts
+src/app/api/wellness/streaks/route.ts
+src/app/api/wellness/toy-brands/route.ts
+src/app/api/wellness/toys/route.ts
+src/app/api/wishlist/route.ts
+src/app/api/wishlist/share/route.ts
+src/app/api/wishlist/shared/route.ts
+src/app/blog/[slug]/page.tsx
+src/app/blog/page.tsx
+src/app/checkout/CheckoutClient.tsx
+src/app/checkout/payment/page.tsx
+src/app/consultations/ConsultationsClient.tsx
+src/app/forgot-password/page.tsx
+src/app/gift-cards/GiftCardsClient.tsx
+src/app/gifts/page.tsx
+src/app/host/dashboard/HostDashboardClient.tsx
+src/app/host/streams/[streamId]/go-live/GoLiveClient.tsx
+src/app/host/streams/new/CreateStreamClient.tsx
+src/app/live/LiveHubClient.tsx
+src/app/live/[streamId]/StreamViewerClient.tsx
+src/app/order/[reference]/page.tsx
+src/app/pitch/page.tsx
+src/app/product/[slug]/ProductDetailClient.tsx
+src/app/product/[slug]/page.tsx
+src/app/quiz/QuizClient.tsx
+src/app/registry/RegistryDashboard.tsx
+src/app/registry/[slug]/PublicRegistryClient.tsx
+src/app/registry/[slug]/manage/ManageRegistryClient.tsx
+src/app/registry/new/NewRegistryClient.tsx
+src/app/reset-password/page.tsx
+src/app/returns/ReturnsClient.tsx
+src/app/shop/[category]/page.tsx
+src/app/shop/bundles/page.tsx
+src/app/shop/page.tsx
+src/app/size-guide/page.tsx
+src/app/subscriptions/SubscriptionsClient.tsx
+src/app/wishlist/[code]/page.tsx
+src/components/chatbot/ChatbotWidget.tsx
+src/components/checkout/AddressAutocomplete.tsx
+src/components/experience/ExperienceGallery.tsx
+src/components/experience/ProductComparison.tsx
+src/components/experience/ProductConfigurator.tsx
+src/components/experience/SensoryPreview.tsx
+src/components/experience/SizeVisualizer.tsx
+src/components/experience/VirtualTryOn.tsx
+src/components/home/CategoryGrid.tsx
+src/components/home/DigitalProducts.tsx
+src/components/home/FeaturedProducts.tsx
+src/components/home/GiftSets.tsx
+src/components/home/Newsletter.tsx
+src/components/product/ProductAvailabilityCalendar.tsx
+src/components/product/StockIndicator.tsx
+src/components/reviews/ReviewsSection.tsx
+src/components/search/EnhancedSearchBar.tsx
+src/components/search/SearchPage.tsx
+src/components/social-proof/SocialProof.tsx
+src/lib/admin/middleware.ts
+src/lib/auth/session.ts
+src/lib/payments/coinbase.ts
+src/lib/payments/stripe.ts
+src/lib/stock-alerts.ts
+src/stores/auth.ts
+=== 1.3 Routing and Navigation ===
+--- Return null/undefined instead of notFound ---
+src/app/admin/support/[id]/page.tsx:33:  if (!ticket) return null
+src/app/checkout/payment/page.tsx:181:      if (!checkoutData || orderId) return null;
+src/app/checkout/payment/page.tsx:224:        return null;
+src/app/checkout/payment/page.tsx:339:    return null;
+src/app/blog/[slug]/page.tsx:44:  if (!post) return null
+--- Missing generateMetadata ---
+Missing generateMetadata: src/app/experience/page.tsx
+Missing generateMetadata: src/app/pitch/page.tsx
+Missing generateMetadata: src/app/order/[reference]/page.tsx
+Missing generateMetadata: src/app/gift-cards/page.tsx
+Missing generateMetadata: src/app/our-story/page.tsx
+Missing generateMetadata: src/app/host/streams/[streamId]/go-live/page.tsx
+Missing generateMetadata: src/app/host/streams/new/page.tsx
+Missing generateMetadata: src/app/host/dashboard/page.tsx
+Missing generateMetadata: src/app/host/page.tsx
+Missing generateMetadata: src/app/changelog/page.tsx
+Missing generateMetadata: src/app/shop/[category]/page.tsx
+Missing generateMetadata: src/app/shop/page.tsx
+Missing generateMetadata: src/app/shop/bundles/page.tsx
+Missing generateMetadata: src/app/education/page.tsx
+Missing generateMetadata: src/app/features/page.tsx
+Missing generateMetadata: src/app/admin/customers/page.tsx
+Missing generateMetadata: src/app/admin/products/page.tsx
+Missing generateMetadata: src/app/admin/changelog/page.tsx
+Missing generateMetadata: src/app/admin/email-test/page.tsx
+Missing generateMetadata: src/app/admin/support/[id]/page.tsx
+Missing generateMetadata: src/app/admin/support/page.tsx
+Missing generateMetadata: src/app/admin/wellness-test/page.tsx
+Missing generateMetadata: src/app/admin/campaigns/new/page.tsx
+Missing generateMetadata: src/app/admin/campaigns/[id]/page.tsx
+Missing generateMetadata: src/app/admin/campaigns/page.tsx
+Missing generateMetadata: src/app/admin/orders/page.tsx
+Missing generateMetadata: src/app/admin/page.tsx
+Missing generateMetadata: src/app/admin/segments/[id]/page.tsx
+Missing generateMetadata: src/app/admin/segments/page.tsx
+Missing generateMetadata: src/app/admin/analytics/page.tsx
+Missing generateMetadata: src/app/quiz/page.tsx
+Missing generateMetadata: src/app/product/[slug]/page.tsx
+Missing generateMetadata: src/app/track-order/page.tsx
+Missing generateMetadata: src/app/checkout/payment/page.tsx
+Missing generateMetadata: src/app/checkout/confirmation/page.tsx
+Missing generateMetadata: src/app/checkout/page.tsx
+Missing generateMetadata: src/app/blog/page.tsx
+Missing generateMetadata: src/app/blog/[slug]/page.tsx
+Missing generateMetadata: src/app/subscriptions/page.tsx
+Missing generateMetadata: src/app/search/page.tsx
+Missing generateMetadata: src/app/verify-email/page.tsx
+Missing generateMetadata: src/app/gifts/page.tsx
+Missing generateMetadata: src/app/support/page.tsx
+Missing generateMetadata: src/app/forgot-password/page.tsx
+Missing generateMetadata: src/app/consultations/page.tsx
+Missing generateMetadata: src/app/live/[streamId]/page.tsx
+Missing generateMetadata: src/app/live/page.tsx
+Missing generateMetadata: src/app/registry/new/page.tsx
+Missing generateMetadata: src/app/registry/page.tsx
+Missing generateMetadata: src/app/registry/[slug]/manage/page.tsx
+Missing generateMetadata: src/app/registry/[slug]/page.tsx
+Missing generateMetadata: src/app/reset-password/page.tsx
+Missing generateMetadata: src/app/members/page.tsx
+Missing generateMetadata: src/app/returns/page.tsx
+Missing generateMetadata: src/app/digital/page.tsx
+Missing generateMetadata: src/app/account/packaging/page.tsx
+Missing generateMetadata: src/app/account/vip/page.tsx
+Missing generateMetadata: src/app/account/toys/page.tsx
+Missing generateMetadata: src/app/account/wellness/page.tsx
+Missing generateMetadata: src/app/account/security/page.tsx
+Missing generateMetadata: src/app/account/referrals/page.tsx
+Missing generateMetadata: src/app/account/rewards/page.tsx
+Missing generateMetadata: src/app/account/loyalty/page.tsx
+Missing generateMetadata: src/app/account/alerts/page.tsx
+Missing generateMetadata: src/app/account/sessions/page.tsx
+Missing generateMetadata: src/app/account/support/[id]/page.tsx
+Missing generateMetadata: src/app/account/support/page.tsx
+Missing generateMetadata: src/app/account/orders/page.tsx
+Missing generateMetadata: src/app/account/page.tsx
+Missing generateMetadata: src/app/account/wishlist/page.tsx
+Missing generateMetadata: src/app/account/couple/page.tsx
+Missing generateMetadata: src/app/size-guide/page.tsx
+Missing generateMetadata: src/app/legal/privacy/page.tsx
+Missing generateMetadata: src/app/legal/discreet-billing/page.tsx
+Missing generateMetadata: src/app/legal/terms/page.tsx
+Missing generateMetadata: src/app/legal/returns/page.tsx
+Missing generateMetadata: src/app/legal/cookies/page.tsx
+Missing generateMetadata: src/app/page.tsx
+Missing generateMetadata: src/app/age-gate/page.tsx
+--- Deprecated next/router ---
+--- Missing 'use server' in actions ---
+--- Missing revalidateTag/Path ---
+=== 2.1 Server Action Data Passthrough ===
+src/app/api/experience/3d-models/route.ts:92:        data: data.hotspots.map((h: Record<string, unknown>, index: number) => ({
+src/app/api/admin/products/[id]/route.ts:24:        data: body,
+=== 2.2 queryRawUnsafe ===
+=== 2.3 Session url/param ===
+src/app/admin/page.tsx:11:  // if (!session) redirect('/account')
+=== 2.5 Exposing Prisma Results ===
+src/app/api/returns/route.ts:14:      const returns = await db.returnRequest.findMany({
+src/app/api/returns/route.ts:30:    const returns = await db.returnRequest.findMany({
+src/app/api/returns/route.ts:144:    const existingReturn = await db.returnRequest.findUnique({
+src/lib/auth/session.ts:103:  return db.customer.findUnique({
+=== 2.7 FindMany without take ===
+No take in: src/app/api/experience/configurations/route.ts
+No take in: src/app/api/experience/features/route.ts
+No take in: src/app/api/packaging/route.ts
+No take in: src/app/api/gift-cards/route.ts
+No take in: src/app/api/vip/progress/route.ts
+No take in: src/app/api/vip/tiers/route.ts
+No take in: src/app/api/products/stock/route.ts
+No take in: src/app/api/couples/route.ts
+No take in: src/app/api/wellness/daily-rewards/route.ts
+No take in: src/app/api/wellness/patterns/route.ts
+No take in: src/app/api/wellness/achievements/route.ts
+No take in: src/app/api/wellness/toys/route.ts
+No take in: src/app/api/wellness/challenges/route.ts
+No take in: src/app/api/wellness/couple-goals/route.ts
+No take in: src/app/api/wellness/checkin/route.ts
+No take in: src/app/api/gift-wrapping/route.ts
+No take in: src/app/api/packaging-photos/route.ts
+No take in: src/app/api/quiz/questions/route.ts
+No take in: src/app/api/promotions/route.ts
+No take in: src/app/api/size-guides/route.ts
+No take in: src/app/api/consultations/route.ts
+No take in: src/app/api/points/rewards/route.ts
+No take in: src/app/api/points/redeem/route.ts
+No take in: src/app/api/registry/[id]/purchases/route.ts
+No take in: src/app/api/registry/[id]/events/route.ts
+No take in: src/app/api/registry/[id]/guests/route.ts
+No take in: src/app/api/returns/route.ts
+No take in: src/app/api/cron/gift-cards/route.ts
+No take in: src/app/api/cron/abandoned-cart/route.ts
+No take in: src/app/api/wishlist/share/route.ts
+=== Done ===
