@@ -14,7 +14,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 
-interface VIPTier {
+export interface VIPTier {
   id: string
   name: string
   slug: string
@@ -39,7 +39,7 @@ interface VIPTier {
   }>
 }
 
-interface Progress {
+export interface Progress {
   id: string
   lifetimePoints: number
   lifetimeSpent: number
@@ -47,7 +47,7 @@ interface Progress {
   currentTier: VIPTier | null
 }
 
-interface VIPData {
+export interface VIPData {
   progress: Progress
   nextTier: VIPTier | null
   pointsToNextTier: number
@@ -55,52 +55,16 @@ interface VIPData {
   allTiers: VIPTier[]
 }
 
-export default function VIPClient() {
+export default function VIPClient({ initialData }: { initialData: VIPData }) {
   const router = useRouter()
-  const { customer, isAuthenticated } = useAuthStore()
-  const [data, setData] = useState<VIPData | null>(null)
-  const [loading, setLoading] = useState(true)
+  const { isAuthenticated } = useAuthStore()
+  const data = initialData
 
   useEffect(() => {
     if (!isAuthenticated) {
       router.push('/account')
-      return
     }
-
-    const fetchData = async () => {
-      try {
-        const res = await fetch(`/api/vip/progress?customerId=${customer?.id}`)
-        if (res.ok) {
-          const json = await res.json()
-          setData(json)
-        }
-      } catch (error) {
-        console.error('Error fetching VIP data:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    if (customer?.id) {
-      fetchData()
-    }
-  }, [customer?.id, isAuthenticated, router])
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <p className="font-body text-warm-gray">Loading...</p>
-      </div>
-    )
-  }
-
-  if (!data) {
-    return (
-      <div className="text-center py-8">
-        <p className="font-body text-warm-gray">Unable to load VIP data</p>
-      </div>
-    )
-  }
+  }, [isAuthenticated, router])
 
   const { progress, nextTier, pointsToNextTier, progressPercentage, allTiers } = data
 
@@ -128,7 +92,7 @@ export default function VIPClient() {
     <>
       {/* Header */}
       <div className="mb-8">
-        <h1 
+        <h1
           className="font-display text-charcoal mb-2"
           style={{ fontSize: 'clamp(1.75rem, 3vw, 2.5rem)', fontWeight: 300 }}
         >
@@ -145,22 +109,22 @@ export default function VIPClient() {
               {getTierIcon(progress.currentTier?.level ?? 0)}
             </div>
             <div>
-              <div className="text-sm font-body text-warm-gray uppercase tracking-wider mb-1">
+              <div className="text-xs font-body text-warm-gray uppercase tracking-widest mb-1.5">
                 Current Status
               </div>
-              <h2 className="font-display text-3xl text-charcoal" style={{ fontWeight: 300 }}>
+              <h2 className="font-display text-charcoal" style={{ fontSize: '2rem', fontWeight: 300 }}>
                 {progress.currentTier?.name || 'Bronze'}
               </h2>
-              <div className="font-body text-warm-gray mt-1">
+              <div className="font-body text-warm-gray mt-1 text-sm">
                 Member since 2024
               </div>
             </div>
           </div>
           <div className="text-center md:text-right">
-            <div className="text-sm font-body text-warm-gray uppercase tracking-wider mb-1">
+            <div className="text-xs font-body text-warm-gray uppercase tracking-widest mb-1.5">
               Lifetime Points
             </div>
-            <div className="font-display text-4xl text-terracotta" style={{ fontWeight: 300 }}>
+            <div className="font-display text-terracotta" style={{ fontSize: '2.5rem', fontWeight: 300 }}>
               {progress.lifetimePoints.toLocaleString()}
             </div>
           </div>
@@ -241,23 +205,22 @@ export default function VIPClient() {
       </div>
 
       {/* Tier Comparison */}
-      <h2 className="font-display text-2xl text-charcoal mb-6" style={{ fontWeight: 300 }}>
+      <h2 className="font-display text-charcoal mb-8" style={{ fontSize: '1.75rem', fontWeight: 300 }}>
         VIP Tiers
       </h2>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {allTiers.map((tier) => (
           <div
             key={tier.id}
-            className={`p-6 border ${
-              progress.currentTier?.level === tier.level
-                ? 'border-terracotta bg-warm-white'
-                : 'border-sand bg-warm-white'
-            }`}
+            className={`p-6 border ${progress.currentTier?.level === tier.level
+              ? 'border-terracotta bg-warm-white'
+              : 'border-sand bg-warm-white'
+              }`}
           >
-            <div className={`w-12 h-12 flex items-center justify-center mb-4 ${getTierColor(tier.level)}`}>
+            <div className={`w-12 h-12 flex items-center justify-center mb-6 rounded-full ${getTierColor(tier.level)}`}>
               {getTierIcon(tier.level)}
             </div>
-            <h3 className="font-display text-xl text-charcoal mb-2" style={{ fontWeight: 300 }}>
+            <h3 className="font-body text-charcoal uppercase tracking-wider font-bold text-sm mb-2">
               {tier.name}
             </h3>
             <div className="font-body text-sm text-warm-gray mb-4">
@@ -299,28 +262,31 @@ export default function VIPClient() {
       </div>
 
       {/* How to Earn */}
-      <div className="mt-12 p-8 bg-sand border border-sand">
-        <h2 className="font-display text-2xl text-charcoal mb-6" style={{ fontWeight: 300 }}>
+      <div className="mt-12 p-8 lg:p-12 bg-cream border border-sand">
+        <h2 className="font-display text-charcoal mb-8 text-center" style={{ fontSize: '1.75rem', fontWeight: 300 }}>
           How to Earn Points
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div>
-            <div className="font-display text-3xl text-terracotta mb-2" style={{ fontWeight: 300 }}>
-              1 point
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+          <div className="p-6 border border-sand bg-warm-white hover:border-terracotta/50 transition-colors">
+            <div className="font-display text-terracotta mb-3" style={{ fontSize: '2.5rem', fontWeight: 300 }}>
+              1
             </div>
-            <div className="font-body text-charcoal">Per $1 spent</div>
+            <div className="font-body text-charcoal text-sm uppercase tracking-wider font-bold mb-1">Point</div>
+            <div className="font-body text-warm-gray text-sm">Per $1 spent</div>
           </div>
-          <div>
-            <div className="font-display text-3xl text-terracotta mb-2" style={{ fontWeight: 300 }}>
-              100 points
+          <div className="p-6 border border-sand bg-warm-white hover:border-terracotta/50 transition-colors">
+            <div className="font-display text-terracotta mb-3" style={{ fontSize: '2.5rem', fontWeight: 300 }}>
+              100
             </div>
-            <div className="font-body text-charcoal">Per referred friend</div>
+            <div className="font-body text-charcoal text-sm uppercase tracking-wider font-bold mb-1">Points</div>
+            <div className="font-body text-warm-gray text-sm">Per referred friend</div>
           </div>
-          <div>
-            <div className="font-display text-3xl text-terracotta mb-2" style={{ fontWeight: 300 }}>
-              50 points
+          <div className="p-6 border border-sand bg-warm-white hover:border-terracotta/50 transition-colors">
+            <div className="font-display text-terracotta mb-3" style={{ fontSize: '2.5rem', fontWeight: 300 }}>
+              50
             </div>
-            <div className="font-body text-charcoal">Product review bonus</div>
+            <div className="font-body text-charcoal text-sm uppercase tracking-wider font-bold mb-1">Points</div>
+            <div className="font-body text-warm-gray text-sm">Product review bonus</div>
           </div>
         </div>
       </div>

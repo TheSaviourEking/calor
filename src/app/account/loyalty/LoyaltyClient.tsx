@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Gift, Star, TrendingUp, Clock, Award } from 'lucide-react'
 import Link from 'next/link'
 
-interface Transaction {
+export interface Transaction {
   id: string
   points: number
   type: string
@@ -13,7 +13,7 @@ interface Transaction {
   createdAt: string
 }
 
-interface LoyaltyAccount {
+export interface LoyaltyAccount {
   id: string
   points: number
   totalEarned: number
@@ -26,27 +26,8 @@ interface LoyaltyAccount {
   transactions: Transaction[]
 }
 
-export default function LoyaltyClient() {
-  const [account, setAccount] = useState<LoyaltyAccount | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    fetchAccount()
-  }, [])
-
-  const fetchAccount = async () => {
-    try {
-      const res = await fetch('/api/loyalty')
-      if (res.ok) {
-        const data = await res.json()
-        setAccount(data.account)
-      }
-    } catch (error) {
-      console.error('Error fetching loyalty account:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
+export default function LoyaltyClient({ initialAccount }: { initialAccount: LoyaltyAccount | null }) {
+  const account = initialAccount
 
   const formatPrice = (cents: number) => `$${(cents / 100).toFixed(2)}`
 
@@ -65,14 +46,6 @@ export default function LoyaltyClient() {
     })
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <p className="font-body text-warm-gray">Loading...</p>
-      </div>
-    )
-  }
-
   if (!account) {
     return (
       <div className="text-center py-16">
@@ -87,7 +60,7 @@ export default function LoyaltyClient() {
     <>
       {/* Header */}
       <div className="mb-8">
-        <h1 
+        <h1
           className="font-display text-charcoal mb-2"
           style={{ fontSize: 'clamp(1.75rem, 3vw, 2.5rem)', fontWeight: 300 }}
         >
@@ -214,9 +187,8 @@ export default function LoyaltyClient() {
                   </p>
                 </div>
                 <span
-                  className={`font-body text-sm ${
-                    tx.points > 0 ? 'text-terracotta' : 'text-warm-gray'
-                  }`}
+                  className={`font-body text-sm ${tx.points > 0 ? 'text-terracotta' : 'text-warm-gray'
+                    }`}
                 >
                   {tx.points > 0 ? '+' : ''}{tx.points}
                 </span>

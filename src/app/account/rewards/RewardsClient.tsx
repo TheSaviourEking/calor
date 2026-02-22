@@ -30,12 +30,17 @@ interface Reward {
   unavailableReason: string | null
 }
 
-export default function RewardsClient() {
+export default function RewardsClient({
+  initialRewards,
+  initialPointsBalance
+}: {
+  initialRewards: Reward[]
+  initialPointsBalance: number
+}) {
   const router = useRouter()
   const { customer, isAuthenticated } = useAuthStore()
-  const [rewards, setRewards] = useState<Reward[]>([])
-  const [pointsBalance, setPointsBalance] = useState(0)
-  const [loading, setLoading] = useState(true)
+  const [rewards, setRewards] = useState<Reward[]>(initialRewards)
+  const [pointsBalance, setPointsBalance] = useState(initialPointsBalance)
   const [redeeming, setRedeeming] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -43,37 +48,8 @@ export default function RewardsClient() {
   useEffect(() => {
     if (!isAuthenticated) {
       router.push('/account')
-      return
     }
-
-    const fetchData = async () => {
-      try {
-        // Fetch rewards
-        const rewardsRes = await fetch(`/api/points/rewards?customerId=${customer?.id}`)
-        if (rewardsRes.ok) {
-          const json = await rewardsRes.json()
-          setRewards(json.rewards)
-        }
-
-        // Fetch points balance
-        if (customer?.id) {
-          const loyaltyRes = await fetch(`/api/loyalty?customerId=${customer.id}`)
-          if (loyaltyRes.ok) {
-            const json = await loyaltyRes.json()
-            setPointsBalance(json.account?.points || 0)
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching rewards:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    if (customer?.id) {
-      fetchData()
-    }
-  }, [customer?.id, isAuthenticated, router])
+  }, [isAuthenticated, router])
 
   const handleRedeem = async (reward: Reward) => {
     if (!customer?.id) return
@@ -101,7 +77,7 @@ export default function RewardsClient() {
 
       setSuccess(`Successfully redeemed: ${reward.name}`)
       setPointsBalance(json.newPointsBalance)
-      
+
       // Refresh rewards
       const rewardsRes = await fetch(`/api/points/rewards?customerId=${customer.id}`)
       if (rewardsRes.ok) {
@@ -132,14 +108,6 @@ export default function RewardsClient() {
     return 'Special reward'
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <p className="font-body text-warm-gray">Loading rewards...</p>
-      </div>
-    )
-  }
-
   const featuredRewards = rewards.filter(r => r.featured)
   const regularRewards = rewards.filter(r => !r.featured)
 
@@ -147,7 +115,7 @@ export default function RewardsClient() {
     <>
       {/* Header */}
       <div className="mb-8">
-        <h1 
+        <h1
           className="font-display text-charcoal mb-2"
           style={{ fontSize: 'clamp(1.75rem, 3vw, 2.5rem)', fontWeight: 300 }}
         >
@@ -231,11 +199,10 @@ export default function RewardsClient() {
                   <button
                     onClick={() => handleRedeem(reward)}
                     disabled={!reward.available || pointsBalance < reward.pointsCost || redeeming === reward.id}
-                    className={`font-body px-6 py-3 border transition-colors ${
-                      !reward.available || pointsBalance < reward.pointsCost
-                        ? 'border-warm-gray/30 text-warm-gray/50 cursor-not-allowed'
-                        : 'border-charcoal text-charcoal hover:bg-charcoal hover:text-cream'
-                    }`}
+                    className={`font-body px-6 py-3 border transition-colors ${!reward.available || pointsBalance < reward.pointsCost
+                      ? 'border-warm-gray/30 text-warm-gray/50 cursor-not-allowed'
+                      : 'border-charcoal text-charcoal hover:bg-charcoal hover:text-cream'
+                      }`}
                   >
                     {redeeming === reward.id ? (
                       <Loader2 className="w-5 h-5 animate-spin" />
@@ -285,11 +252,10 @@ export default function RewardsClient() {
               <button
                 onClick={() => handleRedeem(reward)}
                 disabled={!reward.available || pointsBalance < reward.pointsCost || redeeming === reward.id}
-                className={`font-body text-sm px-4 py-2 border transition-colors ${
-                  !reward.available || pointsBalance < reward.pointsCost
-                    ? 'border-warm-gray/30 text-warm-gray/50 cursor-not-allowed'
-                    : 'border-charcoal text-charcoal hover:bg-charcoal hover:text-cream'
-                }`}
+                className={`font-body text-sm px-4 py-2 border transition-colors ${!reward.available || pointsBalance < reward.pointsCost
+                  ? 'border-warm-gray/30 text-warm-gray/50 cursor-not-allowed'
+                  : 'border-charcoal text-charcoal hover:bg-charcoal hover:text-cream'
+                  }`}
               >
                 {redeeming === reward.id ? (
                   <Loader2 className="w-4 h-4 animate-spin" />

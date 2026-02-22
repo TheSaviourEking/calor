@@ -6,8 +6,8 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useQuizStore, QuizQuestion } from '@/stores/quiz'
 import { useCartStore } from '@/stores'
-import { 
-  ArrowLeft, ArrowRight, RotateCcw, Sparkles, Heart, 
+import {
+  ArrowLeft, ArrowRight, RotateCcw, Sparkles, Heart,
   Check, Star, ShoppingCart, Loader2, ShoppingBag, Package
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -92,11 +92,11 @@ export default function QuizClient() {
   // Add all recommended products to cart
   const handleAddAllToCart = async () => {
     if (recommendationProducts.length === 0) return
-    
+
     setAddingAllToCart(true)
     try {
       const productIds = recommendationProducts.map(p => p.id)
-      
+
       // Add each product to cart
       for (const product of recommendationProducts) {
         if (product.variants?.[0]) {
@@ -184,7 +184,7 @@ export default function QuizClient() {
           {/* Header */}
           <div className="text-center mb-12">
             <span className="eyebrow mb-6">Personalized for You</span>
-            <h1 
+            <h1
               className="font-display text-charcoal mb-4"
               style={{ fontSize: 'clamp(2.5rem, 4vw, 4rem)', fontWeight: 300 }}
             >
@@ -284,7 +284,7 @@ export default function QuizClient() {
                     <span className="font-body text-charcoal">
                       ${((product.variants?.[0]?.price || 0) / 100).toFixed(2)}
                     </span>
-                    <button 
+                    <button
                       onClick={() => {
                         if (product.variants?.[0]) {
                           addToCart({
@@ -314,7 +314,7 @@ export default function QuizClient() {
 
           {/* Actions */}
           <div className="flex justify-center gap-4">
-            <button 
+            <button
               onClick={() => {
                 reset()
                 setRecommendationProducts([])
@@ -325,7 +325,7 @@ export default function QuizClient() {
               <RotateCcw className="h-4 w-4" />
               Retake Quiz
             </button>
-            <button 
+            <button
               onClick={() => router.push('/shop')}
               className="bg-charcoal text-cream px-6 py-3 font-body text-sm uppercase tracking-wider hover:bg-terracotta transition-colors"
             >
@@ -343,7 +343,7 @@ export default function QuizClient() {
     <div className="min-h-screen pt-20 bg-cream">
       {/* Progress Bar */}
       <div className="fixed top-16 left-0 right-0 h-1 bg-sand z-40">
-        <div 
+        <div
           className="h-full bg-terracotta transition-all duration-300"
           style={{ width: `${progress}%` }}
         />
@@ -370,7 +370,7 @@ export default function QuizClient() {
             </span>
 
             {/* Question Text */}
-            <h2 
+            <h2
               className="font-display text-charcoal"
               style={{ fontSize: 'clamp(1.75rem, 3vw, 2.5rem)', fontWeight: 300 }}
             >
@@ -390,11 +390,10 @@ export default function QuizClient() {
                   <button
                     key={option.value}
                     onClick={() => handleSingleSelect(currentQuestion.id, option.value)}
-                    className={`w-full p-4 text-left border transition-all font-body text-sm ${
-                      getCurrentAnswer(currentQuestion.id) === option.value
+                    className={`w-full p-4 text-left border transition-all font-body text-sm ${getCurrentAnswer(currentQuestion.id) === option.value
                         ? 'border-terracotta bg-terracotta/5 text-charcoal'
                         : 'border-sand hover:border-terracotta/50 text-charcoal'
-                    }`}
+                      }`}
                   >
                     {option.label}
                   </button>
@@ -403,16 +402,21 @@ export default function QuizClient() {
                 currentQuestion.options.map((option) => {
                   const currentAnswer = getCurrentAnswer(currentQuestion.id) as string[]
                   const isChecked = Array.isArray(currentAnswer) && currentAnswer.includes(option.value)
-                  
+
                   return (
                     <label
                       key={option.value}
-                      className={`flex items-center gap-3 p-4 border cursor-pointer transition-all ${
-                        isChecked
+                      className={`flex items-center gap-3 p-4 border cursor-pointer transition-all ${isChecked
                           ? 'border-terracotta bg-terracotta/5'
                           : 'border-sand hover:border-terracotta/50'
-                      }`}
+                        }`}
                     >
+                      <input
+                        type="checkbox"
+                        className="hidden"
+                        checked={isChecked}
+                        onChange={(e) => handleMultiSelect(currentQuestion.id, option.value, e.target.checked)}
+                      />
                       <div className={`w-4 h-4 border flex items-center justify-center ${isChecked ? 'border-terracotta bg-terracotta' : 'border-sand'}`}>
                         {isChecked && <Check className="h-3 w-3 text-cream" />}
                       </div>
@@ -467,7 +471,7 @@ export default function QuizClient() {
             <p className="font-body text-warm-gray mb-6">
               We're preparing our quiz. Please check back soon.
             </p>
-            <button 
+            <button
               onClick={() => router.push('/shop')}
               className="bg-charcoal text-cream px-6 py-3 font-body text-sm uppercase tracking-wider hover:bg-terracotta transition-colors"
             >

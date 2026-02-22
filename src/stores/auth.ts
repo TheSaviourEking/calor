@@ -13,6 +13,7 @@ interface AuthState {
   customer: Customer | null
   isAuthenticated: boolean
   isLoading: boolean
+  hasFetched: boolean
   setCustomer: (customer: Customer | null) => void
   logout: () => void
   fetchCustomer: () => Promise<void>
@@ -20,59 +21,66 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       customer: null,
       isAuthenticated: false,
       isLoading: true,
-      
-      setCustomer: (customer) => set({ 
-        customer, 
+      hasFetched: false,
+
+      setCustomer: (customer) => set({
+        customer,
         isAuthenticated: !!customer,
-        isLoading: false 
+        isLoading: false
       }),
-      
+
       logout: () => {
-        set({ 
-          customer: null, 
+        set({
+          customer: null,
           isAuthenticated: false,
-          isLoading: false 
+          isLoading: false,
+          hasFetched: false
         })
         // Also call the logout API
-        fetch('/api/auth/logout', { method: 'POST' }).catch(() => {})
+        fetch('/api/auth/logout', { method: 'POST' }).catch(() => { })
       },
-      
+
       fetchCustomer: async () => {
+        if (get().hasFetched) return;
+
         try {
           const res = await fetch('/api/auth/me')
           const data = await res.json()
-          
+
           if (data.customer) {
-            set({ 
-              customer: data.customer, 
+            set({
+              customer: data.customer,
               isAuthenticated: true,
-              isLoading: false 
+              isLoading: false,
+              hasFetched: true
             })
           } else {
-            set({ 
-              customer: null, 
+            set({
+              customer: null,
               isAuthenticated: false,
-              isLoading: false 
+              isLoading: false,
+              hasFetched: true
             })
           }
         } catch {
-          set({ 
-            customer: null, 
+          set({
+            customer: null,
             isAuthenticated: false,
-            isLoading: false 
+            isLoading: false,
+            hasFetched: true
           })
         }
       },
     }),
     {
       name: 'calor-auth',
-      partialize: (state) => ({ 
+      partialize: (state) => ({
         customer: state.customer,
-        isAuthenticated: state.isAuthenticated 
+        isAuthenticated: state.isAuthenticated
       }),
     }
   )

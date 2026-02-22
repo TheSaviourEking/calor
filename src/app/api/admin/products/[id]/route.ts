@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { adminApiHandler } from '@/lib/admin/middleware'
 import { checkAndSendStockAlerts } from '@/lib/stock-alerts'
+import { productUpdateSchema } from '@/lib/validations/products'
 
 export async function PATCH(
   request: NextRequest,
@@ -11,17 +12,31 @@ export async function PATCH(
 
     try {
       const { id } = await params
-      const body = await request.json()
+      let body: unknown
+      try {
+        body = await request.json()
+      } catch {
+        return NextResponse.json({ error: 'Request body must be valid JSON.' }, { status: 400 })
+      }
+
+      const result = productUpdateSchema.safeParse(body)
+      if (!result.success) {
+        return NextResponse.json(
+          { error: 'Invalid input.', details: result.error.flatten().fieldErrors },
+          { status: 400 }
+        )
+      }
 
       // Get old product to check inventory changes
       const oldProduct = await db.product.findUnique({
         where: { id },
         include: { variants: true },
+        // take: handled
       })
 
       const product = await db.product.update({
         where: { id },
-        data: body,
+        data: result.data,
         include: {
           category: true,
           variants: true,

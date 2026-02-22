@@ -33,10 +33,12 @@ interface GiftWrappingOption {
 
 interface CheckoutClientProps {
   giftWrappingOptions: GiftWrappingOption[];
+  initialAvailablePoints?: number;
 }
 
 export default function CheckoutClient({
   giftWrappingOptions,
+  initialAvailablePoints = 0,
 }: CheckoutClientProps) {
   const router = useRouter();
   const { items, getTotal } = useCartStore();
@@ -93,21 +95,10 @@ export default function CheckoutClient({
   const [pointsLoading, setPointsLoading] = useState(false);
   const [pointsToUse, setPointsToUse] = useState<number>(0);
 
-  // Fetch available loyalty points on mount
+  // Initialize loyalty points from server props
   useEffect(() => {
-    async function fetchLoyaltyPoints() {
-      try {
-        const res = await fetch("/api/checkout/loyalty-points");
-        if (res.ok) {
-          const data = await res.json();
-          setAvailablePoints(data.points);
-        }
-      } catch (error) {
-        console.error("Error fetching loyalty points:", error);
-      }
-    }
-    fetchLoyaltyPoints();
-  }, [setAvailablePoints]);
+    setAvailablePoints(initialAvailablePoints);
+  }, [initialAvailablePoints, setAvailablePoints]);
 
   const subtotal = getTotal();
   const shipping = subtotal >= 7500 ? 0 : 1200;
@@ -124,11 +115,11 @@ export default function CheckoutClient({
   const grandTotal = Math.max(
     0,
     subtotal +
-      shipping +
-      wrappingCost -
-      promoDiscount -
-      giftCardDiscount -
-      pointsDiscount,
+    shipping +
+    wrappingCost -
+    promoDiscount -
+    giftCardDiscount -
+    pointsDiscount,
   );
 
   // Handle promo code application
@@ -601,7 +592,7 @@ export default function CheckoutClient({
                               shipping +
                               wrappingCost -
                               promoDiscount) *
-                              100,
+                            100,
                           )}
                           value={pointsToUse}
                           onChange={(e) =>
@@ -626,9 +617,9 @@ export default function CheckoutClient({
                             applyPoints(
                               pointsToUse,
                               subtotal +
-                                shipping +
-                                wrappingCost -
-                                promoDiscount,
+                              shipping +
+                              wrappingCost -
+                              promoDiscount,
                             );
                             toast.success(
                               `${pointsToUse.toLocaleString()} points applied!`,
@@ -663,14 +654,12 @@ export default function CheckoutClient({
                   <button
                     type="button"
                     onClick={() => setIsGift(!isGift)}
-                    className={`w-12 h-6 relative transition-colors ${
-                      isGift ? "bg-terracotta" : "bg-sand"
-                    }`}
+                    className={`w-12 h-6 relative transition-colors ${isGift ? "bg-terracotta" : "bg-sand"
+                      }`}
                   >
                     <span
-                      className={`absolute top-1 w-4 h-4 bg-cream transition-transform ${
-                        isGift ? "right-1" : "left-1"
-                      }`}
+                      className={`absolute top-1 w-4 h-4 bg-cream transition-transform ${isGift ? "right-1" : "left-1"
+                        }`}
                     />
                   </button>
                 </div>
@@ -687,11 +676,10 @@ export default function CheckoutClient({
                           {giftWrappingOptions.map((option) => (
                             <label
                               key={option.id}
-                              className={`flex items-start gap-3 p-3 cursor-pointer border transition-colors ${
-                                selectedWrapping === option.id
+                              className={`flex items-start gap-3 p-3 cursor-pointer border transition-colors ${selectedWrapping === option.id
                                   ? "border-terracotta bg-terracotta/5"
                                   : "border-sand hover:border-terracotta/50"
-                              }`}
+                                }`}
                             >
                               <input
                                 type="radio"
@@ -756,14 +744,12 @@ export default function CheckoutClient({
                         <button
                           type="button"
                           onClick={() => setIsAnonymousGift(!isAnonymousGift)}
-                          className={`w-10 h-5 relative transition-colors ${
-                            isAnonymousGift ? "bg-terracotta" : "bg-sand"
-                          }`}
+                          className={`w-10 h-5 relative transition-colors ${isAnonymousGift ? "bg-terracotta" : "bg-sand"
+                            }`}
                         >
                           <span
-                            className={`absolute top-0.5 w-4 h-4 bg-cream transition-transform ${
-                              isAnonymousGift ? "right-0.5" : "left-0.5"
-                            }`}
+                            className={`absolute top-0.5 w-4 h-4 bg-cream transition-transform ${isAnonymousGift ? "right-0.5" : "left-0.5"
+                              }`}
                           />
                         </button>
                       </div>

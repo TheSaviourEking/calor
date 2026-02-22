@@ -1,47 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getSession } from '@/lib/auth'
+import { returnCreateSchema, returnUpdateSchema } from '@/lib/validations/returns'
 
-// Get return requests for customer
 export async function GET(request: NextRequest) {
   try {
     const session = await getSession()
-    const { searchParams } = new URL(request.url)
-    const orderId = searchParams.get('orderId')
 
-    if (orderId) {
-      // Get returns for specific order
-      const returns = await db.returnRequest.findMany({ take: 50,
-        where: { orderId },
-        include: {
-          items: true,
-          customer: { select: { id: true, firstName: true, lastName: true, email: true } }
-        },
-        orderBy: { createdAt: 'desc' }
-      })
-      return NextResponse.json({ returns })
-    }
-
+    // 1. Authenticate FIRST
     if (!session?.customerId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get all returns for customer
-    const returns = await db.returnRequest.findMany({ take: 50,
-      where: { customerId: session.customerId },
-      include: {
-        items: {
-          include: {
-            returnRequest: {
-              include: { order: { include: { items: true } } }
-            }
-          }
-        },
-        order: {
-          include: {
-            items: { include: { product: { include: { images: true } } } }
-          }
-        }
+    const { searchParams } = new URL(request.url)
+    const orderId = searchParams.get('orderId')
+
+    const baseQuery = orderId
+      ? { orderId, customerId: session.customerId }
+      : { customerId: session.customerId }
+
+    // 2. Exact Select fields mapped to Client requirements (fixes data exposure & recursive includes)
+    const returns = await db.returnRequest.findMany({
+      take: 50,
+      where: baseQuery,
+      select: {
+        id: true,
+        status: true,
+        reason: true,
+        reasonDetails: true,
+        refundMethod: true,
+        refundAmount: true,
+        trackingNumber: true,
+        createdAt: true,
+        order: { select: { reference: true } },
+        items: { select: { id: true, quantity: true, condition: true } }
       },
       orderBy: { createdAt: 'desc' }
     })
@@ -56,12 +48,22 @@ export async function GET(request: NextRequest) {
 // Create new return request
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { orderId, reason, reasonDetails, refundMethod, items, guestEmail } = body
-
-    if (!orderId || !reason || !refundMethod || !items || items.length === 0) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    let body: unknown
+    try {
+      body = await request.json()
+    } catch {
+      return NextResponse.json({ error: 'Request body must be valid JSON' }, { status: 400 })
     }
+
+    const result = returnCreateSchema.safeParse(body)
+    if (!result.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: result.error.flatten().fieldErrors },
+        { status: 400 }
+      )
+    }
+
+    const { orderId, reason, reasonDetails, refundMethod, items, guestEmail } = result.data
 
     const session = await getSession()
     const customerId = session?.customerId || null
@@ -83,7 +85,7 @@ export async function POST(request: NextRequest) {
 
     // Calculate refund amount
     let totalRefund = 0
-    const returnItems = items.map((item: { orderItemId: string; quantity: number; condition: string }) => {
+    const returnItems = items.map((item: { orderItemId: string; quantity: number; condition?: string }) => {
       const orderItem = order.items.find(i => i.id === item.orderItemId)
       if (orderItem) {
         totalRefund += orderItem.priceCents * item.quantity
@@ -115,8 +117,8 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       returnRequest,
       message: 'Return request submitted successfully. We will review and respond within 1-2 business days.'
     })
@@ -129,12 +131,22 @@ export async function POST(request: NextRequest) {
 // Update return status (for admin or customer actions)
 export async function PUT(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { returnId, action, trackingNumber } = body
-
-    if (!returnId || !action) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    let body: unknown
+    try {
+      body = await request.json()
+    } catch {
+      return NextResponse.json({ error: 'Request body must be valid JSON' }, { status: 400 })
     }
+
+    const result = returnUpdateSchema.safeParse(body)
+    if (!result.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: result.error.flatten().fieldErrors },
+        { status: 400 }
+      )
+    }
+
+    const { returnId, action, trackingNumber } = result.data
 
     const session = await getSession()
     if (!session?.customerId) {

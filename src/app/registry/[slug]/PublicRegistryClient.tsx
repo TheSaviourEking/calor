@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { 
+import {
   Gift, Calendar, MapPin, Lock, ShoppingBag, Heart, Users,
   Package, ChevronRight, Share2, Copy, Check
 } from 'lucide-react'
@@ -82,34 +82,38 @@ const priorityStyles: Record<string, string> = {
   nice_to_have: 'bg-cream text-warm-gray',
 }
 
-export default function PublicRegistryClient() {
+interface PublicRegistryClientProps {
+  initialRegistry?: PublicRegistry | null
+  initialRequiresPassword?: boolean
+}
+
+export default function PublicRegistryClient({
+  initialRegistry = null,
+  initialRequiresPassword = false
+}: PublicRegistryClientProps) {
   const params = useParams()
   const router = useRouter()
   const slug = params.slug as string
-  
-  const [registry, setRegistry] = useState<PublicRegistry | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [requiresPassword, setRequiresPassword] = useState(false)
+
+  const [registry, setRegistry] = useState<PublicRegistry | null>(initialRegistry)
+  const [loading, setLoading] = useState(false)
+  const [requiresPassword, setRequiresPassword] = useState(initialRequiresPassword)
   const [password, setPassword] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [copied, setCopied] = useState(false)
-  
+
   const { addItem } = useCartStore()
   const { formatPrice } = useLocaleStore()
-
-  useEffect(() => {
-    fetchRegistry()
-  }, [slug])
 
   const fetchRegistry = async (pwd?: string) => {
     setLoading(true)
     try {
-      const url = pwd 
+      const url = pwd
         ? `/api/registry/slug/${slug}?password=${encodeURIComponent(pwd)}`
         : `/api/registry/slug/${slug}`
-      
+
       const res = await fetch(url)
-      
+
       if (res.status === 401) {
         const data = await res.json()
         if (data.requiresPassword) {
@@ -141,7 +145,7 @@ export default function PublicRegistryClient() {
       category: item.category || item.product?.category?.name || 'Registry Item',
       price: item.price,
       quantity: 1,
-      image: item.imageUrl,
+      image: item.imageUrl || undefined,
     })
     toast.success('Added to bag!')
   }
@@ -162,12 +166,12 @@ export default function PublicRegistryClient() {
   }
 
   // Get unique categories
-  const categories = registry 
-    ? ['all', ...new Set(registry.items.map(i => i.category).filter(Boolean))]
+  const categories = registry
+    ? ['all', ...new Set(registry.items.map(i => i.category).filter(Boolean) as string[])]
     : ['all']
 
   // Filter items
-  const filteredItems = registry?.items.filter(item => 
+  const filteredItems = registry?.items.filter(item =>
     selectedCategory === 'all' || item.category === selectedCategory
   ) || []
 
@@ -188,7 +192,7 @@ export default function PublicRegistryClient() {
           <div className="max-w-md mx-auto px-6 py-16">
             <div className="text-center mb-8">
               <Lock className="w-12 h-12 text-terracotta mx-auto mb-4" />
-              <h1 
+              <h1
                 className="font-display text-charcoal"
                 style={{ fontSize: '1.5rem', fontWeight: 300 }}
               >
@@ -247,7 +251,7 @@ export default function PublicRegistryClient() {
           <div className="max-w-4xl mx-auto px-6">
             <div className="text-center">
               <span className="eyebrow">{registry.registryType.replace('_', ' ')} Registry</span>
-              <h1 
+              <h1
                 className="font-display text-charcoal mt-4"
                 style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', fontWeight: 300 }}
               >
@@ -256,7 +260,7 @@ export default function PublicRegistryClient() {
               <p className="font-body text-warm-gray mt-2">
                 For {registry.ownerName}
               </p>
-              
+
               {/* Event Info */}
               {(registry.eventDate || registry.eventLocation) && (
                 <div className="flex items-center justify-center gap-6 mt-4 font-body text-sm text-warm-gray">
@@ -303,7 +307,7 @@ export default function PublicRegistryClient() {
                 </span>
               </div>
               <div className="h-2 bg-sand overflow-hidden">
-                <div 
+                <div
                   className="h-full bg-terracotta transition-all"
                   style={{ width: `${registry.stats.completionPercentage}%` }}
                 />
@@ -325,7 +329,7 @@ export default function PublicRegistryClient() {
               </h3>
               <div className="flex gap-4 overflow-x-auto pb-2">
                 {registry.events.map((event) => (
-                  <div 
+                  <div
                     key={event.id}
                     className="flex-shrink-0 p-4 border border-sand bg-cream"
                   >
@@ -355,11 +359,10 @@ export default function PublicRegistryClient() {
                 <button
                   key={cat}
                   onClick={() => setSelectedCategory(cat)}
-                  className={`flex-shrink-0 px-4 py-2 font-body text-sm transition-colors ${
-                    selectedCategory === cat
-                      ? 'bg-charcoal text-cream'
-                      : 'border border-sand text-charcoal hover:border-terracotta'
-                  }`}
+                  className={`flex-shrink-0 px-4 py-2 font-body text-sm transition-colors ${selectedCategory === cat
+                    ? 'bg-charcoal text-cream'
+                    : 'border border-sand text-charcoal hover:border-terracotta'
+                    }`}
                 >
                   {cat === 'all' ? 'All Items' : cat}
                 </button>
@@ -380,8 +383,8 @@ export default function PublicRegistryClient() {
                   {/* Image */}
                   <div className="relative aspect-square bg-gradient-to-br from-cream to-sand">
                     {item.imageUrl ? (
-                      <img 
-                        src={item.imageUrl} 
+                      <img
+                        src={item.imageUrl}
                         alt={item.name}
                         className="w-full h-full object-cover"
                       />
@@ -390,7 +393,7 @@ export default function PublicRegistryClient() {
                         <Gift className="w-16 h-16 text-sand" />
                       </div>
                     )}
-                    
+
                     {/* Priority Badge */}
                     <span className={`absolute top-3 left-3 px-2 py-1 text-xs font-body uppercase tracking-wider ${priorityStyles[item.priority] || 'bg-sand text-mid-gray'}`}>
                       {priorityLabels[item.priority] || item.priority}
@@ -409,7 +412,7 @@ export default function PublicRegistryClient() {
                     <p className="font-body text-warm-gray text-xs">
                       {item.category || item.product?.category?.name || 'Gift Item'}
                     </p>
-                    <h3 
+                    <h3
                       className="font-display text-charcoal mt-1"
                       style={{ fontSize: '1.1rem', fontWeight: 400 }}
                     >
@@ -446,7 +449,7 @@ export default function PublicRegistryClient() {
                           <span>{formatPrice(item.contributionTotal)} of {formatPrice(item.price)}</span>
                         </div>
                         <div className="h-1 bg-sand overflow-hidden">
-                          <div 
+                          <div
                             className="h-full bg-gold"
                             style={{ width: `${(item.contributionTotal / item.price) * 100}%` }}
                           />

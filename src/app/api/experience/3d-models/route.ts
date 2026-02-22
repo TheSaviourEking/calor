@@ -25,13 +25,13 @@ export async function GET(request: NextRequest) {
     })
 
     if (!model) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         model: null,
-        message: 'No 3D model available for this product' 
+        message: 'No 3D model available for this product'
       })
     }
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       model: {
         ...model,
         animations: model.animations ? JSON.parse(model.animations) : [],
@@ -53,35 +53,35 @@ export async function GET(request: NextRequest) {
 // POST - Create or update 3D model
 export async function POST(request: NextRequest) {
   try {
-    const data = await request.json()
-    
+    const reqData = await request.json()
+
     const model = await db.product3DModel.upsert({
-      where: { productId: data.productId },
+      where: { productId: reqData.productId },
       create: {
-        productId: data.productId,
-        modelUrl: data.modelUrl,
-        modelType: data.modelType || 'glb',
-        thumbnailUrl: data.thumbnailUrl,
-        animations: data.animations ? JSON.stringify(data.animations) : null,
-        arSupported: data.arSupported || false,
-        arScale: data.arScale,
-        isProcessing: data.isProcessing || false,
-        isReady: data.isReady !== false,
+        productId: reqData.productId,
+        modelUrl: reqData.modelUrl,
+        modelType: reqData.modelType || 'glb',
+        thumbnailUrl: reqData.thumbnailUrl,
+        animations: reqData.animations ? JSON.stringify(reqData.animations) : null,
+        arSupported: reqData.arSupported || false,
+        arScale: reqData.arScale,
+        isProcessing: reqData.isProcessing || false,
+        isReady: reqData.isReady !== false,
       },
       update: {
-        modelUrl: data.modelUrl,
-        modelType: data.modelType || 'glb',
-        thumbnailUrl: data.thumbnailUrl,
-        animations: data.animations ? JSON.stringify(data.animations) : null,
-        arSupported: data.arSupported || false,
-        arScale: data.arScale,
-        isProcessing: data.isProcessing || false,
-        isReady: data.isReady !== false,
+        modelUrl: reqData.modelUrl,
+        modelType: reqData.modelType || 'glb',
+        thumbnailUrl: reqData.thumbnailUrl,
+        animations: reqData.animations ? JSON.stringify(reqData.animations) : null,
+        arSupported: reqData.arSupported || false,
+        arScale: reqData.arScale,
+        isProcessing: reqData.isProcessing || false,
+        isReady: reqData.isReady !== false,
       }
     })
 
     // Create hotspots if provided
-    if (data.hotspots && Array.isArray(data.hotspots)) {
+    if (reqData.hotspots && Array.isArray(reqData.hotspots)) {
       // Delete existing hotspots
       await db.productHotspot.deleteMany({
         where: { modelId: model.id }
@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
 
       // Create new hotspots
       await db.productHotspot.createMany({
-        data: data.hotspots.map((h: Record<string, unknown>, index: number) => ({
+        data: reqData.hotspots.map((h: Record<string, unknown>, index: number) => ({
           modelId: model.id,
           positionX: (h.position as Record<string, number>)?.x || 0,
           positionY: (h.position as Record<string, number>)?.y || 0,

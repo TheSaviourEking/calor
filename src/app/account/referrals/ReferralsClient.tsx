@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Gift, Users, Copy, Check, Share2, ExternalLink, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
-interface ReferralCode {
+export interface ReferralCode {
   id: string
   code: string
   referralCount: number
@@ -23,30 +23,9 @@ interface ReferralCode {
   }>
 }
 
-export default function ReferralsClient() {
-  const [referralCode, setReferralCode] = useState<ReferralCode | null>(null)
-  const [loading, setLoading] = useState(true)
+export default function ReferralsClient({ initialReferralCode }: { initialReferralCode: ReferralCode | null }) {
+  const [referralCode] = useState<ReferralCode | null>(initialReferralCode)
   const [copied, setCopied] = useState(false)
-
-  useEffect(() => {
-    fetchReferralCode()
-  }, [])
-
-  const fetchReferralCode = async () => {
-    try {
-      const res = await fetch('/api/referrals/code')
-      const data = await res.json()
-      if (res.ok) {
-        setReferralCode(data.referralCode)
-      } else {
-        toast.error('Failed to load referral code')
-      }
-    } catch (error) {
-      toast.error('Something went wrong')
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const copyToClipboard = () => {
     if (!referralCode) return
@@ -60,7 +39,7 @@ export default function ReferralsClient() {
     if (!referralCode) return
     const shareUrl = `${window.location.origin}?ref=${referralCode.code}`
     const shareText = `Use my referral code ${referralCode.code} at CALŌR for $10 off your first order!`
-    
+
     if (navigator.share) {
       try {
         await navigator.share({
@@ -90,20 +69,12 @@ export default function ReferralsClient() {
     return `${local.substring(0, 2)}***@${domain}`
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <Loader2 className="w-8 h-8 animate-spin text-terracotta" />
-      </div>
-    )
-  }
-
   return (
     <div className="space-y-8">
       {/* Header */}
       <div className="text-center">
         <span className="eyebrow">Earn Rewards</span>
-        <h1 
+        <h1
           className="font-display text-charcoal mt-4"
           style={{ fontSize: 'clamp(2rem, 4vw, 2.5rem)', fontWeight: 300 }}
         >
@@ -122,7 +93,7 @@ export default function ReferralsClient() {
             Your Referral Code
           </h2>
         </div>
-        
+
         {referralCode ? (
           <>
             <div className="flex items-center justify-center gap-4 mb-6">
@@ -132,7 +103,7 @@ export default function ReferralsClient() {
                 </span>
               </div>
             </div>
-            
+
             <div className="flex items-center justify-center gap-4">
               <button
                 onClick={copyToClipboard}
@@ -265,13 +236,12 @@ export default function ReferralsClient() {
                       {formatDate(referral.createdAt)}
                     </td>
                     <td className="py-4 px-6">
-                      <span className={`inline-block px-2 py-1 text-xs font-body ${
-                        referral.status === 'rewarded' 
-                          ? 'bg-green-100 text-green-700'
-                          : referral.status === 'qualified'
+                      <span className={`inline-block px-2 py-1 text-xs font-body ${referral.status === 'rewarded'
+                        ? 'bg-green-100 text-green-700'
+                        : referral.status === 'qualified'
                           ? 'bg-blue-100 text-blue-700'
                           : 'bg-yellow-100 text-yellow-700'
-                      }`}>
+                        }`}>
                         {referral.status.charAt(0).toUpperCase() + referral.status.slice(1)}
                       </span>
                     </td>

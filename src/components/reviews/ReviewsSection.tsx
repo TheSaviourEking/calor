@@ -35,6 +35,8 @@ interface ReviewSummary {
 interface ReviewsSectionProps {
   productId: string
   productName: string
+  initialReviews?: Review[]
+  initialReviewSummary?: ReviewSummary | null
 }
 
 function StarRating({ rating, size = 'md' }: { rating: number; size?: 'sm' | 'md' | 'lg' }) {
@@ -49,10 +51,9 @@ function StarRating({ rating, size = 'md' }: { rating: number; size?: 'sm' | 'md
       {[1, 2, 3, 4, 5].map((star) => (
         <Star
           key={star}
-          className={`${sizeClasses[size]} ${
-            star <= rating ? 'fill-terracotta text-terracotta' : 'text-sand'
-          }`}
-         
+          className={`${sizeClasses[size]} ${star <= rating ? 'fill-terracotta text-terracotta' : 'text-sand'
+            }`}
+
         />
       ))}
     </div>
@@ -77,10 +78,15 @@ function RatingBar({ stars, count, total }: { stars: number; count: number; tota
   )
 }
 
-export default function ReviewsSection({ productId, productName }: ReviewsSectionProps) {
-  const [reviews, setReviews] = useState<Review[]>([])
-  const [summary, setSummary] = useState<ReviewSummary | null>(null)
-  const [loading, setLoading] = useState(true)
+export default function ReviewsSection({
+  productId,
+  productName,
+  initialReviews = [],
+  initialReviewSummary = null
+}: ReviewsSectionProps) {
+  const [reviews, setReviews] = useState<Review[]>(initialReviews)
+  const [summary, setSummary] = useState<ReviewSummary | null>(initialReviewSummary)
+  const [loading, setLoading] = useState(false)
   const [showForm, setShowForm] = useState(false)
   const [expandedReviews, setExpandedReviews] = useState<Set<string>>(new Set())
   const [voting, setVoting] = useState<string | null>(null)
@@ -93,22 +99,7 @@ export default function ReviewsSection({ productId, productName }: ReviewsSectio
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    fetchReviews()
-  }, [productId])
-
-  const fetchReviews = async () => {
-    try {
-      const response = await fetch(`/api/reviews?productId=${productId}`)
-      const data = await response.json()
-      setReviews(data.reviews || [])
-      setSummary(data.summary)
-    } catch {
-      console.error('Failed to fetch reviews')
-    } finally {
-      setLoading(false)
-    }
-  }
+  // Removed automatic fetchReviews on mount since we have initial props
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -164,8 +155,8 @@ export default function ReviewsSection({ productId, productName }: ReviewsSectio
       const data = await response.json()
 
       if (response.ok) {
-        setReviews(reviews.map(r => 
-          r.id === reviewId 
+        setReviews(reviews.map(r =>
+          r.id === reviewId
             ? { ...r, helpfulCount: data.counts.helpfulCount, notHelpfulCount: data.counts.notHelpfulCount }
             : r
         ))
@@ -252,10 +243,9 @@ export default function ReviewsSection({ productId, productName }: ReviewsSectio
                   className="p-1 hover:scale-110 transition-transform"
                 >
                   <Star
-                    className={`w-8 h-8 ${
-                      star <= rating ? 'fill-terracotta text-terracotta' : 'text-sand'
-                    }`}
-                   
+                    className={`w-8 h-8 ${star <= rating ? 'fill-terracotta text-terracotta' : 'text-sand'
+                      }`}
+
                   />
                 </button>
               ))}
