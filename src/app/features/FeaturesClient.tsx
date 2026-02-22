@@ -2,382 +2,272 @@
 
 import Link from 'next/link'
 import ClientWrapper from '@/components/layout/ClientWrapper'
-import { 
-  Sparkles, Gift, Heart, Camera, Bot, Crown, Shield, 
-  Package, Users, BarChart3, Video, Gamepad2, Box,
-  Zap, Star, Radio, Calendar, Target, MessageSquare,
-  ChevronRight, ArrowRight, Play, HeartHandshake,
-  Luggage, Ticket, BadgeCheck, Wand2, Flame, CoupleIcon
+import {
+  Sparkles, Gift, Heart, Camera, Crown, Shield,
+  Package, Users, Video, Focus,
+  Star, Radio, Calendar, Target, MessageSquare,
+  ChevronRight, HeartHandshake,
+  Activity, Zap, User, Link2
 } from 'lucide-react'
 
 const featureCategories = [
   {
     title: 'Shopping Experience',
-    description: 'A seamless, personalized shopping journey',
-    color: 'terracotta',
+    description: 'A seamless, personalized journey tailored to your intimate needs.',
     features: [
       {
-        icon: Bot,
-        title: 'AI Product Recommendations',
-        description: 'Personalized suggestions based on your preferences, purchase history, and browsing behavior.',
+        icon: Sparkles,
+        title: 'AI Curation',
+        description: 'Personalized product suggestions based on your unique preferences and browsing behavior.',
         link: '/shop',
-        badge: 'AI-Powered'
+        badge: 'Intelligence'
       },
       {
-        icon: Box,
-        title: 'AR Try-On & 3D Viewer',
-        description: 'Experience products virtually with augmented reality try-on and 360° 3D viewing.',
+        icon: Focus,
+        title: 'Virtual Try-On',
+        description: 'Experience products virtually with high-fidelity augmented reality and 360° detail.',
         link: '/experience',
-        badge: 'Interactive'
+        badge: 'Experience'
       },
       {
-        icon: Target,
+        icon: Link2,
         title: 'Product Comparison',
-        description: 'Compare up to 4 products side-by-side to find your perfect match.',
+        description: 'Compare products side-by-side to find the perfect addition to your collection.',
         link: '/shop',
         badge: null
       },
       {
         icon: Star,
-        title: 'Smart Quiz',
-        description: 'Take our intelligent quiz to discover products tailored to your preferences and goals.',
+        title: 'Intimacy Quiz',
+        description: 'Our thoughtful quiz guides you to discoveries tailored to your personal goals.',
         link: '/quiz',
-        badge: 'Popular'
+        badge: 'Curated'
       },
       {
         icon: Zap,
-        title: 'Flash Sales',
-        description: 'Exclusive limited-time offers with countdown timers. Act fast before they are gone.',
+        title: 'Member Access',
+        description: 'Exclusive limited-time access to new releases and special inventory.',
         link: '/shop',
-        badge: 'Limited'
+        badge: 'Priority'
       },
       {
         icon: Package,
-        title: 'Product Bundles',
-        description: 'Curated bundles with built-in savings. Get more value with every purchase.',
+        title: 'Curated Bundles',
+        description: 'Thematically paired sets designed for seamless exploration and value.',
         link: '/shop/bundles',
-        badge: 'Save 20%+'
+        badge: 'Sets'
       }
     ]
   },
   {
     title: 'Wellness Platform',
-    description: 'Track your journey, earn rewards, connect with your partner',
-    color: 'purple',
+    description: 'Tools for connection, reflection, and habit-building.',
     features: [
       {
-        icon: Flame,
-        title: 'Daily Check-ins & Streaks',
-        description: 'Build healthy habits with daily wellness check-ins. Maintain streaks for bonus rewards.',
+        icon: Activity,
+        title: 'Daily Reflection',
+        description: 'Track your wellness journey with mindful daily check-ins and insights.',
         link: '/account/wellness',
-        badge: 'Gamified'
+        badge: 'Wellness'
       },
       {
-        icon: Crown,
-        title: 'Achievements & Badges',
-        description: 'Earn achievement badges across bronze, silver, gold, and platinum tiers.',
-        link: '/account/wellness',
-        badge: 'Fun'
-      },
-      {
-        icon: Gamepad2,
-        title: 'Smart Toy Integration',
-        description: 'Connect smart devices, create custom patterns, and track sessions with loyalty rewards.',
-        link: '/account/toys',
-        badge: 'Advanced'
-      },
-      {
-        icon: HeartHandshake,
-        title: 'Couple Wellness',
-        description: 'Link accounts with your partner, set shared goals, and track your connection score.',
+        icon: Heart,
+        title: 'Connection Score',
+        description: 'Build intimacy with your partner through shared goals and synchronised tracking.',
         link: '/account/couple',
-        badge: 'Couples'
+        badge: 'Partners'
+      },
+      {
+        icon: Video,
+        title: 'Smart Integration',
+        description: 'Connect and control your compatible devices with precision and privacy.',
+        link: '/account/toys',
+        badge: 'Technology'
       },
       {
         icon: Calendar,
-        title: '7-Day Reward Calendar',
-        description: 'Log in daily to unlock rewards, bonuses, and exclusive offers.',
+        title: 'Wellness Calendar',
+        description: 'A visual map of your progress and upcoming milestones in your journey.',
         link: '/account/wellness',
         badge: null
       },
       {
+        icon: HeartHandshake,
+        title: 'Guided Sessions',
+        description: 'Access library of expert-led sessions for every mood and intention.',
+        link: '/account/wellness',
+        badge: 'Expertise'
+      },
+      {
         icon: Target,
-        title: 'Challenges & Goals',
-        description: 'Participate in wellness challenges and track progress toward personal goals.',
+        title: 'Personal Goals',
+        description: 'Set and achieve personal connection milestones at your own pace.',
         link: '/account/wellness',
         badge: null
       }
     ]
   },
   {
-    title: 'Loyalty & Rewards',
-    description: 'Get rewarded for every interaction',
-    color: 'gold',
+    title: 'Loyalty & Recognition',
+    description: 'Understated rewards for our most dedicated community members.',
     features: [
       {
         icon: Crown,
-        title: 'VIP Membership Tiers',
-        description: 'Progress through Bronze, Silver, Gold, and Platinum tiers with exclusive benefits.',
+        title: 'VIP Tiers',
+        description: 'Unlock higher levels of service as you progress from Bronze to Platinum.',
         link: '/account/vip',
-        badge: '4 Tiers'
+        badge: 'Membership'
       },
       {
         icon: Sparkles,
-        title: 'Points on Everything',
-        description: 'Earn points on purchases, reviews, referrals, and wellness activities.',
+        title: 'Points & Privilege',
+        description: 'Accumulate points through engagements and redeem for exclusive experiences.',
         link: '/account/vip',
-        badge: 'Earn More'
+        badge: 'Rewards'
       },
       {
         icon: Gift,
-        title: 'Rewards Store',
-        description: 'Redeem points for discounts, free products, and exclusive experiences.',
+        title: 'Private Store',
+        description: 'A collection of rare items and rewards available only via tier points.',
         link: '/account/rewards',
-        badge: 'Redeem'
+        badge: 'Exclusive'
       },
       {
         icon: Users,
-        title: 'Referral Program',
-        description: 'Invite friends and earn $10 credit for both of you when they make their first purchase.',
+        title: 'The Table',
+        description: 'Refer those you care about and share the Calor experience with mutual benefits.',
         link: '/account/referrals',
-        badge: '$10 Each'
+        badge: 'Referrals'
       }
     ]
   },
   {
     title: 'Gifting & Registry',
-    description: 'Perfect for special occasions',
-    color: 'terracotta',
+    description: 'Elevated ways to celebrate milestones and connections.',
     features: [
       {
         icon: Gift,
         title: 'Gift Registry',
-        description: 'Create registries for weddings, birthdays, baby showers, and special occasions.',
+        description: 'Beautifully managed lists for weddings, anniversaries, and milestones.',
         link: '/registry',
-        badge: 'New'
+        badge: 'Planning'
       },
       {
         icon: Users,
-        title: 'Group Gifting',
-        description: 'Friends and family can contribute toward bigger gifts together.',
+        title: 'Collective Gifting',
+        description: 'Coordinate with others to contribute toward meaningful, high-value gifts.',
         link: '/registry',
-        badge: 'Collaborative'
+        badge: 'Shared'
       },
       {
-        icon: Gift,
-        title: 'Digital Gift Cards',
-        description: 'Send personalized gift cards instantly or schedule for special dates.',
+        icon: Star,
+        title: 'Digital Gifts',
+        description: 'Instant, personalized digital tokens of appreciation and care.',
         link: '/gift-cards',
         badge: null
       },
       {
         icon: Heart,
-        title: 'Wishlist Sharing',
-        description: 'Create and share wishlists with unique links. Perfect for gift ideas.',
+        title: 'Curated Wishlists',
+        description: 'Maintain and share elegant lists of desired products with those you trust.',
         link: '/account/wishlist',
         badge: null
       }
     ]
   },
   {
-    title: 'Live Shopping',
-    description: 'Interactive, real-time shopping experiences',
-    color: 'red',
-    features: [
-      {
-        icon: Radio,
-        title: 'Live Streams',
-        description: 'Watch live product demos, tutorials, and exclusive reveals from hosts.',
-        link: '/live',
-        badge: 'Live'
-      },
-      {
-        icon: MessageSquare,
-        title: 'Live Chat',
-        description: 'Ask questions in real-time and get instant answers from hosts.',
-        link: '/live',
-        badge: null
-      },
-      {
-        icon: Zap,
-        title: 'Flash Offers',
-        description: 'Exclusive in-stream discounts available only during live broadcasts.',
-        link: '/live',
-        badge: 'Exclusive'
-      },
-      {
-        icon: Video,
-        title: 'Stream Replays',
-        description: 'Missed a live stream? Watch replays anytime at your convenience.',
-        link: '/live',
-        badge: null
-      }
-    ]
-  },
-  {
-    title: 'Expert Services',
-    description: 'Professional guidance when you need it',
-    color: 'blue',
-    features: [
-      {
-        icon: Calendar,
-        title: 'Virtual Consultations',
-        description: 'Book 1-on-1 video sessions with certified wellness experts and coaches.',
-        link: '/consultations',
-        badge: 'Expert'
-      },
-      {
-        icon: Package,
-        title: 'Subscription Boxes',
-        description: 'Curated monthly boxes delivered to your door with handpicked products.',
-        link: '/subscriptions',
-        badge: 'Monthly'
-      },
-      {
-        icon: Bot,
-        title: 'AI Support Chat',
-        description: 'Get instant answers to common questions with our intelligent chatbot.',
-        link: '/support',
-        badge: '24/7'
-      },
-      {
-        icon: MessageSquare,
-        title: 'Support Tickets',
-        description: 'Detailed support requests with tracking and priority handling.',
-        link: '/account/support',
-        badge: null
-      }
-    ]
-  },
-  {
-    title: 'Privacy & Security',
-    description: 'Your privacy is our priority',
-    color: 'charcoal',
+    title: 'Privacy & Care',
+    description: 'Your security and peace of mind are our primary focus.',
     features: [
       {
         icon: Shield,
-        title: 'Discreet Packaging',
-        description: 'Plain packaging with no branding. Your privacy is guaranteed.',
+        title: 'Absolute Privacy',
+        description: 'Unbranded, discreet packaging and billing for complete peace of mind.',
         link: '/account/packaging',
-        badge: 'Private'
+        badge: 'Discreet'
       },
       {
         icon: Shield,
-        title: 'Secure Payments',
-        description: 'Stripe, crypto, and bank transfer options with full encryption.',
+        title: 'Secure Operations',
+        description: 'End-to-end encryption for all transactions and payment methods.',
         link: '/checkout',
-        badge: 'Secure'
+        badge: 'Protected'
       },
       {
         icon: Shield,
-        title: 'Session Management',
-        description: 'View and revoke active sessions. Control your account security.',
+        title: 'Access Control',
+        description: 'Robust session management and granular controls over your data.',
         link: '/account/sessions',
         badge: null
       },
       {
-        icon: Shield,
-        title: 'Anonymous Gifting',
-        description: 'Send gifts without revealing your identity to the recipient.',
-        link: '/gifts',
-        badge: null
-      }
-    ]
-  },
-  {
-    title: 'Returns & Support',
-    description: 'Hassle-free customer care',
-    color: 'green',
-    features: [
-      {
         icon: Package,
-        title: 'Easy Returns Portal',
-        description: 'Simple return process with multiple refund options and tracking.',
+        title: 'Seamless Care',
+        description: 'A dedicated portal for hassle-free returns and ongoing support.',
         link: '/returns',
-        badge: 'Easy'
-      },
-      {
-        icon: Star,
-        title: 'Product Reviews',
-        description: 'Read verified purchase reviews and share your own experiences.',
-        link: '/shop',
-        badge: null
-      },
-      {
-        icon: Zap,
-        title: 'Stock Alerts',
-        description: 'Get notified when out-of-stock items are back in inventory.',
-        link: '/account/alerts',
-        badge: null
-      },
-      {
-        icon: Zap,
-        title: 'Price Drop Alerts',
-        description: 'Set alerts for price drops on products in your wishlist.',
-        link: '/account/alerts',
-        badge: null
+        badge: 'Support'
       }
     ]
   }
 ]
 
 const stats = [
-  { label: 'Products', value: '500+' },
-  { label: 'Features', value: '90+' },
-  { label: 'Happy Customers', value: '10K+' },
-  { label: 'Countries', value: '50+' },
+  { label: 'Curated Products', value: '500+' },
+  { label: 'Intuitive Features', value: '90+' },
+  { label: 'Trusted Community', value: '10K+' },
+  { label: 'Global Reach', value: '50+' },
 ]
 
 export default function FeaturesClient() {
   return (
     <ClientWrapper>
-      <div className="min-h-screen pt-20 bg-cream">
-        {/* Hero */}
-        <div className="bg-gradient-to-br from-charcoal via-charcoal to-charcoal/90 py-20 lg:py-28">
-          <div className="max-w-6xl mx-auto px-6">
-            <div className="text-center">
-              <div className="flex items-center justify-center gap-2 mb-4">
-                <Sparkles className="w-5 h-5 text-terracotta" />
-                <span className="font-body text-terracotta text-sm uppercase tracking-wider">Platform Features</span>
+      <div className="min-h-screen bg-cream">
+        {/* Hero Section */}
+        <section className="relative pt-32 pb-20 overflow-hidden bg-warm-white">
+          <div className="absolute top-0 right-0 w-1/2 h-full bg-cream/30 -skew-x-12 translate-x-1/4 pointer-events-none" />
+          <div className="container relative max-w-6xl mx-auto px-6">
+            <div className="max-w-3xl">
+              <div className="flex items-center gap-4 mb-8">
+                <span className="w-10 h-px bg-terracotta/40" />
+                <span className="eyebrow text-terracotta">Capabilities</span>
               </div>
-              <h1 
-                className="font-display text-cream mb-6"
-                style={{ fontSize: 'clamp(2.5rem, 6vw, 4rem)', fontWeight: 300 }}
-              >
-                Everything You Need
+              <h1 className="font-display text-charcoal mb-8" style={{ fontSize: 'clamp(2.5rem, 6vw, 4.5rem)', fontWeight: 300, lineHeight: 1.1 }}>
+                Designed for <span className="italic text-terracotta">intimacy</span>.
+                <br />Built for trust.
               </h1>
-              <p className="font-body text-cream/70 text-lg max-w-2xl mx-auto mb-8">
-                CALŌR is more than a store. It is a complete wellness platform designed 
-                to enhance every aspect of your intimate journey.
+              <p className="font-body text-warm-gray text-lg mb-10 leading-relaxed max-w-xl">
+                CALŌR merges advanced technology with elegant design to create a platform that respects your journey. Every feature is a deliberate step toward an elevated experience.
               </p>
-              <div className="flex flex-wrap justify-center gap-4">
+              <div className="flex flex-wrap gap-6">
                 <Link
                   href="/shop"
-                  className="px-8 py-3 bg-terracotta text-cream font-body text-sm uppercase tracking-wider hover:bg-terracotta/90 transition-colors"
+                  className="px-10 py-4 bg-charcoal text-cream font-body text-xs uppercase tracking-[0.2em] transition-all hover:bg-charcoal/90"
                 >
-                  Start Shopping
+                  Explore Collection
                 </Link>
                 <Link
                   href="/quiz"
-                  className="px-8 py-3 border border-cream/30 text-cream font-body text-sm uppercase tracking-wider hover:bg-cream/10 transition-colors"
+                  className="px-10 py-4 border border-sand text-charcoal font-body text-xs uppercase tracking-[0.2em] transition-all hover:bg-cream"
                 >
                   Take the Quiz
                 </Link>
               </div>
             </div>
           </div>
-        </div>
+        </section>
 
-        {/* Stats */}
-        <div className="bg-sand/50 py-8 border-b border-sand">
+        {/* Stats Strip */}
+        <div className="border-y border-sand bg-warm-white/30 py-12">
           <div className="max-w-6xl mx-auto px-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-12">
               {stats.map((stat) => (
-                <div key={stat.label} className="text-center">
-                  <p className="font-display text-charcoal text-3xl" style={{ fontWeight: 300 }}>
+                <div key={stat.label} className="text-center md:text-left">
+                  <p className="font-display text-charcoal text-3xl mb-1" style={{ fontWeight: 300 }}>
                     {stat.value}
                   </p>
-                  <p className="font-body text-warm-gray text-sm uppercase tracking-wider">{stat.label}</p>
+                  <span className="font-body text-warm-gray text-[10px] uppercase tracking-[0.2em]">
+                    {stat.label}
+                  </span>
                 </div>
               ))}
             </div>
@@ -385,47 +275,51 @@ export default function FeaturesClient() {
         </div>
 
         {/* Feature Categories */}
-        <div className="max-w-6xl mx-auto px-6 py-16 lg:py-24">
-          {featureCategories.map((category, categoryIndex) => (
-            <div key={category.title} className={categoryIndex > 0 ? 'mt-20 pt-12 border-t border-sand' : ''}>
-              <div className="mb-10">
-                <h2 
-                  className="font-display text-charcoal mb-2"
-                  style={{ fontSize: 'clamp(1.5rem, 3vw, 2rem)', fontWeight: 400 }}
-                >
-                  {category.title}
-                </h2>
-                <p className="font-body text-warm-gray">{category.description}</p>
+        <div className="max-w-6xl mx-auto px-6 py-24 lg:py-32">
+          {featureCategories.map((category, idx) => (
+            <div key={category.title} className={idx > 0 ? 'mt-32' : ''}>
+              <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
+                <div className="max-w-2xl">
+                  <div className="flex items-center gap-4 mb-4">
+                    <span className="w-10 h-px bg-sand" />
+                    <span className="eyebrow text-warm-gray">{category.title}</span>
+                  </div>
+                  <h2 className="font-display text-charcoal text-3xl md:text-4xl" style={{ fontWeight: 300 }}>
+                    {category.description}
+                  </h2>
+                </div>
               </div>
-              
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-y-16 gap-x-8">
                 {category.features.map((feature) => {
                   const Icon = feature.icon
                   return (
                     <Link
                       key={feature.title}
                       href={feature.link}
-                      className="group bg-warm-white border border-sand p-6 hover:border-terracotta/50 transition-all hover:shadow-lg"
+                      className="group block"
                     >
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="w-12 h-12 flex items-center justify-center bg-cream">
-                          <Icon className="w-6 h-6 text-terracotta" />
+                      <div className="bg-warm-white p-8 border border-sand transition-all duration-300 group-hover:border-terracotta/40 group-hover:-translate-y-1 group-hover:shadow-[0_20px_40px_-20px_rgba(0,0,0,0.05)]">
+                        <div className="flex justify-between items-start mb-8">
+                          <div className="p-3 bg-cream/50 rounded-full group-hover:bg-terracotta/5 transition-colors">
+                            <Icon className="w-6 h-6 text-terracotta/60 group-hover:text-terracotta transition-colors" />
+                          </div>
+                          {feature.badge && (
+                            <span className="px-3 py-1 bg-cream border border-sand text-[9px] font-body uppercase tracking-wider text-charcoal/60">
+                              {feature.badge}
+                            </span>
+                          )}
                         </div>
-                        {feature.badge && (
-                          <span className="px-2 py-1 bg-terracotta/10 text-terracotta text-xs font-body uppercase tracking-wider">
-                            {feature.badge}
-                          </span>
-                        )}
-                      </div>
-                      <h3 className="font-display text-charcoal text-lg mb-2 group-hover:text-terracotta transition-colors" style={{ fontWeight: 400 }}>
-                        {feature.title}
-                      </h3>
-                      <p className="font-body text-warm-gray text-sm leading-relaxed">
-                        {feature.description}
-                      </p>
-                      <div className="mt-4 flex items-center gap-2 text-terracotta font-body text-sm group-hover:gap-3 transition-all">
-                        <span>Learn more</span>
-                        <ChevronRight className="w-4 h-4" />
+                        <h3 className="font-display text-charcoal text-xl mb-3" style={{ fontWeight: 400 }}>
+                          {feature.title}
+                        </h3>
+                        <p className="font-body text-warm-gray text-sm leading-relaxed mb-6">
+                          {feature.description}
+                        </p>
+                        <div className="flex items-center gap-2 text-terracotta/60 font-body text-[10px] uppercase tracking-widest group-hover:text-terracotta group-hover:gap-3 transition-all">
+                          <span>Learn more</span>
+                          <ChevronRight className="w-3 h-3" />
+                        </div>
                       </div>
                     </Link>
                   )
@@ -436,34 +330,35 @@ export default function FeaturesClient() {
         </div>
 
         {/* CTA Section */}
-        <div className="bg-charcoal py-20">
+        <section className="py-24 lg:py-32 bg-charcoal">
           <div className="max-w-4xl mx-auto px-6 text-center">
-            <h2 
-              className="font-display text-cream mb-4"
-              style={{ fontSize: 'clamp(1.5rem, 3vw, 2.5rem)', fontWeight: 300 }}
-            >
-              Ready to Experience CALŌR?
+            <div className="flex items-center justify-center gap-4 mb-8">
+              <span className="w-10 h-px bg-gold/40" />
+              <span className="eyebrow text-gold">Join the Community</span>
+              <span className="w-10 h-px bg-gold/40" />
+            </div>
+            <h2 className="font-display text-cream mb-8" style={{ fontSize: 'clamp(2rem, 5vw, 3rem)', fontWeight: 300, lineHeight: 1.2 }}>
+              Ready to experience <br />the Calor difference?
             </h2>
-            <p className="font-body text-cream/70 text-lg mb-8 max-w-2xl mx-auto">
-              Join thousands of customers who trust us for their wellness journey. 
-              Create your free account and start exploring all features today.
+            <p className="font-body text-cream/60 text-lg mb-12 max-w-xl mx-auto leading-relaxed">
+              Create your account today and gain access to our full suite of personalized wellness tools and exclusive member features.
             </p>
-            <div className="flex flex-wrap justify-center gap-4">
+            <div className="flex flex-wrap justify-center gap-6">
               <Link
                 href="/account"
-                className="px-8 py-3 bg-terracotta text-cream font-body text-sm uppercase tracking-wider hover:bg-terracotta/90 transition-colors"
+                className="px-12 py-4 bg-terracotta text-cream font-body text-xs uppercase tracking-[0.2em] transition-all hover:bg-terracotta/90"
               >
                 Create Account
               </Link>
               <Link
                 href="/quiz"
-                className="px-8 py-3 border border-cream/30 text-cream font-body text-sm uppercase tracking-wider hover:bg-cream/10 transition-colors"
+                className="px-12 py-4 border border-cream/20 text-cream font-body text-xs uppercase tracking-[0.2em] transition-all hover:bg-cream/10"
               >
-                Take the Quiz
+                Intimacy Quiz
               </Link>
             </div>
           </div>
-        </div>
+        </section>
       </div>
     </ClientWrapper>
   )
