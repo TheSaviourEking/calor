@@ -1,0 +1,1388 @@
+=== FILE TREE ===
+./.DS_Store
+./.dockerignore
+./.gitignore
+./.zscripts/build.sh
+./.zscripts/mini-services-build.sh
+./.zscripts/mini-services-install.sh
+./.zscripts/mini-services-start.sh
+./.zscripts/start.sh
+./AUDIT_REPORT.md
+./COMPETITIVE_STRATEGY.md
+./Caddyfile
+./DEPLOYMENT.md
+./MINI-SERVICES.md
+./README.md
+./bun.lock
+./codebase_map.txt
+./components.json
+./db/custom.db
+./download/README.md
+./eslint.config.mjs
+./examples/websocket/frontend.tsx
+./examples/websocket/server.ts
+./map_codebase.sh
+./mini-services/.DS_Store
+./mini-services/.gitkeep
+./mini-services/live-stream/bun.lock
+./mini-services/live-stream/index.ts
+./mini-services/live-stream/package.json
+./mini-services/support-chat/bun.lock
+./mini-services/support-chat/index.ts
+./mini-services/support-chat/package.json
+./next.config.ts
+./package.json
+./postcss.config.mjs
+./prisma/schema.prisma
+./prisma/seed.ts
+./public/images/products/audio-erotica-membership.png
+./public/images/products/couples-connect-device.png
+./public/images/products/date-night-deck.png
+./public/images/products/desire-journal.png
+./public/images/products/erotic-novel-digital.png
+./public/images/products/guided-intimacy-series.png
+./public/images/products/honeymoon-kit.png
+./public/images/products/intimacy-guide-couples.png
+./public/images/products/midnight-lace-bodysuit.png
+./public/images/products/organic-water-based-lubricant.png
+./public/images/products/premium-condom-variety.png
+./public/images/products/pure-silk-robe.png
+./public/images/products/self-care-night-set.png
+./public/images/products/slow-burn-novel.png
+./public/images/products/sweet-almond-massage-oil.png
+./public/images/products/the-evening-collection.png
+./public/images/products/warm-touch-wand.png
+./public/images/products/whisper-quiet-massager.png
+./public/logo.svg
+./public/robots.txt
+./scripts/check-users.ts
+./scripts/create-test-users.ts
+./scripts/generate-product-images.ts
+./scripts/seed-wellness.ts
+./seed-phase5.ts
+./src/.DS_Store
+./src/app/account/alerts/AlertsClient.tsx
+./src/app/account/alerts/page.tsx
+./src/app/account/couple/CoupleClient.tsx
+./src/app/account/couple/page.tsx
+./src/app/account/layout.tsx
+./src/app/account/loyalty/LoyaltyClient.tsx
+./src/app/account/loyalty/page.tsx
+./src/app/account/orders/page.tsx
+./src/app/account/packaging/PackagingClient.tsx
+./src/app/account/packaging/page.tsx
+./src/app/account/page.tsx
+./src/app/account/referrals/ReferralsClient.tsx
+./src/app/account/referrals/page.tsx
+./src/app/account/rewards/RewardsClient.tsx
+./src/app/account/rewards/page.tsx
+./src/app/account/security/page.tsx
+./src/app/account/sessions/RevokeSessionButton.tsx
+./src/app/account/sessions/page.tsx
+./src/app/account/support/SupportClient.tsx
+./src/app/account/support/[id]/TicketDetailClient.tsx
+./src/app/account/support/[id]/page.tsx
+./src/app/account/support/page.tsx
+./src/app/account/toys/SmartToysClient.tsx
+./src/app/account/toys/page.tsx
+./src/app/account/vip/VIPClient.tsx
+./src/app/account/vip/page.tsx
+./src/app/account/wellness/WellnessClient.tsx
+./src/app/account/wellness/page.tsx
+./src/app/account/wishlist/page.tsx
+./src/app/admin/AdminClient.tsx
+./src/app/admin/analytics/AnalyticsClient.tsx
+./src/app/admin/analytics/page.tsx
+./src/app/admin/campaigns/CampaignsClient.tsx
+./src/app/admin/campaigns/[id]/CampaignDetailClient.tsx
+./src/app/admin/campaigns/[id]/page.tsx
+./src/app/admin/campaigns/new/NewCampaignClient.tsx
+./src/app/admin/campaigns/new/page.tsx
+./src/app/admin/campaigns/page.tsx
+./src/app/admin/changelog/AdminChangelogClient.tsx
+./src/app/admin/changelog/page.tsx
+./src/app/admin/customers/AdminCustomersClient.tsx
+./src/app/admin/customers/page.tsx
+./src/app/admin/email-test/EmailTestClient.tsx
+./src/app/admin/email-test/page.tsx
+./src/app/admin/layout.tsx
+./src/app/admin/orders/AdminOrdersClient.tsx
+./src/app/admin/orders/page.tsx
+./src/app/admin/page.tsx
+./src/app/admin/products/AdminProductsClient.tsx
+./src/app/admin/products/page.tsx
+./src/app/admin/segments/SegmentsClient.tsx
+./src/app/admin/segments/[id]/SegmentDetailClient.tsx
+./src/app/admin/segments/[id]/page.tsx
+./src/app/admin/segments/page.tsx
+./src/app/admin/support/AdminSupportClient.tsx
+./src/app/admin/support/[id]/AdminTicketDetailClient.tsx
+./src/app/admin/support/[id]/page.tsx
+./src/app/admin/support/page.tsx
+./src/app/admin/wellness-test/page.tsx
+./src/app/api/abandoned-cart/recover/route.ts
+./src/app/api/abandoned-cart/route.ts
+./src/app/api/address/autocomplete/route.ts
+./src/app/api/address/details/route.ts
+./src/app/api/admin/analytics/route.ts
+./src/app/api/admin/audit-logs/route.ts
+./src/app/api/admin/campaigns/route.ts
+./src/app/api/admin/customers/[id]/route.ts
+./src/app/api/admin/orders/[id]/route.ts
+./src/app/api/admin/products/[id]/images/route.ts
+./src/app/api/admin/products/[id]/route.ts
+./src/app/api/admin/rfm/route.ts
+./src/app/api/admin/segments/campaigns/route.ts
+./src/app/api/admin/segments/route.ts
+./src/app/api/alerts/preferences/route.ts
+./src/app/api/alerts/price-drop/route.ts
+./src/app/api/alerts/stock/route.ts
+./src/app/api/anonymous-gift/route.ts
+./src/app/api/auth/forgot-password/route.ts
+./src/app/api/auth/login/route.ts
+./src/app/api/auth/logout/route.ts
+./src/app/api/auth/me/route.ts
+./src/app/api/auth/oauth/apple/route.ts
+./src/app/api/auth/oauth/google/route.ts
+./src/app/api/auth/register/route.ts
+./src/app/api/auth/resend-verification/route.ts
+./src/app/api/auth/reset-password/route.ts
+./src/app/api/auth/verify-email/route.ts
+./src/app/api/blog/route.ts
+./src/app/api/bundles/route.ts
+./src/app/api/chatbot/route.ts
+./src/app/api/checkout/loyalty-points/route.ts
+./src/app/api/checkout/validate-giftcard/route.ts
+./src/app/api/checkout/validate-promo/route.ts
+./src/app/api/consultants/route.ts
+./src/app/api/consultations/route.ts
+./src/app/api/couples/route.ts
+./src/app/api/cron/abandoned-cart/route.ts
+./src/app/api/cron/gift-cards/route.ts
+./src/app/api/cron/price-alerts/route.ts
+./src/app/api/cron/stock-alerts/route.ts
+./src/app/api/crypto/webhook/route.ts
+./src/app/api/experience/3d-models/route.ts
+./src/app/api/experience/configurations/route.ts
+./src/app/api/experience/experiences/route.ts
+./src/app/api/experience/features/route.ts
+./src/app/api/experience/sensory/route.ts
+./src/app/api/experience/size-visualizer/route.ts
+./src/app/api/flash-sales/route.ts
+./src/app/api/gift-cards/check/route.ts
+./src/app/api/gift-cards/redeem/route.ts
+./src/app/api/gift-cards/route.ts
+./src/app/api/gift-wrapping/route.ts
+./src/app/api/hosts/[id]/route.ts
+./src/app/api/hosts/me/route.ts
+./src/app/api/hosts/route.ts
+./src/app/api/images/[id]/route.ts
+./src/app/api/loyalty/redeem/route.ts
+./src/app/api/loyalty/route.ts
+./src/app/api/newsletter/route.ts
+./src/app/api/orders/route.ts
+./src/app/api/packaging-photos/route.ts
+./src/app/api/packaging/route.ts
+./src/app/api/payment/bank-transfer/route.ts
+./src/app/api/payment/create-intent/route.ts
+./src/app/api/payment/crypto-charge/route.ts
+./src/app/api/pitch-deck/route.ts
+./src/app/api/points/redeem/route.ts
+./src/app/api/points/rewards/route.ts
+./src/app/api/products/[id]/views/route.ts
+./src/app/api/products/stock/route.ts
+./src/app/api/promotions/check/route.ts
+./src/app/api/promotions/route.ts
+./src/app/api/quiz/convert/route.ts
+./src/app/api/quiz/questions/route.ts
+./src/app/api/quiz/submit/route.ts
+./src/app/api/recommendations/product/[id]/route.ts
+./src/app/api/recommendations/route.ts
+./src/app/api/referrals/code/route.ts
+./src/app/api/referrals/validate/route.ts
+./src/app/api/registry/[id]/events/route.ts
+./src/app/api/registry/[id]/guests/route.ts
+./src/app/api/registry/[id]/items/route.ts
+./src/app/api/registry/[id]/purchases/route.ts
+./src/app/api/registry/[id]/route.ts
+./src/app/api/registry/route.ts
+./src/app/api/registry/slug/[slug]/route.ts
+./src/app/api/returns/route.ts
+./src/app/api/reviews/[id]/vote/route.ts
+./src/app/api/reviews/route.ts
+./src/app/api/route.ts
+./src/app/api/search/route.ts
+./src/app/api/sessions/revoke/route.ts
+./src/app/api/size-guides/route.ts
+./src/app/api/stream-reminders/route.ts
+./src/app/api/streams/[id]/chat/route.ts
+./src/app/api/streams/[id]/end/route.ts
+./src/app/api/streams/[id]/offers/route.ts
+./src/app/api/streams/[id]/products/route.ts
+./src/app/api/streams/[id]/route.ts
+./src/app/api/streams/[id]/start/route.ts
+./src/app/api/streams/live/route.ts
+./src/app/api/streams/replays/route.ts
+./src/app/api/streams/route.ts
+./src/app/api/streams/schedule/route.ts
+./src/app/api/stripe/webhook/route.ts
+./src/app/api/subscriptions/plans/route.ts
+./src/app/api/subscriptions/route.ts
+./src/app/api/tickets/[id]/messages/route.ts
+./src/app/api/tickets/[id]/route.ts
+./src/app/api/tickets/categories/route.ts
+./src/app/api/tickets/route.ts
+./src/app/api/vip/progress/route.ts
+./src/app/api/vip/tiers/route.ts
+./src/app/api/wellness/achievements/route.ts
+./src/app/api/wellness/challenges/[id]/route.ts
+./src/app/api/wellness/challenges/route.ts
+./src/app/api/wellness/checkin/route.ts
+./src/app/api/wellness/couple-goals/route.ts
+./src/app/api/wellness/daily-rewards/route.ts
+./src/app/api/wellness/patterns/route.ts
+./src/app/api/wellness/profile/route.ts
+./src/app/api/wellness/sessions/route.ts
+./src/app/api/wellness/streaks/route.ts
+./src/app/api/wellness/toy-brands/route.ts
+./src/app/api/wellness/toys/route.ts
+./src/app/api/wishlist/route.ts
+./src/app/api/wishlist/share/route.ts
+./src/app/api/wishlist/shared/route.ts
+./src/app/blog/BlogPageClient.tsx
+./src/app/blog/[slug]/page.tsx
+./src/app/blog/page.tsx
+./src/app/changelog/ChangelogClient.tsx
+./src/app/changelog/page.tsx
+./src/app/checkout/CheckoutClient.tsx
+./src/app/checkout/confirmation/page.tsx
+./src/app/checkout/page.tsx
+./src/app/checkout/payment/page.tsx
+./src/app/consultations/ConsultationsClient.tsx
+./src/app/consultations/page.tsx
+./src/app/digital/page.tsx
+./src/app/education/page.tsx
+./src/app/experience/ExperienceClient.tsx
+./src/app/experience/page.tsx
+./src/app/features/FeaturesClient.tsx
+./src/app/features/page.tsx
+./src/app/forgot-password/page.tsx
+./src/app/gift-cards/GiftCardsClient.tsx
+./src/app/gift-cards/page.tsx
+./src/app/gifts/page.tsx
+./src/app/globals.css
+./src/app/host/dashboard/HostDashboardClient.tsx
+./src/app/host/dashboard/page.tsx
+./src/app/host/layout.tsx
+./src/app/host/page.tsx
+./src/app/host/streams/[streamId]/go-live/GoLiveClient.tsx
+./src/app/host/streams/[streamId]/go-live/page.tsx
+./src/app/host/streams/new/CreateStreamClient.tsx
+./src/app/host/streams/new/page.tsx
+./src/app/layout.tsx
+./src/app/legal/cookies/page.tsx
+./src/app/legal/discreet-billing/page.tsx
+./src/app/legal/privacy/page.tsx
+./src/app/legal/returns/page.tsx
+./src/app/legal/terms/page.tsx
+./src/app/live/LiveHubClient.tsx
+./src/app/live/[streamId]/StreamViewerClient.tsx
+./src/app/live/[streamId]/page.tsx
+./src/app/live/page.tsx
+./src/app/members/page.tsx
+./src/app/not-found.tsx
+./src/app/order/[reference]/page.tsx
+./src/app/our-story/page.tsx
+./src/app/page.tsx
+./src/app/pitch/page.tsx
+./src/app/product/[slug]/ProductDetailClient.tsx
+./src/app/product/[slug]/page.tsx
+./src/app/quiz/QuizClient.tsx
+./src/app/quiz/page.tsx
+./src/app/registry/RegistryDashboard.tsx
+./src/app/registry/[slug]/PublicRegistryClient.tsx
+./src/app/registry/[slug]/manage/ManageRegistryClient.tsx
+./src/app/registry/[slug]/manage/page.tsx
+./src/app/registry/[slug]/page.tsx
+./src/app/registry/layout.tsx
+./src/app/registry/new/NewRegistryClient.tsx
+./src/app/registry/new/page.tsx
+./src/app/registry/page.tsx
+./src/app/reset-password/page.tsx
+./src/app/returns/ReturnsClient.tsx
+./src/app/returns/page.tsx
+./src/app/search/SearchClient.tsx
+./src/app/search/page.tsx
+./src/app/shop/ShopClient.tsx
+./src/app/shop/[category]/CategoryClient.tsx
+./src/app/shop/[category]/page.tsx
+./src/app/shop/bundles/BundlesClient.tsx
+./src/app/shop/bundles/page.tsx
+./src/app/shop/page.tsx
+./src/app/size-guide/SizeGuideClient.tsx
+./src/app/size-guide/page.tsx
+./src/app/subscriptions/SubscriptionsClient.tsx
+./src/app/subscriptions/page.tsx
+./src/app/support/SupportChatClient.tsx
+./src/app/support/page.tsx
+./src/app/track-order/page.tsx
+./src/app/verify-email/page.tsx
+./src/app/wishlist/[code]/SharedWishlistClient.tsx
+./src/app/wishlist/[code]/page.tsx
+./src/components/account/AccountLayout.tsx
+./src/components/account/AccountNav.tsx
+./src/components/cart/CartDrawer.tsx
+./src/components/chatbot/ChatbotWidget.tsx
+./src/components/checkout/AddressAutocomplete.tsx
+./src/components/comparison/ComparisonContext.tsx
+./src/components/comparison/ProductComparison.tsx
+./src/components/experience/ExperienceGallery.tsx
+./src/components/experience/InteractiveGuide.tsx
+./src/components/experience/ProductComparison.tsx
+./src/components/experience/ProductConfigurator.tsx
+./src/components/experience/ProductViewer3D.tsx
+./src/components/experience/SensoryPreview.tsx
+./src/components/experience/SizeVisualizer.tsx
+./src/components/experience/VirtualTryOn.tsx
+./src/components/experience/index.ts
+./src/components/flash-sale/FlashSaleBanner.tsx
+./src/components/home/CategoryGrid.tsx
+./src/components/home/DigitalProducts.tsx
+./src/components/home/FeaturedProducts.tsx
+./src/components/home/FeaturesShowcase.tsx
+./src/components/home/GiftSets.tsx
+./src/components/home/Hero.tsx
+./src/components/home/Marquee.tsx
+./src/components/home/Newsletter.tsx
+./src/components/home/PaymentTrust.tsx
+./src/components/home/Philosophy.tsx
+./src/components/home/SearchSection.tsx
+./src/components/home/VIPTeaser.tsx
+./src/components/layout/AgeGate.tsx
+./src/components/layout/ClientWrapper.tsx
+./src/components/layout/CountryModal.tsx
+./src/components/layout/Footer.tsx
+./src/components/layout/Navigation.tsx
+./src/components/layout/SearchModal.tsx
+./src/components/product/ImageZoom.tsx
+./src/components/product/ProductAvailabilityCalendar.tsx
+./src/components/product/ProductCard.tsx
+./src/components/product/StockIndicator.tsx
+./src/components/reviews/ReviewsSection.tsx
+./src/components/search/ActiveFilters.tsx
+./src/components/search/EnhancedSearchBar.tsx
+./src/components/search/SearchFilters.tsx
+./src/components/search/SearchPage.tsx
+./src/components/search/SearchResults.tsx
+./src/components/search/index.ts
+./src/components/social-proof/SocialProof.tsx
+./src/components/ui/ScrollReveal.tsx
+./src/components/ui/accordion.tsx
+./src/components/ui/alert-dialog.tsx
+./src/components/ui/alert.tsx
+./src/components/ui/aspect-ratio.tsx
+./src/components/ui/avatar.tsx
+./src/components/ui/badge.tsx
+./src/components/ui/breadcrumb.tsx
+./src/components/ui/button.tsx
+./src/components/ui/calendar.tsx
+./src/components/ui/card.tsx
+./src/components/ui/carousel.tsx
+./src/components/ui/chart.tsx
+./src/components/ui/checkbox.tsx
+./src/components/ui/collapsible.tsx
+./src/components/ui/command.tsx
+./src/components/ui/context-menu.tsx
+./src/components/ui/dialog.tsx
+./src/components/ui/drawer.tsx
+./src/components/ui/dropdown-menu.tsx
+./src/components/ui/form.tsx
+./src/components/ui/hover-card.tsx
+./src/components/ui/input-otp.tsx
+./src/components/ui/input.tsx
+./src/components/ui/label.tsx
+./src/components/ui/menubar.tsx
+./src/components/ui/navigation-menu.tsx
+./src/components/ui/pagination.tsx
+./src/components/ui/popover.tsx
+./src/components/ui/progress.tsx
+./src/components/ui/radio-group.tsx
+./src/components/ui/resizable.tsx
+./src/components/ui/scroll-area.tsx
+./src/components/ui/select.tsx
+./src/components/ui/separator.tsx
+./src/components/ui/sheet.tsx
+./src/components/ui/sidebar.tsx
+./src/components/ui/skeleton.tsx
+./src/components/ui/slider.tsx
+./src/components/ui/sonner.tsx
+./src/components/ui/switch.tsx
+./src/components/ui/table.tsx
+./src/components/ui/tabs.tsx
+./src/components/ui/textarea.tsx
+./src/components/ui/toast.tsx
+./src/components/ui/toaster.tsx
+./src/components/ui/toggle-group.tsx
+./src/components/ui/toggle.tsx
+./src/components/ui/tooltip.tsx
+./src/hooks/use-mobile.ts
+./src/hooks/use-toast.ts
+./src/lib/admin/middleware.ts
+./src/lib/auth/index.ts
+./src/lib/auth/session.ts
+./src/lib/db.ts
+./src/lib/email/index.ts
+./src/lib/geo.ts
+./src/lib/payments/coinbase.ts
+./src/lib/payments/stripe.ts
+./src/lib/stock-alerts.ts
+./src/lib/utils.ts
+./src/stores/age-gate.ts
+./src/stores/auth.ts
+./src/stores/cart.ts
+./src/stores/checkout.ts
+./src/stores/index.ts
+./src/stores/locale.ts
+./src/stores/quiz.ts
+./src/stores/wishlist.ts
+./tailwind.config.ts
+./tsconfig.json
+./worklog.md
+
+=== LINE COUNTS ===
+   63979 total
+     974 ./src/app/account/toys/SmartToysClient.tsx
+     830 ./src/app/product/[slug]/ProductDetailClient.tsx
+     830 ./src/app/admin/changelog/AdminChangelogClient.tsx
+     800 ./src/app/pitch/page.tsx
+     798 ./src/app/registry/[slug]/manage/ManageRegistryClient.tsx
+     792 ./src/app/checkout/CheckoutClient.tsx
+     757 ./src/lib/email/index.ts
+     732 ./src/app/account/wellness/WellnessClient.tsx
+     726 ./src/components/ui/sidebar.tsx
+     697 ./src/app/admin/support/[id]/AdminTicketDetailClient.tsx
+     687 ./src/app/live/[streamId]/StreamViewerClient.tsx
+     651 ./src/app/api/pitch-deck/route.ts
+     612 ./src/app/admin/wellness-test/page.tsx
+     590 ./src/app/host/streams/[streamId]/go-live/GoLiveClient.tsx
+     572 ./src/app/consultations/ConsultationsClient.tsx
+     570 ./src/app/checkout/payment/page.tsx
+     566 ./src/app/changelog/ChangelogClient.tsx
+     538 ./src/app/returns/ReturnsClient.tsx
+     535 ./prisma/seed.ts
+     525 ./src/app/api/admin/rfm/route.ts
+     522 ./src/app/admin/segments/[id]/SegmentDetailClient.tsx
+     522 ./src/app/admin/products/AdminProductsClient.tsx
+     497 ./src/app/registry/[slug]/PublicRegistryClient.tsx
+     496 ./src/app/admin/orders/AdminOrdersClient.tsx
+     483 ./src/app/account/support/SupportClient.tsx
+     481 ./src/app/quiz/QuizClient.tsx
+     475 ./mini-services/live-stream/index.ts
+     470 ./src/app/features/FeaturesClient.tsx
+     455 ./src/app/experience/ExperienceClient.tsx
+     451 ./src/app/host/streams/new/CreateStreamClient.tsx
+     434 ./src/app/account/support/[id]/TicketDetailClient.tsx
+     432 ./src/app/live/LiveHubClient.tsx
+     428 ./src/components/reviews/ReviewsSection.tsx
+     428 ./src/app/registry/new/NewRegistryClient.tsx
+     422 ./src/components/search/SearchResults.tsx
+     422 ./src/app/admin/customers/AdminCustomersClient.tsx
+     418 ./src/components/experience/ProductConfigurator.tsx
+     410 ./src/app/subscriptions/SubscriptionsClient.tsx
+     401 ./src/app/api/orders/route.ts
+     398 ./src/app/account/alerts/AlertsClient.tsx
+     395 ./src/components/experience/ExperienceGallery.tsx
+     391 ./src/app/gift-cards/GiftCardsClient.tsx
+     388 ./src/app/account/wishlist/page.tsx
+     386 ./src/app/admin/campaigns/[id]/CampaignDetailClient.tsx
+     384 ./src/app/admin/segments/SegmentsClient.tsx
+     381 ./src/app/registry/RegistryDashboard.tsx
+     380 ./src/components/experience/ProductComparison.tsx
+     379 ./src/components/experience/SensoryPreview.tsx
+     378 ./src/components/experience/InteractiveGuide.tsx
+     375 ./src/components/experience/VirtualTryOn.tsx
+     375 ./src/app/admin/support/AdminSupportClient.tsx
+     364 ./src/components/search/EnhancedSearchBar.tsx
+     364 ./src/app/account/packaging/PackagingClient.tsx
+     355 ./src/app/api/chatbot/route.ts
+     353 ./src/components/ui/chart.tsx
+     348 ./src/app/blog/[slug]/page.tsx
+     342 ./src/app/host/dashboard/HostDashboardClient.tsx
+     337 ./src/app/admin/email-test/EmailTestClient.tsx
+     332 ./src/app/admin/campaigns/CampaignsClient.tsx
+     331 ./src/components/search/SearchPage.tsx
+     331 ./src/app/account/couple/CoupleClient.tsx
+     329 ./src/app/account/vip/VIPClient.tsx
+     317 ./src/app/account/rewards/RewardsClient.tsx
+     316 ./src/app/admin/campaigns/new/NewCampaignClient.tsx
+     314 ./src/app/admin/analytics/AnalyticsClient.tsx
+     306 ./src/app/support/SupportChatClient.tsx
+     303 ./src/app/account/referrals/ReferralsClient.tsx
+     297 ./src/components/experience/SizeVisualizer.tsx
+     296 ./src/app/api/recommendations/route.ts
+     286 ./src/components/experience/ProductViewer3D.tsx
+     281 ./src/app/size-guide/SizeGuideClient.tsx
+     279 ./seed-phase5.ts
+     276 ./src/components/ui/menubar.tsx
+     271 ./src/components/search/SearchFilters.tsx
+     264 ./src/app/blog/BlogPageClient.tsx
+     264 ./src/app/account/loyalty/LoyaltyClient.tsx
+     262 ./src/components/chatbot/ChatbotWidget.tsx
+     257 ./src/components/ui/dropdown-menu.tsx
+     253 ./src/app/api/wellness/sessions/route.ts
+     252 ./src/components/ui/context-menu.tsx
+     252 ./src/app/account/page.tsx
+     241 ./src/components/ui/carousel.tsx
+     229 ./src/app/api/admin/campaigns/route.ts
+     228 ./src/app/api/admin/segments/campaigns/route.ts
+     227 ./src/app/wishlist/[code]/SharedWishlistClient.tsx
+     226 ./src/app/api/admin/analytics/route.ts
+     222 ./src/components/layout/Footer.tsx
+     216 ./src/app/api/wellness/patterns/route.ts
+     215 ./src/app/api/registry/[id]/items/route.ts
+     213 ./src/components/ui/calendar.tsx
+     212 ./src/app/api/consultations/route.ts
+     211 ./src/app/shop/bundles/BundlesClient.tsx
+     208 ./src/app/api/points/redeem/route.ts
+     206 ./src/app/api/wellness/couple-goals/route.ts
+     203 ./src/app/api/couples/route.ts
+     201 ./src/components/cart/CartDrawer.tsx
+     199 ./src/app/api/subscriptions/route.ts
+     196 ./examples/websocket/frontend.tsx
+     194 ./src/components/checkout/AddressAutocomplete.tsx
+     193 ./src/hooks/use-toast.ts
+     193 ./src/app/api/experience/sensory/route.ts
+     192 ./src/components/comparison/ProductComparison.tsx
+     192 ./src/app/api/wellness/checkin/route.ts
+     192 ./src/app/api/streams/route.ts
+     188 ./src/app/api/wellness/toys/route.ts
+     188 ./src/app/api/registry/[id]/route.ts
+     187 ./src/app/api/admin/segments/route.ts
+     186 ./src/app/api/recommendations/product/[id]/route.ts
+     185 ./src/components/ui/select.tsx
+     185 ./src/components/layout/Navigation.tsx
+     184 ./src/components/ui/command.tsx
+     183 ./src/app/reset-password/page.tsx
+     181 ./src/app/api/quiz/questions/route.ts
+     179 ./src/app/api/reviews/route.ts
+     177 ./src/app/legal/cookies/page.tsx
+     177 ./src/app/api/quiz/submit/route.ts
+     176 ./src/app/api/registry/[id]/events/route.ts
+     175 ./src/components/comparison/ComparisonContext.tsx
+     174 ./src/app/api/subscriptions/plans/route.ts
+     173 ./src/app/api/vip/progress/route.ts
+     173 ./src/app/api/registry/slug/[slug]/route.ts
+     169 ./src/app/api/streams/[id]/route.ts
+     168 ./src/components/ui/navigation-menu.tsx
+     168 ./src/components/product/ProductCard.tsx
+     167 ./src/components/ui/form.tsx
+     166 ./src/app/api/returns/route.ts
+     166 ./src/app/api/auth/oauth/apple/route.ts
+     166 ./src/app/account/layout.tsx
+     162 ./src/app/api/gift-cards/route.ts
+     162 ./src/app/admin/AdminClient.tsx
+     159 ./src/app/api/registry/[id]/guests/route.ts
+     159 ./src/app/api/experience/size-visualizer/route.ts
+     158 ./src/app/api/products/stock/route.ts
+     157 ./src/components/ui/alert-dialog.tsx
+     157 ./src/components/social-proof/SocialProof.tsx
+     156 ./src/stores/checkout.ts
+     154 ./src/app/account/security/page.tsx
+     152 ./src/app/order/[reference]/page.tsx
+     152 ./src/app/api/blog/route.ts
+     146 ./src/lib/stock-alerts.ts
+     146 ./src/app/verify-email/page.tsx
+     146 ./src/app/api/points/rewards/route.ts
+     146 ./src/app/api/auth/oauth/google/route.ts
+     146 ./src/app/api/alerts/price-drop/route.ts
+     145 ./src/components/layout/SearchModal.tsx
+     145 ./src/components/home/SearchSection.tsx
+     145 ./src/app/shop/ShopClient.tsx
+     145 ./src/app/api/wellness/streaks/route.ts
+     144 ./src/app/api/wellness/challenges/[id]/route.ts
+     144 ./mini-services/support-chat/index.ts
+     143 ./src/components/ui/dialog.tsx
+     143 ./src/app/api/registry/route.ts
+     140 ./src/app/api/vip/tiers/route.ts
+     140 ./src/app/api/cron/abandoned-cart/route.ts
+     140 ./src/app/api/admin/orders/[id]/route.ts
+     139 ./src/components/ui/sheet.tsx
+     138 ./src/app/api/registry/[id]/purchases/route.ts
+     137 ./examples/websocket/server.ts
+     136 ./src/app/api/admin/products/[id]/route.ts
+     135 ./src/components/ui/drawer.tsx
+     133 ./src/app/api/admin/audit-logs/route.ts
+     132 ./src/app/api/tickets/route.ts
+     131 ./src/app/api/alerts/stock/route.ts
+     129 ./src/app/checkout/confirmation/page.tsx
+     129 ./src/app/api/experience/experiences/route.ts
+     128 ./src/components/ui/toast.tsx
+     127 ./src/components/ui/pagination.tsx
+     127 ./src/components/home/FeaturesShowcase.tsx
+     127 ./src/app/api/cron/stock-alerts/route.ts
+     127 ./src/app/api/consultants/route.ts
+     125 ./src/components/product/StockIndicator.tsx
+     123 ./src/components/product/ProductAvailabilityCalendar.tsx
+     123 ./scripts/generate-product-images.ts
+     117 ./src/app/api/experience/3d-models/route.ts
+     116 ./src/components/ui/table.tsx
+     116 ./src/app/account/sessions/page.tsx
+     113 ./src/app/forgot-password/page.tsx
+     113 ./src/app/api/wellness/challenges/route.ts
+     112 ./src/lib/auth/session.ts
+     112 ./src/app/legal/discreet-billing/page.tsx
+     112 ./src/app/api/wishlist/share/route.ts
+     111 ./src/app/admin/support/[id]/page.tsx
+     110 ./src/components/home/GiftSets.tsx
+     109 ./src/components/ui/breadcrumb.tsx
+     109 ./src/app/registry/layout.tsx
+     108 ./src/app/shop/[category]/CategoryClient.tsx
+     107 ./src/app/api/bundles/route.ts
+     106 ./src/stores/quiz.ts
+     106 ./src/components/home/CategoryGrid.tsx
+     106 ./src/app/host/layout.tsx
+     106 ./src/app/api/referrals/code/route.ts
+     106 ./src/app/api/products/[id]/views/route.ts
+     103 ./src/lib/payments/coinbase.ts
+     103 ./src/app/api/cron/gift-cards/route.ts
+     102 ./src/app/api/wellness/profile/route.ts
+     102 ./src/app/api/hosts/route.ts
+     102 ./src/app/api/abandoned-cart/route.ts
+     101 ./src/app/api/streams/[id]/offers/route.ts
+      99 ./src/app/api/wellness/achievements/route.ts
+      99 ./src/app/api/tickets/[id]/messages/route.ts
+      99 ./src/app/api/promotions/route.ts
+      99 ./src/app/api/promotions/check/route.ts
+      99 ./src/app/api/cron/price-alerts/route.ts
+      98 ./src/components/flash-sale/FlashSaleBanner.tsx
+      98 ./src/app/api/admin/products/[id]/images/route.ts
+      98 ./src/app/admin/layout.tsx
+      97 ./src/components/search/ActiveFilters.tsx
+      97 ./src/app/api/tickets/[id]/route.ts
+      96 ./src/components/product/ImageZoom.tsx
+      96 ./src/app/api/hosts/[id]/route.ts
+      96 ./src/app/admin/support/page.tsx
+      95 ./src/components/layout/CountryModal.tsx
+      95 ./src/app/legal/terms/page.tsx
+      95 ./src/app/api/streams/[id]/products/route.ts
+      95 ./src/app/account/orders/page.tsx
+      94 ./src/app/api/auth/register/route.ts
+      93 ./src/components/home/Hero.tsx
+      93 ./src/app/api/auth/resend-verification/route.ts
+      92 ./src/components/ui/card.tsx
+      92 ./src/components/home/VIPTeaser.tsx
+      92 ./src/app/api/gift-cards/redeem/route.ts
+      91 ./src/app/api/tickets/categories/route.ts
+      91 ./src/app/api/packaging/route.ts
+      90 ./src/lib/payments/stripe.ts
+      90 ./src/components/account/AccountNav.tsx
+      90 ./src/app/api/payment/bank-transfer/route.ts
+      89 ./src/components/home/Newsletter.tsx
+      88 ./src/components/account/AccountLayout.tsx
+      87 ./src/components/layout/AgeGate.tsx
+      87 ./src/app/api/loyalty/route.ts
+      87 ./src/app/api/admin/customers/[id]/route.ts
+      86 ./src/stores/cart.ts
+      86 ./src/app/legal/privacy/page.tsx
+      85 ./src/app/wishlist/[code]/page.tsx
+      85 ./src/app/api/abandoned-cart/recover/route.ts
+      84 ./src/components/home/PaymentTrust.tsx
+      84 ./src/components/home/DigitalProducts.tsx
+      84 ./src/app/api/auth/reset-password/route.ts
+      83 ./src/app/api/reviews/[id]/vote/route.ts
+      82 ./src/app/api/streams/[id]/end/route.ts
+      82 ./scripts/seed-wellness.ts
+      79 ./src/stores/auth.ts
+      79 ./src/components/home/Philosophy.tsx
+      79 ./src/app/api/gift-cards/check/route.ts
+      78 ./src/components/ui/ScrollReveal.tsx
+      77 ./src/components/ui/input-otp.tsx
+      77 ./src/app/product/[slug]/page.tsx
+      77 ./src/app/members/page.tsx
+      77 ./src/app/legal/returns/page.tsx
+      77 ./src/app/api/checkout/validate-promo/route.ts
+      76 ./src/app/education/page.tsx
+      76 ./src/app/digital/page.tsx
+      76 ./src/app/api/experience/features/route.ts
+      75 ./src/app/api/auth/login/route.ts
+      73 ./src/components/ui/toggle-group.tsx
+      72 ./src/components/home/FeaturedProducts.tsx
+      72 ./src/app/api/wishlist/shared/route.ts
+      72 ./src/app/api/anonymous-gift/route.ts
+      70 ./src/app/api/wellness/toy-brands/route.ts
+      69 ./src/app/our-story/page.tsx
+      69 ./src/app/api/streams/[id]/start/route.ts
+      69 ./src/app/api/experience/configurations/route.ts
+      69 ./src/app/admin/page.tsx
+      67 ./src/app/api/alerts/preferences/route.ts
+      66 ./src/components/ui/tabs.tsx
+      66 ./src/components/ui/alert.tsx
+      66 ./src/components/ui/accordion.tsx
+      65 ./src/app/api/loyalty/redeem/route.ts
+      64 ./tailwind.config.ts
+      63 ./src/components/ui/slider.tsx
+      63 ./src/app/api/flash-sales/route.ts
+      62 ./src/app/track-order/page.tsx
+      62 ./src/app/shop/[category]/page.tsx
+      62 ./src/app/gifts/page.tsx
+      61 ./src/components/ui/tooltip.tsx
+      61 ./src/app/api/auth/forgot-password/route.ts
+      61 ./scripts/create-test-users.ts
+      60 ./src/app/api/streams/live/route.ts
+      60 ./src/app/api/referrals/validate/route.ts
+      59 ./src/components/ui/button.tsx
+      59 ./src/app/api/streams/replays/route.ts
+      59 ./src/app/api/address/details/route.ts
+      58 ./src/components/ui/scroll-area.tsx
+      58 ./src/app/layout.tsx
+      57 ./src/app/api/streams/schedule/route.ts
+      56 ./src/components/ui/resizable.tsx
+      55 ./src/stores/locale.ts
+      54 ./src/lib/geo.ts
+      54 ./src/app/api/wellness/daily-rewards/route.ts
+      53 ./src/components/ui/avatar.tsx
+      52 ./src/app/api/images/[id]/route.ts
+      51 ./src/app/api/address/autocomplete/route.ts
+      49 ./src/app/blog/page.tsx
+      49 ./src/app/api/streams/[id]/chat/route.ts
+      49 ./src/app/api/stream-reminders/route.ts
+      48 ./src/components/ui/popover.tsx
+      47 ./src/components/ui/toggle.tsx
+      47 ./scripts/check-users.ts
+      46 ./src/stores/wishlist.ts
+      46 ./src/components/ui/badge.tsx
+      46 ./src/app/api/size-guides/route.ts
+      45 ./src/components/ui/radio-group.tsx
+      45 ./src/app/api/quiz/convert/route.ts
+      45 ./src/app/api/auth/verify-email/route.ts
+      45 ./src/app/api/auth/me/route.ts
+      44 ./src/components/ui/hover-card.tsx
+      44 ./src/app/shop/page.tsx
+      44 ./src/app/api/checkout/validate-giftcard/route.ts
+      42 ./src/app/account/sessions/RevokeSessionButton.tsx
+      40 ./src/app/api/stripe/webhook/route.ts
+      38 ./src/app/not-found.tsx
+      37 ./src/app/api/newsletter/route.ts
+      37 ./src/app/admin/orders/page.tsx
+      34 ./src/components/ui/toaster.tsx
+      34 ./src/app/shop/bundles/page.tsx
+      33 ./src/components/ui/collapsible.tsx
+      33 ./src/app/api/search/route.ts
+      33 ./src/app/api/hosts/me/route.ts
+      33 ./src/app/api/checkout/loyalty-points/route.ts
+      32 ./src/lib/admin/middleware.ts
+      32 ./src/components/ui/checkbox.tsx
+      32 ./src/components/home/Marquee.tsx
+      32 ./src/app/page.tsx
+      32 ./src/app/admin/customers/page.tsx
+      31 ./src/components/ui/switch.tsx
+      31 ./src/components/ui/progress.tsx
+      30 ./src/app/admin/products/page.tsx
+      29 ./src/app/api/wishlist/route.ts
+      28 ./src/components/ui/separator.tsx
+      28 ./src/app/api/sessions/revoke/route.ts
+      28 ./src/app/api/crypto/webhook/route.ts
+      27 ./src/app/size-guide/page.tsx
+      27 ./src/app/api/payment/crypto-charge/route.ts
+      27 ./src/app/api/payment/create-intent/route.ts
+      26 ./src/components/layout/ClientWrapper.tsx
+      25 ./src/components/ui/sonner.tsx
+      24 ./src/stores/age-gate.ts
+      24 ./src/components/ui/label.tsx
+      24 ./src/app/api/packaging-photos/route.ts
+      24 ./src/app/api/gift-wrapping/route.ts
+      22 ./src/app/checkout/page.tsx
+      21 ./src/components/ui/input.tsx
+      19 ./src/hooks/use-mobile.ts
+      19 ./src/app/registry/page.tsx
+      18 ./src/components/ui/textarea.tsx
+      18 ./src/app/registry/[slug]/manage/page.tsx
+      17 ./src/app/search/page.tsx
+      17 ./src/app/registry/new/page.tsx
+      17 ./src/app/admin/segments/page.tsx
+      17 ./src/app/admin/segments/[id]/page.tsx
+      16 ./src/app/subscriptions/page.tsx
+      16 ./src/app/search/SearchClient.tsx
+      16 ./src/app/returns/page.tsx
+      16 ./src/app/quiz/page.tsx
+      16 ./src/app/consultations/page.tsx
+      16 ./src/app/admin/campaigns/page.tsx
+      16 ./src/app/admin/campaigns/new/page.tsx
+      16 ./src/app/admin/campaigns/[id]/page.tsx
+      16 ./src/app/admin/analytics/page.tsx
+      15 ./src/app/support/page.tsx
+      15 ./src/app/registry/[slug]/page.tsx
+      15 ./src/app/api/auth/logout/route.ts
+      14 ./src/lib/db.ts
+      13 ./src/components/ui/skeleton.tsx
+      13 ./src/app/account/referrals/page.tsx
+      12 ./next.config.ts
+      11 ./src/components/ui/aspect-ratio.tsx
+      11 ./src/app/gift-cards/page.tsx
+      11 ./src/app/features/page.tsx
+      11 ./src/app/changelog/page.tsx
+      11 ./src/app/admin/email-test/page.tsx
+      11 ./src/app/admin/changelog/page.tsx
+      11 ./src/app/account/rewards/page.tsx
+      11 ./src/app/account/couple/page.tsx
+      10 ./src/app/experience/page.tsx
+      10 ./src/app/account/wellness/page.tsx
+      10 ./src/app/account/toys/page.tsx
+       8 ./src/components/experience/index.ts
+       7 ./src/stores/index.ts
+       6 ./src/lib/utils.ts
+       5 ./src/components/search/index.ts
+       5 ./src/app/live/page.tsx
+       5 ./src/app/live/[streamId]/page.tsx
+       5 ./src/app/host/streams/new/page.tsx
+       5 ./src/app/host/streams/[streamId]/go-live/page.tsx
+       5 ./src/app/host/page.tsx
+       5 ./src/app/host/dashboard/page.tsx
+       5 ./src/app/account/vip/page.tsx
+       5 ./src/app/account/support/page.tsx
+       5 ./src/app/account/support/[id]/page.tsx
+       5 ./src/app/account/packaging/page.tsx
+       5 ./src/app/account/loyalty/page.tsx
+       5 ./src/app/account/alerts/page.tsx
+       4 ./src/app/api/route.ts
+       2 ./src/lib/auth/index.ts
+
+=== TODOS ===
+./prisma/seed.ts:35:      fullDescription: 'A personal massager designed for quiet, unhurried moments. The motor is near-silent. Ten intensity levels, each distinct from the last. Made from body-safe silicone that warms to skin temperature quickly.',
+./prisma/seed.ts:83:      shortDescription: 'A massage wand that heats to body temperature. The warmth is the point.',
+./prisma/seed.ts:84:      fullDescription: 'A massage wand that heats to body temperature. The warmth is the point. Flexible neck, eight patterns, and a battery that lasts longer than expected. Charges via USB-C.',
+./prisma/seed.ts:98:      usageGuide: 'Press and hold power button for 3 seconds to activate warming feature. Allow 2 minutes to reach temperature. Use with water-based lubricant. External use only.',
+./prisma/seed.ts:142:        warnings: ['For external and internal use', 'Store at room temperature', 'Discontinue if irritation occurs']
+./mini-services/live-stream/index.ts:187:        // TODO: Send to host for moderation
+./examples/websocket/frontend.tsx:40:      reconnectionAttempts: 5,
+./src/app/admin/products/AdminProductsClient.tsx:110:    if (!confirm('Are you sure you want to delete this product? This action cannot be undone.')) return
+./src/app/admin/email-test/EmailTestClient.tsx:102:    const template = `# Email Service (Resend)
+./src/app/admin/email-test/EmailTestClient.tsx:112:    navigator.clipboard.writeText(template)
+./src/app/admin/campaigns/CampaignsClient.tsx:70:    if (!confirm('Are you sure you want to delete this campaign?')) return
+./src/app/registry/[slug]/manage/ManageRegistryClient.tsx:649:                  if (!confirm('Are you sure you want to delete this registry? This cannot be undone.')) return
+./src/app/api/experience/sensory/route.ts:78:        temperatureResponsive: data.temperatureResponsive || false,
+./src/app/api/experience/sensory/route.ts:99:        temperatureResponsive: data.temperatureResponsive || false,
+./src/app/api/experience/sensory/route.ts:175:    temperatureResponsive: false,
+./src/app/api/gift-cards/route.ts:95:    let attempts = 0
+./src/app/api/gift-cards/route.ts:96:    while (attempts < 10) {
+./src/app/api/gift-cards/route.ts:100:      attempts++
+./src/app/api/wellness/patterns/route.ts:198:          { error: 'Not authorized to delete this pattern' },
+./src/app/api/admin/rfm/route.ts:425:        'Final re-engagement attempt',
+./src/app/api/quiz/questions/route.ts:67:            { value: "temperature", label: "Temperature play", icon: "thermometer", weight: 1 },
+./src/app/size-guide/SizeGuideClient.tsx:61:            Size guides coming soon
+./src/app/legal/discreet-billing/page.tsx:28:              <p className="font-body text-warm-gray text-sm">$XXX.XX</p>
+./src/components/experience/SensoryPreview.tsx:21:  temperatureResponsive: boolean
+./src/components/experience/SensoryPreview.tsx:312:        {(profile.temperatureResponsive || profile.warmingSupported || profile.coolingSupported) && (
+./src/components/experience/SensoryPreview.tsx:329:              {profile.temperatureResponsive && (
+./src/components/experience/InteractiveGuide.tsx:122:      description: 'Clean after each use and store properly. Keep away from extreme temperatures and direct sunlight.',
+./src/lib/email/index.ts:11:// Log email attempts
+
+=== CONSOLE.LOGS ===
+./prisma/seed.ts:26:  console.log(`Created ${categories.length} categories`)
+./prisma/seed.ts:439:  console.log(`Created ${products.length} products`)
+./prisma/seed.ts:481:  console.log(`Created ${giftWrappingOptions.length} gift wrapping options`)
+./prisma/seed.ts:513:  console.log(`Created ${packagingPhotos.length} packaging photos`)
+./prisma/seed.ts:525:  console.log('Seed completed successfully')
+./prisma/seed.ts:530:    console.error(e)
+./mini-services/support-chat/index.ts:39:  console.log('Client connected:', socket.id)
+./mini-services/support-chat/index.ts:67:    console.log('Session started:', sessionId)
+./mini-services/support-chat/index.ts:138:    console.log('Client disconnected:', socket.id)
+./mini-services/support-chat/index.ts:143:  console.log(`Support chat service running on port ${PORT}`)
+./mini-services/live-stream/index.ts:23:  console.log(`[Live Stream] Client connected: ${socket.id}`)
+./mini-services/live-stream/index.ts:117:      console.log(`[Live Stream] Client ${socket.id} joined stream ${streamId}`)
+./mini-services/live-stream/index.ts:119:      console.error('Error joining stream:', error)
+./mini-services/live-stream/index.ts:129:      console.error('Error leaving stream:', error)
+./mini-services/live-stream/index.ts:202:      console.error('Error sending message:', error)
+./mini-services/live-stream/index.ts:233:      console.error('Error adding reaction:', error)
+./mini-services/live-stream/index.ts:269:      console.error('Error featuring product:', error)
+./mini-services/live-stream/index.ts:288:      console.error('Error activating offer:', error)
+./mini-services/live-stream/index.ts:334:      console.error('Error claiming offer:', error)
+./mini-services/live-stream/index.ts:355:      console.error('Error tracking product click:', error)
+./mini-services/live-stream/index.ts:374:      console.error('Error tracking cart add:', error)
+./mini-services/live-stream/index.ts:399:      console.error('Error pinning message:', error)
+./mini-services/live-stream/index.ts:417:      console.error('Error highlighting message:', error)
+./mini-services/live-stream/index.ts:423:    console.log(`[Live Stream] Client disconnected: ${socket.id}`)
+./mini-services/live-stream/index.ts:474:  console.log(`[Live Stream] WebSocket server running on port ${PORT}`)
+./examples/websocket/server.ts:50:  console.log(`User connected: ${socket.id}`)
+./examples/websocket/server.ts:54:    console.log('Received test message:', data)
+./examples/websocket/server.ts:82:    console.log(`${username} joined the chat room, current online users: ${users.size}`)
+./examples/websocket/server.ts:92:      console.log(`${username}: ${content}`)
+./examples/websocket/server.ts:107:      console.log(`${user.username} left the chat room, current online users: ${users.size}`)
+./examples/websocket/server.ts:109:      console.log(`User disconnected: ${socket.id}`)
+./examples/websocket/server.ts:114:    console.error(`Socket error (${socket.id}):`, error)
+./examples/websocket/server.ts:120:  console.log(`WebSocket server running on port ${PORT}`)
+./examples/websocket/server.ts:125:  console.log('Received SIGTERM signal, shutting down server...')
+./examples/websocket/server.ts:127:    console.log('WebSocket server closed')
+./examples/websocket/server.ts:133:  console.log('Received SIGINT signal, shutting down server...')
+./examples/websocket/server.ts:135:    console.log('WebSocket server closed')
+./scripts/generate-product-images.ts:55:  console.log(`Found ${products.length} products`);
+./scripts/generate-product-images.ts:65:        console.log(`Skipping ${product.slug} - image file exists`);
+./scripts/generate-product-images.ts:68:        console.log(`Image record exists but file missing for ${product.slug}`);
+./scripts/generate-product-images.ts:77:    console.log(`Generating image for: ${product.name}...`);
+./scripts/generate-product-images.ts:111:      console.log(`✓ Generated and saved: ${filename}`);
+./scripts/generate-product-images.ts:116:      console.error(`✗ Failed to generate image for ${product.slug}:`, error);
+./scripts/generate-product-images.ts:120:  console.log('\nImage generation complete!');
+./scripts/generate-product-images.ts:123:generateImages().catch(console.error);
+./scripts/create-test-users.ts:11:    console.log('Creating test user...')
+./scripts/create-test-users.ts:23:    console.log('Created test@calor.com with password: Test123!')
+./scripts/create-test-users.ts:31:    console.log('Reset test@calor.com password to: Test123!')
+./scripts/create-test-users.ts:49:  console.log('Reset admin@calor.com password to: Admin123!')
+./scripts/create-test-users.ts:55:  console.log('\n=== AVAILABLE USERS ===')
+./scripts/create-test-users.ts:57:    console.log(`- ${u.email} (${u.firstName} ${u.lastName}) ${u.isAdmin ? '[ADMIN]' : ''}`)
+./scripts/create-test-users.ts:61:main().catch(console.error).finally(() => db.$disconnect())
+./scripts/seed-wellness.ts:4:  console.log('Seeding wellness data...')
+./scripts/seed-wellness.ts:24:  console.log('✅ Seeded', rewards.length, 'daily rewards')
+./scripts/seed-wellness.ts:40:  console.log('✅ Seeded', achievements.length, 'achievements')
+./scripts/seed-wellness.ts:54:  console.log('✅ Seeded challenges')
+./scripts/seed-wellness.ts:70:  console.log('✅ Seeded', brands.length, 'toy brands')
+./scripts/seed-wellness.ts:73:  console.log('\n📊 Verification:')
+./scripts/seed-wellness.ts:74:  console.log('  Daily Rewards:', await db.dailyReward.count())
+./scripts/seed-wellness.ts:75:  console.log('  Achievements:', await db.achievement.count())
+./scripts/seed-wellness.ts:76:  console.log('  Challenges:', await db.challenge.count())
+./scripts/seed-wellness.ts:77:  console.log('  Toy Brands:', await db.smartToyBrand.count())
+./scripts/seed-wellness.ts:79:  console.log('\n🎉 Wellness data seeded successfully!')
+./scripts/seed-wellness.ts:82:main().catch(console.error).finally(() => db.$disconnect())
+./scripts/check-users.ts:9:  console.log('Existing customers:', JSON.stringify(customers, null, 2))
+./scripts/check-users.ts:12:    console.log('\nNo customers found. Creating test user...')
+./scripts/check-users.ts:26:    console.log('Created test user:', testUser.email)
+./scripts/check-users.ts:41:    console.log('Created admin user:', adminUser.email)
+./scripts/check-users.ts:43:    console.log('\nUsers already exist in database.')
+./scripts/check-users.ts:47:main().catch(console.error).finally(() => db.$disconnect())
+./seed-phase5.ts:6:  console.log('Seeding Phase 5 data...')
+./seed-phase5.ts:86:  console.log('Created VIP tiers:', bronzeTier.name, silverTier.name, goldTier.name, platinumTier.name)
+./seed-phase5.ts:116:  console.log('Created tier benefits')
+./seed-phase5.ts:203:  console.log('Created points rewards')
+./seed-phase5.ts:267:  console.log('Created chatbot knowledge base')
+./seed-phase5.ts:269:  console.log('Phase 5 seeding complete!')
+./seed-phase5.ts:274:    console.error(e)
+./src/app/pitch/page.tsx:296:      console.error('Failed to download PDF:', error)
+./src/app/host/streams/new/CreateStreamClient.tsx:50:      console.error('Error fetching products:', error)
+./src/app/host/dashboard/HostDashboardClient.tsx:62:        console.error('Error fetching dashboard:', error)
+./src/app/admin/customers/AdminCustomersClient.tsx:97:      console.error('Failed to update admin status')
+./src/app/admin/email-test/EmailTestClient.tsx:64:      console.error('Failed to fetch email status:', error)
+./src/app/admin/campaigns/CampaignsClient.tsx:62:      console.error('Error fetching campaigns:', error)
+./src/app/admin/segments/SegmentsClient.tsx:112:      console.error('Error fetching data:', error)
+./src/app/admin/segments/SegmentsClient.tsx:137:        console.log('RFM calculated:', data)
+./src/app/admin/segments/SegmentsClient.tsx:141:      console.error('Error calculating RFM:', error)
+./src/app/admin/segments/[id]/SegmentDetailClient.tsx:114:      console.error('Error fetching segment:', error)
+./src/app/admin/segments/[id]/SegmentDetailClient.tsx:147:      console.error('Error creating campaign:', error)
+./src/app/admin/analytics/AnalyticsClient.tsx:71:      console.error('Error fetching analytics:', error)
+./src/app/quiz/QuizClient.tsx:63:        console.error('Failed to fetch questions:', error)
+./src/app/quiz/QuizClient.tsx:86:      console.error('Failed to submit quiz:', error)
+./src/app/quiz/QuizClient.tsx:127:      console.error('Failed to add to cart:', error)
+./src/app/checkout/payment/page.tsx:190:      console.error('Order creation error:', err)
+./src/app/checkout/payment/page.tsx:224:        console.error('Payment intent error:', err)
+./src/app/checkout/payment/page.tsx:239:        console.error('Crypto charge error:', err)
+./src/app/checkout/payment/page.tsx:254:        console.error('Bank transfer error:', err)
+./src/app/checkout/CheckoutClient.tsx:85:        console.error('Error fetching loyalty points:', error)
+./src/app/subscriptions/SubscriptionsClient.tsx:64:      console.error('Failed to fetch plans:', error)
+./src/app/subscriptions/SubscriptionsClient.tsx:115:      console.error('Failed to subscribe:', error)
+./src/app/subscriptions/SubscriptionsClient.tsx:134:      console.error('Failed to update subscription:', error)
+./src/app/support/SupportChatClient.tsx:73:      console.error('Socket error:', data.message)
+./src/app/consultations/ConsultationsClient.tsx:68:      console.error('Failed to fetch consultants:', error)
+./src/app/consultations/ConsultationsClient.tsx:82:      console.error('Failed to fetch slots:', error)
+./src/app/consultations/ConsultationsClient.tsx:112:      console.error('Failed to book consultation:', error)
+./src/app/live/LiveHubClient.tsx:70:        console.error('Error fetching streams:', error)
+./src/app/registry/RegistryDashboard.tsx:84:      console.error('Error fetching registries:', error)
+./src/app/registry/[slug]/PublicRegistryClient.tsx:124:      console.error('Error fetching registry:', error)
+./src/app/registry/[slug]/manage/ManageRegistryClient.tsx:143:      console.error('Error fetching registry:', error)
+./src/app/registry/[slug]/manage/ManageRegistryClient.tsx:171:      console.error('Error searching products:', error)
+./src/app/api/experience/configurations/route.ts:34:    console.error('Error fetching configurations:', error)
+./src/app/api/experience/configurations/route.ts:63:    console.error('Error creating configuration:', error)
+./src/app/api/experience/features/route.ts:39:    console.error('Error fetching features:', error)
+./src/app/api/experience/features/route.ts:70:    console.error('Error creating feature:', error)
+./src/app/api/experience/experiences/route.ts:85:    console.error('Error fetching experiences:', error)
+./src/app/api/experience/experiences/route.ts:123:    console.error('Error creating experience:', error)
+./src/app/api/experience/sensory/route.ts:51:    console.error('Error fetching sensory profile:', error)
+./src/app/api/experience/sensory/route.ts:113:    console.error('Error saving sensory profile:', error)
+./src/app/api/experience/3d-models/route.ts:45:    console.error('Error fetching 3D model:', error)
+./src/app/api/experience/3d-models/route.ts:111:    console.error('Error saving 3D model:', error)
+./src/app/api/experience/size-visualizer/route.ts:64:    console.error('Error fetching size visualization:', error)
+./src/app/api/experience/size-visualizer/route.ts:104:    console.error('Error saving size visualization:', error)
+./src/app/api/packaging/route.ts:25:    console.error('Error fetching packaging preferences:', error)
+./src/app/api/packaging/route.ts:88:    console.error('Error updating packaging preferences:', error)
+./src/app/api/tickets/route.ts:67:    console.error('Error fetching tickets:', error)
+./src/app/api/tickets/route.ts:129:    console.error('Error creating ticket:', error)
+./src/app/api/tickets/[id]/messages/route.ts:96:    console.error('Error adding message:', error)
+./src/app/api/tickets/[id]/route.ts:40:    console.error('Error fetching ticket:', error)
+./src/app/api/tickets/[id]/route.ts:94:    console.error('Error updating ticket:', error)
+./src/app/api/tickets/categories/route.ts:45:    console.error('Error fetching categories:', error)
+./src/app/api/tickets/categories/route.ts:88:    console.error('Error creating category:', error)
+./src/app/api/crypto/webhook/route.ts:20:    console.error('Crypto webhook handler error:', error)
+./src/app/api/gift-cards/redeem/route.ts:86:    console.error('Gift card redemption error:', error)
+./src/app/api/gift-cards/route.ts:56:    console.error('Gift cards fetch error:', error)
+./src/app/api/gift-cards/route.ts:140:        console.error('Failed to send gift card email:', emailError)
+./src/app/api/gift-cards/route.ts:156:    console.error('Gift card creation error:', error)
+./src/app/api/gift-cards/check/route.ts:73:    console.error('Gift card check error:', error)
+./src/app/api/vip/progress/route.ts:87:    console.error('Error fetching VIP progress:', error)
+./src/app/api/vip/progress/route.ts:167:    console.error('Error updating VIP progress:', error)
+./src/app/api/vip/tiers/route.ts:20:    console.error('Error fetching VIP tiers:', error)
+./src/app/api/vip/tiers/route.ts:86:    console.error('Error creating VIP tier:', error)
+./src/app/api/vip/tiers/route.ts:134:    console.error('Error updating VIP tier:', error)
+./src/app/api/products/stock/route.ts:60:    console.error('Error fetching stock status:', error)
+./src/app/api/products/stock/route.ts:152:    console.error('Error checking stock:', error)
+./src/app/api/products/[id]/views/route.ts:47:    console.error('Product view tracking error:', error)
+./src/app/api/products/[id]/views/route.ts:100:    console.error('Social proof fetch error:', error)
+./src/app/api/flash-sales/route.ts:57:    console.error('Flash sales fetch error:', error)
+./src/app/api/couples/route.ts:46:    console.error('Error fetching couples link:', error)
+./src/app/api/couples/route.ts:122:    console.error('Error creating couples link:', error)
+./src/app/api/couples/route.ts:200:    console.error('Error updating couples link:', error)
+./src/app/api/wellness/daily-rewards/route.ts:14:    console.error('Error fetching daily rewards:', error)
+./src/app/api/wellness/daily-rewards/route.ts:48:    console.error('Error seeding daily rewards:', error)
+./src/app/api/wellness/patterns/route.ts:50:    console.error('Error fetching patterns:', error)
+./src/app/api/wellness/patterns/route.ts:112:    console.error('Error creating pattern:', error)
+./src/app/api/wellness/patterns/route.ts:168:    console.error('Error updating pattern:', error)
+./src/app/api/wellness/patterns/route.ts:210:    console.error('Error deleting pattern:', error)
+./src/app/api/wellness/achievements/route.ts:40:    console.error('Error fetching achievements:', error)
+./src/app/api/wellness/achievements/route.ts:93:    console.error('Error creating achievement:', error)
+./src/app/api/wellness/toy-brands/route.ts:21:    console.error('Error fetching toy brands:', error)
+./src/app/api/wellness/toy-brands/route.ts:64:    console.error('Error creating toy brand:', error)
+./src/app/api/wellness/toys/route.ts:49:    console.error('Error fetching toys:', error)
+./src/app/api/wellness/toys/route.ts:115:    console.error('Error connecting toy:', error)
+./src/app/api/wellness/toys/route.ts:154:    console.error('Error updating toy:', error)
+./src/app/api/wellness/toys/route.ts:182:    console.error('Error disconnecting toy:', error)
+./src/app/api/wellness/challenges/route.ts:54:    console.error('Error fetching challenges:', error)
+./src/app/api/wellness/challenges/route.ts:107:    console.error('Error creating challenge:', error)
+./src/app/api/wellness/challenges/[id]/route.ts:32:    console.error('Error fetching challenge:', error)
+./src/app/api/wellness/challenges/[id]/route.ts:138:    console.error('Error completing challenge:', error)
+./src/app/api/wellness/couple-goals/route.ts:50:    console.error('Error fetching couple goals:', error)
+./src/app/api/wellness/couple-goals/route.ts:127:    console.error('Error creating couple goal:', error)
+./src/app/api/wellness/couple-goals/route.ts:200:    console.error('Error updating couple goal:', error)
+./src/app/api/wellness/sessions/route.ts:73:    console.error('Error fetching sessions:', error)
+./src/app/api/wellness/sessions/route.ts:167:    console.error('Error creating session:', error)
+./src/app/api/wellness/sessions/route.ts:247:    console.error('Error updating session:', error)
+./src/app/api/wellness/profile/route.ts:47:    console.error('Error fetching wellness profile:', error)
+./src/app/api/wellness/profile/route.ts:96:    console.error('Error updating wellness profile:', error)
+./src/app/api/wellness/checkin/route.ts:49:    console.error('Error fetching check-in status:', error)
+./src/app/api/wellness/checkin/route.ts:186:    console.error('Error checking in:', error)
+./src/app/api/wellness/streaks/route.ts:41:    console.error('Error fetching streak:', error)
+./src/app/api/wellness/streaks/route.ts:139:    console.error('Error updating streak:', error)
+./src/app/api/auth/oauth/apple/route.ts:108:    console.error('Apple OAuth error:', error)
+./src/app/api/auth/oauth/apple/route.ts:151:    console.error('Apple OAuth URL generation error:', error)
+./src/app/api/auth/oauth/google/route.ts:117:    console.error('Google OAuth error:', error)
+./src/app/api/auth/resend-verification/route.ts:87:    console.error('Resend verification error:', error)
+./src/app/api/auth/logout/route.ts:9:    console.error('Logout error:', error)
+./src/app/api/auth/verify-email/route.ts:42:    console.error('Email verification error:', error)
+./src/app/api/auth/register/route.ts:88:    console.error('Registration error:', error)
+./src/app/api/auth/me/route.ts:39:    console.error('Error fetching current user:', error)
+./src/app/api/auth/forgot-password/route.ts:55:    console.error('Forgot password error:', error)
+./src/app/api/auth/reset-password/route.ts:78:    console.error('Reset password error:', error)
+./src/app/api/auth/login/route.ts:69:    console.error('Login error:', error)
+./src/app/api/images/[id]/route.ts:18:    console.error('Image delete error:', error)
+./src/app/api/images/[id]/route.ts:46:    console.error('Image update error:', error)
+./src/app/api/chatbot/route.ts:39:    console.error('Error fetching chatbot conversation:', error)
+./src/app/api/chatbot/route.ts:128:    console.error('Error processing chatbot message:', error)
+./src/app/api/stream-reminders/route.ts:43:    console.error('Error creating reminder:', error)
+./src/app/api/referrals/validate/route.ts:54:    console.error('Referral validation error:', error)
+./src/app/api/referrals/code/route.ts:45:    console.error('Referral code fetch error:', error)
+./src/app/api/referrals/code/route.ts:100:    console.error('Referral code creation error:', error)
+./src/app/api/payment/crypto-charge/route.ts:21:    console.error('Crypto charge creation error:', error)
+./src/app/api/payment/bank-transfer/route.ts:84:    console.error('Bank transfer setup error:', error)
+./src/app/api/payment/create-intent/route.ts:21:    console.error('Payment intent creation error:', error)
+./src/app/api/streams/schedule/route.ts:51:    console.error('Error fetching scheduled streams:', error)
+./src/app/api/streams/replays/route.ts:53:    console.error('Error fetching replays:', error)
+./src/app/api/streams/route.ts:86:    console.error('Error fetching streams:', error)
+./src/app/api/streams/route.ts:186:    console.error('Error creating stream:', error)
+./src/app/api/streams/live/route.ts:54:    console.error('Error fetching live streams:', error)
+./src/app/api/streams/[id]/offers/route.ts:30:    console.error('Error fetching stream offers:', error)
+./src/app/api/streams/[id]/offers/route.ts:95:    console.error('Error creating offer:', error)
+./src/app/api/streams/[id]/products/route.ts:28:    console.error('Error fetching stream products:', error)
+./src/app/api/streams/[id]/products/route.ts:89:    console.error('Error adding product to stream:', error)
+./src/app/api/streams/[id]/chat/route.ts:43:    console.error('Error fetching chat messages:', error)
+./src/app/api/streams/[id]/start/route.ts:63:    console.error('Error starting stream:', error)
+./src/app/api/streams/[id]/end/route.ts:76:    console.error('Error ending stream:', error)
+./src/app/api/streams/[id]/route.ts:71:    console.error('Error fetching stream:', error)
+./src/app/api/streams/[id]/route.ts:124:    console.error('Error updating stream:', error)
+./src/app/api/streams/[id]/route.ts:163:    console.error('Error deleting stream:', error)
+./src/app/api/gift-wrapping/route.ts:21:    console.error('Error fetching gift wrapping options:', error)
+./src/app/api/anonymous-gift/route.ts:69:    console.error('Error sending gift notification:', error)
+./src/app/api/packaging-photos/route.ts:21:    console.error('Error fetching packaging photos:', error)
+./src/app/api/admin/customers/[id]/route.ts:31:    console.error('Customer update error:', error)
+./src/app/api/admin/customers/[id]/route.ts:81:    console.error('Customer fetch error:', error)
+./src/app/api/admin/audit-logs/route.ts:88:    console.error('Error fetching audit logs:', error)
+./src/app/api/admin/audit-logs/route.ts:130:    console.error('Error creating audit log:', error)
+./src/app/api/admin/products/[id]/images/route.ts:69:    console.error('Image upload error:', error)
+./src/app/api/admin/products/[id]/images/route.ts:92:    console.error('Image fetch error:', error)
+./src/app/api/admin/products/[id]/route.ts:46:        console.error('Error sending stock alerts:', err)
+./src/app/api/admin/products/[id]/route.ts:52:    console.error('Product update error:', error)
+./src/app/api/admin/products/[id]/route.ts:96:    console.error('Product delete error:', error)
+./src/app/api/admin/products/[id]/route.ts:130:    console.error('Product fetch error:', error)
+./src/app/api/admin/rfm/route.ts:21:    console.error('RFM API error:', error)
+./src/app/api/admin/rfm/route.ts:42:    console.error('RFM calculation error:', error)
+./src/app/api/admin/campaigns/route.ts:52:    console.error('Error fetching campaigns:', error)
+./src/app/api/admin/campaigns/route.ts:127:    console.error('Error creating campaign:', error)
+./src/app/api/admin/campaigns/route.ts:181:    console.error('Error updating campaign:', error)
+./src/app/api/admin/campaigns/route.ts:226:    console.error('Error deleting campaign:', error)
+./src/app/api/admin/orders/[id]/route.ts:94:    console.error('Order update error:', error)
+./src/app/api/admin/orders/[id]/route.ts:134:    console.error('Order fetch error:', error)
+./src/app/api/admin/segments/route.ts:72:    console.error('Error fetching segments:', error)
+./src/app/api/admin/segments/route.ts:123:    console.error('Error creating segment:', error)
+./src/app/api/admin/segments/route.ts:157:    console.error('Error updating segment:', error)
+./src/app/api/admin/segments/route.ts:184:    console.error('Error deleting segment:', error)
+./src/app/api/admin/segments/campaigns/route.ts:66:    console.error('Error fetching campaigns:', error)
+./src/app/api/admin/segments/campaigns/route.ts:122:    console.error('Error creating campaign:', error)
+./src/app/api/admin/segments/campaigns/route.ts:159:    console.error('Error updating campaign:', error)
+./src/app/api/admin/segments/campaigns/route.ts:180:    console.error('Error deleting campaign:', error)
+./src/app/api/admin/segments/campaigns/route.ts:225:    console.error('Error updating campaign:', error)
+./src/app/api/admin/analytics/route.ts:223:    console.error('Error fetching analytics:', error)
+./src/app/api/quiz/submit/route.ts:82:    console.error('Quiz submission error:', error)
+./src/app/api/quiz/submit/route.ts:169:    console.error('AI recommendation error:', error)
+./src/app/api/quiz/convert/route.ts:42:    console.error('Quiz conversion error:', error)
+./src/app/api/quiz/questions/route.ts:178:    console.error('Error fetching quiz questions:', error)
+./src/app/api/loyalty/redeem/route.ts:62:    console.error('Error redeeming points:', error)
+./src/app/api/loyalty/route.ts:84:    console.error('Error fetching loyalty account:', error)
+./src/app/api/checkout/validate-giftcard/route.ts:41:    console.error('Gift card validation error:', error)
+./src/app/api/checkout/loyalty-points/route.ts:30:    console.error('Error fetching loyalty points:', error)
+./src/app/api/checkout/validate-promo/route.ts:74:    console.error('Promo validation error:', error)
+./src/app/api/blog/route.ts:80:    console.error('Blog posts fetch error:', error)
+./src/app/api/blog/route.ts:146:    console.error('Blog post creation error:', error)
+./src/app/api/recommendations/product/[id]/route.ts:180:    console.error('Error fetching product recommendations:', error)
+./src/app/api/recommendations/route.ts:223:    console.error('Error fetching recommendations:', error)
+./src/app/api/recommendations/route.ts:290:    console.error('Error creating recommendation:', error)
+./src/app/api/subscriptions/plans/route.ts:171:    console.error('Error fetching subscription plans:', error)
+./src/app/api/subscriptions/route.ts:36:    console.error('Error fetching subscriptions:', error)
+./src/app/api/subscriptions/route.ts:106:    console.error('Error creating subscription:', error)
+./src/app/api/subscriptions/route.ts:196:    console.error('Error updating subscription:', error)
+./src/app/api/alerts/preferences/route.ts:26:    console.error('Error fetching alert preferences:', error)
+./src/app/api/alerts/preferences/route.ts:64:    console.error('Error updating alert preferences:', error)
+./src/app/api/alerts/price-drop/route.ts:41:    console.error('Error fetching price drop alerts:', error)
+./src/app/api/alerts/price-drop/route.ts:108:    console.error('Error creating price drop alert:', error)
+./src/app/api/alerts/price-drop/route.ts:143:    console.error('Error deleting price drop alert:', error)
+./src/app/api/alerts/stock/route.ts:40:    console.error('Error fetching stock alerts:', error)
+./src/app/api/alerts/stock/route.ts:93:    console.error('Error creating stock alert:', error)
+./src/app/api/alerts/stock/route.ts:128:    console.error('Error deleting stock alert:', error)
+./src/app/api/abandoned-cart/route.ts:49:    console.error('Abandoned cart track error:', error)
+./src/app/api/abandoned-cart/route.ts:96:    console.error('Abandoned carts fetch error:', error)
+./src/app/api/abandoned-cart/recover/route.ts:79:    console.error('Recovery email error:', error)
+./src/app/api/sessions/revoke/route.ts:25:    console.error('Error revoking session:', error)
+./src/app/api/promotions/route.ts:30:    console.error('Promotions fetch error:', error)
+./src/app/api/promotions/route.ts:93:    console.error('Promotion creation error:', error)
+./src/app/api/promotions/check/route.ts:93:    console.error('Promo check error:', error)
+./src/app/api/consultants/route.ts:124:    console.error('Error fetching consultants:', error)
+./src/app/api/size-guides/route.ts:40:    console.error('Size guides fetch error:', error)
+./src/app/api/consultations/route.ts:106:    console.error('Error fetching consultations:', error)
+./src/app/api/consultations/route.ts:166:    console.error('Error creating consultation:', error)
+./src/app/api/consultations/route.ts:209:    console.error('Error updating consultation:', error)
+./src/app/api/address/autocomplete/route.ts:17:      console.warn('GOOGLE_PLACES_API_KEY not configured')
+./src/app/api/address/autocomplete/route.ts:35:      console.error('Google Places API error:', data.status, data.error_message)
+./src/app/api/address/autocomplete/route.ts:48:    console.error('Address autocomplete error:', error)
+./src/app/api/address/details/route.ts:31:      console.error('Google Places Details API error:', data.status)
+./src/app/api/address/details/route.ts:56:    console.error('Address details error:', error)
+./src/app/api/points/rewards/route.ts:86:    console.error('Error fetching points rewards:', error)
+./src/app/api/points/rewards/route.ts:140:    console.error('Error creating points reward:', error)
+./src/app/api/points/redeem/route.ts:28:    console.error('Error fetching redemptions:', error)
+./src/app/api/points/redeem/route.ts:202:    console.error('Error redeeming points:', error)
+./src/app/api/registry/slug/[slug]/route.ts:170:    console.error('Error fetching public registry:', error)
+./src/app/api/registry/route.ts:60:    console.error('Error fetching registries:', error)
+./src/app/api/registry/route.ts:130:    console.error('Error creating registry:', error)
+./src/app/api/registry/[id]/purchases/route.ts:42:    console.error('Error fetching purchases:', error)
+./src/app/api/registry/[id]/purchases/route.ts:100:    console.error('Error recording purchase:', error)
+./src/app/api/registry/[id]/purchases/route.ts:135:    console.error('Error updating purchase:', error)
+./src/app/api/registry/[id]/route.ts:80:    console.error('Error fetching registry:', error)
+./src/app/api/registry/[id]/route.ts:155:    console.error('Error updating registry:', error)
+./src/app/api/registry/[id]/route.ts:185:    console.error('Error deleting registry:', error)
+./src/app/api/registry/[id]/items/route.ts:45:    console.error('Error fetching registry items:', error)
+./src/app/api/registry/[id]/items/route.ts:139:    console.error('Error adding registry item:', error)
+./src/app/api/registry/[id]/items/route.ts:176:    console.error('Error updating registry item:', error)
+./src/app/api/registry/[id]/items/route.ts:212:    console.error('Error deleting registry item:', error)
+./src/app/api/registry/[id]/events/route.ts:34:    console.error('Error fetching events:', error)
+./src/app/api/registry/[id]/events/route.ts:95:    console.error('Error adding event:', error)
+./src/app/api/registry/[id]/events/route.ts:137:    console.error('Error updating event:', error)
+./src/app/api/registry/[id]/events/route.ts:173:    console.error('Error deleting event:', error)
+./src/app/api/registry/[id]/guests/route.ts:34:    console.error('Error fetching guests:', error)
+./src/app/api/registry/[id]/guests/route.ts:83:    console.error('Error adding guests:', error)
+./src/app/api/registry/[id]/guests/route.ts:120:    console.error('Error updating guest:', error)
+./src/app/api/registry/[id]/guests/route.ts:156:    console.error('Error deleting guest:', error)
+./src/app/api/hosts/route.ts:42:    console.error('Error fetching hosts:', error)
+./src/app/api/hosts/route.ts:96:    console.error('Error creating host:', error)
+./src/app/api/hosts/me/route.ts:27:    console.error('Error fetching host profile:', error)
+./src/app/api/hosts/[id]/route.ts:60:    console.error('Error fetching host:', error)
+./src/app/api/hosts/[id]/route.ts:90:    console.error('Error updating host:', error)
+./src/app/api/returns/route.ts:51:    console.error('Error fetching returns:', error)
+./src/app/api/returns/route.ts:124:    console.error('Error creating return:', error)
+./src/app/api/returns/route.ts:163:    console.error('Error updating return:', error)
+./src/app/api/orders/route.ts:318:        console.error('[ORDER] Failed to send confirmation email:', err)
+./src/app/api/orders/route.ts:333:    console.error('Order creation error:', error)
+./src/app/api/orders/route.ts:395:    console.error('Orders fetch error:', error)
+./src/app/api/newsletter/route.ts:31:    console.error('Newsletter error:', error)
+./src/app/api/cron/price-alerts/route.ts:83:    console.error('Price alert check error:', error)
+./src/app/api/cron/gift-cards/route.ts:37:    console.log(`[CRON] Found ${scheduledGiftCards.length} gift cards to deliver`)
+./src/app/api/cron/gift-cards/route.ts:78:        console.error(`[CRON] Failed to deliver gift card ${giftCard.id}:`, err)
+./src/app/api/cron/gift-cards/route.ts:97:    console.error('[CRON] Gift card delivery error:', error)
+./src/app/api/cron/stock-alerts/route.ts:87:    console.error('Stock alert check error:', error)
+./src/app/api/cron/abandoned-cart/route.ts:123:        console.error(`Failed to process cart ${cart.id}:`, error)
+./src/app/api/cron/abandoned-cart/route.ts:134:    console.error('Abandoned cart cron error:', error)
+./src/app/api/wishlist/shared/route.ts:66:    console.error('Error fetching shared wishlist:', error)
+./src/app/api/wishlist/route.ts:26:    console.error('Error fetching wishlist products:', error)
+./src/app/api/wishlist/share/route.ts:40:    console.error('Error creating shared wishlist:', error)
+./src/app/api/wishlist/share/route.ts:68:    console.error('Error fetching shared wishlists:', error)
+./src/app/api/wishlist/share/route.ts:106:    console.error('Error deleting shared wishlist:', error)
+./src/app/api/bundles/route.ts:34:    console.error('Bundles fetch error:', error)
+./src/app/api/bundles/route.ts:101:    console.error('Bundle creation error:', error)
+./src/app/api/stripe/webhook/route.ts:22:    console.error('Stripe webhook signature error:', error)
+./src/app/api/stripe/webhook/route.ts:32:    console.error('Stripe webhook handler error:', error)
+./src/app/api/reviews/route.ts:71:    console.error('Reviews fetch error:', error)
+./src/app/api/reviews/route.ts:173:    console.error('Review creation error:', error)
+./src/app/api/reviews/[id]/vote/route.ts:77:    console.error('Vote error:', error)
+./src/app/returns/ReturnsClient.tsx:104:      console.error('Failed to fetch data:', error)
+./src/app/account/packaging/PackagingClient.tsx:67:      console.error('Failed to fetch packaging preferences:', error)
+./src/app/account/vip/VIPClient.tsx:78:        console.error('Error fetching VIP data:', error)
+./src/app/account/toys/SmartToysClient.tsx:136:        console.error('Error fetching data:', error)
+./src/app/account/wellness/WellnessClient.tsx:170:        console.error('Error fetching wellness data:', error)
+./src/app/account/rewards/RewardsClient.tsx:67:        console.error('Error fetching rewards:', error)
+./src/app/account/loyalty/LoyaltyClient.tsx:45:      console.error('Error fetching loyalty account:', error)
+./src/app/account/alerts/AlertsClient.tsx:81:      console.error('Error fetching alerts:', error)
+./src/app/account/support/SupportClient.tsx:117:      console.error('Failed to fetch data:', error)
+./src/app/account/support/[id]/TicketDetailClient.tsx:107:      console.error('Failed to fetch ticket:', error)
+./src/app/account/page.tsx:71:      console.error('Auth error:', error)
+./src/app/account/page.tsx:97:      console.error('Google OAuth error:', error)
+./src/app/account/page.tsx:118:      console.error('Apple OAuth error:', error)
+./src/app/account/wishlist/page.tsx:61:        console.error('Error fetching wishlist:', error)
+./src/app/account/wishlist/page.tsx:80:        console.error('Error fetching shared wishlists:', error)
+./src/app/account/couple/CoupleClient.tsx:59:      console.error('Failed to fetch couples data:', error)
+./src/components/experience/SensoryPreview.tsx:73:        console.error('Error fetching sensory profile:', error)
+./src/components/experience/SizeVisualizer.tsx:68:        console.error('Error fetching size visualization:', error)
+./src/components/experience/ExperienceGallery.tsx:71:        console.error('Error fetching experiences:', error)
+./src/components/experience/ProductConfigurator.tsx:91:        console.error('Error fetching configurations:', error)
+./src/components/experience/VirtualTryOn.tsx:62:      console.error('Camera error:', err)
+./src/components/experience/VirtualTryOn.tsx:128:      console.error('Share error:', err)
+./src/components/experience/ProductComparison.tsx:65:        console.error('Search error:', error)
+./src/components/chatbot/ChatbotWidget.tsx:59:      console.error('Error fetching conversation:', error)
+./src/components/chatbot/ChatbotWidget.tsx:113:      console.error('Error sending message:', error)
+./src/components/product/StockIndicator.tsx:47:        console.error('Error fetching stock:', error)
+./src/components/checkout/AddressAutocomplete.tsx:68:        console.error('Error fetching predictions:', error)
+./src/components/checkout/AddressAutocomplete.tsx:111:      console.error('Error fetching address details:', error)
+./src/components/search/EnhancedSearchBar.tsx:94:      console.error('Error fetching recent searches:', error)
+./src/components/search/EnhancedSearchBar.tsx:112:      console.error('Error fetching suggestions:', error)
+./src/components/search/SearchPage.tsx:142:      console.error('Search error:', error)
+./src/components/reviews/ReviewsSection.tsx:107:      console.error('Failed to fetch reviews')
+./src/components/reviews/ReviewsSection.tsx:174:      console.error('Failed to vote')
+./src/components/social-proof/SocialProof.tsx:37:        console.error('Failed to fetch social proof')
+./src/lib/email/index.ts:19:  console.log(`[EMAIL] ${success ? '✓' : '✗'} ${type} → ${to} | ${subject}${error ? ` | Error: ${error}` : ''}`)
+./src/lib/email/index.ts:48:    console.warn(`[EMAIL] ⚠ ${type} → ${to} | ${subject} | ${msg}`)
+./src/lib/stock-alerts.ts:67:        console.error(`Failed to send stock alert to ${alert.customer.email}:`, error)
+./src/lib/stock-alerts.ts:73:    console.error('Error checking stock alerts:', error)
+./src/lib/stock-alerts.ts:125:        console.error(`Failed to send price alert to ${alert.customer.email}:`, error)
+./src/lib/stock-alerts.ts:143:    console.error('Error checking price alerts:', error)
+
+=== ANY TYPES ===
+./mini-services/live-stream/index.ts:433:async function handleLeaveStream(socket: any, streamId: string) {
+./examples/websocket/frontend.tsx:28:  const [socket, setSocket] = useState<any>(null);
+./seed-phase5.ts:199:      await prisma.pointsReward.create({ data: reward as any })
+./src/app/our-story/page.tsx:17:              CALŌR was built on a simple belief: intimacy deserves the same design attention and dignity as anything else you bring into your life.
+./src/app/quiz/QuizClient.tsx:57:          setQuestions(data.questions.map((q: any) => ({
+./src/app/subscriptions/SubscriptionsClient.tsx:34:  shippingAddress: any
+./src/app/subscriptions/SubscriptionsClient.tsx:35:  orders: any[]
+./src/app/subscriptions/SubscriptionsClient.tsx:57:        setPlans(data.plans.map((p: any) => ({
+./src/app/subscriptions/SubscriptionsClient.tsx:76:          setUserSubscriptions(subData.subscriptions.map((s: any) => ({
+./src/app/consultations/ConsultationsClient.tsx:60:        setConsultants(data.consultants.map((c: any) => ({
+./src/app/consultations/ConsultationsClient.tsx:326:                      onClick={() => setSelectedType(type as any)}
+./src/app/api/subscriptions/route.ts:140:    let updateData: any = {}
+./src/components/home/Philosophy.tsx:45:              CALŌR occupies the space between Apple and Aesop. An elevated wellness and intimacy destination. Not a shop, not a pharmacy, not a bookstore. All three, unified under one philosophy: that intimacy deserves the same design attention and dignity as anything else you bring into your life.
+
+=== EMPTY CATCH BLOCKS ===
+./src/app/api/auth/oauth/google/route.ts:124:  const { redirectUrl } = await request.json().catch(() => ({}))
+./src/stores/auth.ts:41:        fetch('/api/auth/logout', { method: 'POST' }).catch(() => {})
+./src/components/layout/SearchModal.tsx:48:      .catch(() => {})
+./src/components/search/EnhancedSearchBar.tsx:134:    }).catch(() => {})
+./src/lib/auth/session.ts:92:    }).catch(() => {})
+
+=== HARDCODED URLS ===
+./mini-services/support-chat/index.ts:9:    origin: ['http://localhost:3000', 'https://calorco.com'],
+./mini-services/live-stream/index.ts:16:    origin: ['http://localhost:3000'],
+./src/app/admin/email-test/EmailTestClient.tsx:107:NEXT_PUBLIC_SITE_URL=http://localhost:3000
+./src/app/admin/email-test/EmailTestClient.tsx:201:NEXT_PUBLIC_SITE_URL=http://localhost:3000
+./src/app/layout.tsx:32:    url: "https://calorco.com",
+./src/app/api/auth/oauth/apple/route.ts:136:    const redirectUri = `${process.env.NEXT_PUBLIC_URL || 'http://localhost:3000'}/api/auth/oauth/apple`
+./src/app/api/auth/oauth/google/route.ts:29:        redirect_uri: `${process.env.NEXT_PUBLIC_URL || 'http://localhost:3000'}/api/auth/oauth/google`,
+./src/app/api/auth/oauth/google/route.ts:131:  const redirectUri = `${process.env.NEXT_PUBLIC_URL || 'http://localhost:3000'}/api/auth/oauth/google`
+./src/lib/payments/coinbase.ts:44:      redirect_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/checkout/confirmation?ref=${order.reference}`,
+./src/lib/payments/coinbase.ts:45:      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/checkout/payment`,
+./src/lib/email/index.ts:147:          <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/account/orders" class="button">Track Your Order</a>
+./src/lib/email/index.ts:205:          <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/account" class="button">Visit Your Account</a>
+./src/lib/email/index.ts:229:  const resetUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`
+./src/lib/email/index.ts:286:  const verifyUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/auth/verify-email?token=${verifyToken}`
+./src/lib/email/index.ts:397:            <p>Track your order at ${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/track-order</p>
+./src/lib/email/index.ts:466:          <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}" class="button">Start Shopping</a>
+./src/lib/email/index.ts:548:          <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/checkout" class="button">Complete Your Order</a>
+./src/lib/email/index.ts:614:          <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/product/${productSlug}" class="button">Shop Now</a>
+./src/lib/email/index.ts:663:          <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/product/${productSlug}" class="button">Shop Now</a>
+./src/lib/email/index.ts:745:          <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/account/security" class="button">Review Account Activity</a>
+
+=== MISSING IMPORTS ===
+@/components/account/AccountLayout
+@/components/account/AccountNav
+@/components/cart/CartDrawer
+@/components/chatbot/ChatbotWidget
+@/components/checkout/AddressAutocomplete
+@/components/comparison/ComparisonContext
+@/components/comparison/ProductComparison
+@/components/experience/ExperienceGallery
+@/components/experience/InteractiveGuide
+@/components/experience/ProductComparison
+@/components/experience/ProductConfigurator
+@/components/experience/ProductViewer3D
+@/components/experience/SensoryPreview
+@/components/experience/SizeVisualizer
+@/components/experience/VirtualTryOn
+@/components/home/CategoryGrid
+@/components/home/DigitalProducts
+@/components/home/FeaturedProducts
+@/components/home/FeaturesShowcase
+@/components/home/GiftSets
+@/components/home/Hero
+@/components/home/Marquee
+@/components/home/Newsletter
+@/components/home/PaymentTrust
+@/components/home/Philosophy
+@/components/home/SearchSection
+@/components/home/VIPTeaser
+@/components/layout/ClientWrapper
+@/components/product/ProductCard
+@/components/reviews/ReviewsSection
+@/components/search
+@/components/social-proof/SocialProof
+@/components/ui/button
+@/components/ui/card
+@/components/ui/input
+@/components/ui/scroll-area
+@/hooks/use-toast
+@/lib/admin/middleware
+@/lib/auth
+@/lib/auth/session
+@/lib/db
+@/lib/email
+@/lib/geo
+@/lib/payments/coinbase
+@/lib/payments/stripe
+@/lib/stock-alerts
+@/stores
+@/stores/auth
+@/stores/quiz
+
+=== ENV VARS ===
+process.env.APPLE_CLIENT_ID
+process.env.APPLE_KEY_ID
+process.env.APPLE_PRIVATE_KEY
+process.env.APPLE_TEAM_ID
+process.env.COINBASE_COMMERCE_API_KEY
+process.env.COINBASE_WEBHOOK_SECRET
+process.env.CRON_SECRET
+process.env.CRON_SECRET_KEY
+process.env.GOOGLE_CLIENT_ID
+process.env.GOOGLE_CLIENT_SECRET
+process.env.GOOGLE_PLACES_API_KEY
+process.env.JWT_SECRET
+process.env.NEXT_PUBLIC_BASE_URL
+process.env.NEXT_PUBLIC_SITE_URL
+process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY
+process.env.NEXT_PUBLIC_URL
+process.env.NODE_ENV
+process.env.RESEND_API_KEY
+process.env.STRIPE_SECRET_KEY
+process.env.STRIPE_WEBHOOK_SECRET
+
+=== UNUSED EXPORTS ===
+Need to install the following packages:
+ts-prune@0.10.3
+Ok to proceed? (y) 
