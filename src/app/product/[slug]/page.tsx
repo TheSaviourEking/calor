@@ -23,6 +23,12 @@ async function getProduct(slug: string) {
         where: { isActive: true },
         orderBy: [{ isFeatured: "desc" }, { sortOrder: "asc" }],
       },
+      sensoryProfile: true,
+      features: true,
+      sizeVisualization: true,
+      sizeRecommendation: true,
+      model3D: true,
+      regionalPrices: true,
     },
   });
 }
@@ -67,6 +73,10 @@ async function getRelatedProducts(categoryId: string, excludeId: string) {
       images: {
         take: 1,
         select: { url: true, altText: true },
+      },
+      videos: {
+        take: 1,
+        select: { url: true, title: true, videoType: true },
       },
     },
     take: 4,

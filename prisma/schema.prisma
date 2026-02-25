@@ -35,6 +35,14 @@ model Product {
   cleaningGuide    String?        // Cleaning instructions
   usageGuide       String?        // How to use safely
   estimatedDeliveryDays Int?      @default(5) // Estimated delivery days
+  waterproofRating String?        // IPX rating: "IPX4", "IPX5", "IPX6", "IPX7", "IPX8"
+  whatsInTheBox    String?        // Newline-separated list of included items
+  batteryType      String?        // "rechargeable_lithium", "aaa", "aa", "cr2032", "usb_powered"
+  chargeTimeMinutes Int?          // Minutes to full charge
+  usageTimeMinutes Int?           // Minutes of usage per charge
+  chargingMethod   String?        // "usb-c", "micro-usb", "magnetic", "wireless", "dock"
+  metaTitle        String?
+  metaDescription  String?
   // Social proof fields
   viewCount        Int            @default(0) // Total views
   purchaseCount    Int            @default(0) // Total purchases
@@ -59,6 +67,7 @@ model Product {
   sensoryProfile   SensoryProfile?
   sizeVisualization SizeVisualization?
   features         ProductFeature[]
+  regionalPrices   RegionalPrice[]
   // Option D relations (Gift Registry)
   registryItems    RegistryItem[]
 }
@@ -2486,6 +2495,7 @@ model SensoryProfile {
   id              String   @id @default(cuid())
   productId       String   @unique
   product         Product  @relation(fields: [productId], references: [id])
+  hasElectronics  Boolean  @default(true)
 
   // Texture
   textureType     String?  // "smooth", "textured", "ribbed", "realistic"
@@ -3088,6 +3098,7 @@ model AbandonedCartEmailLog {
 model RegionalPrice {
   id              String   @id @default(cuid())
   productId       String
+  product         Product  @relation(fields: [productId], references: [id])
   countryCode     String   // ISO 3166-1 alpha-2, e.g., "US", "GB", "EU"
   currency        String   // ISO 4217, e.g., "USD", "GBP", "EUR"
   priceCents      Int

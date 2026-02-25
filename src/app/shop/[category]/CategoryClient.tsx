@@ -9,6 +9,10 @@ interface Product {
   name: string
   shortDescription: string
   badge: string | null
+  originalPrice: number | null
+  viewCount: number
+  purchaseCount: number
+  isDigital: boolean
   category: {
     name: string
     slug: string
@@ -20,6 +24,11 @@ interface Product {
   images: Array<{
     url: string
     altText: string
+  }>
+  videos?: Array<{
+    url: string
+    title: string | null
+    videoType?: string
   }>
 }
 
@@ -45,15 +54,15 @@ export default function CategoryClient({ category, products }: CategoryClientPro
       {/* Header */}
       <div className="bg-charcoal py-16">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <a 
-            href="/shop" 
+          <a
+            href="/shop"
             className="inline-flex items-center gap-2 font-body text-warm-gray text-sm mb-6 hover:text-terracotta transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Shop
           </a>
           <div className="flex items-center gap-3 mb-4">
-            <h1 
+            <h1
               className="font-display text-cream"
               style={{ fontSize: 'clamp(2.5rem, 4vw, 4rem)', fontWeight: 300 }}
             >
@@ -82,7 +91,7 @@ export default function CategoryClient({ category, products }: CategoryClientPro
               A note before you continue
             </h2>
             <p className="font-body text-warm-gray text-base max-w-md mx-auto mb-8">
-              This section contains adult content including bondage, restraints, and fetish products. 
+              This section contains adult content including bondage, restraints, and fetish products.
               By continuing, you confirm you are an adult and consent to viewing this content.
             </p>
             <button className="bg-terracotta text-warm-white px-8 py-4 font-body text-sm uppercase tracking-wider transition-colors hover:bg-terracotta-light">

@@ -22,7 +22,7 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
 export async function verifyToken(token: string): Promise<SessionPayload | null> {
   try {
     const { payload } = await jwtVerify(token, SECRET)
-    return payload as SessionPayload
+    return payload as unknown as SessionPayload
   } catch {
     return null
   }
@@ -76,7 +76,7 @@ export async function getSession(): Promise<SessionPayload | null> {
       return null
     }
 
-    return payload as SessionPayload
+    return payload as unknown as SessionPayload
   } catch {
     return null
   }
