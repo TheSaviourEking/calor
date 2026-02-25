@@ -18,6 +18,18 @@ import {
   Play,
   X,
   Video,
+  Box,
+  Maximize,
+  Zap,
+  Thermometer,
+  Activity,
+  Layers,
+  Ruler,
+  User,
+  ExternalLink,
+  Settings,
+  Wind,
+  MousePointer2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useCartStore, useWishlistStore, useLocaleStore } from "@/stores";
@@ -72,6 +84,82 @@ interface SafetyInfo {
   [key: string]: unknown;
 }
 
+interface SensoryProfile {
+  id: string;
+  hasElectronics: boolean;
+  textureType: string | null;
+  textureIntensity: number | null;
+  surfaceFeel: string | null;
+  firmness: string | null;
+  flexibility: string | null;
+  vibrationLevels: number | null;
+  vibrationPatterns: number | null;
+  motorType: string | null;
+  maxIntensity: number | null;
+  noiseLevel: string | null;
+  temperatureResponsive: boolean;
+  warmingSupported: boolean;
+  coolingSupported: boolean;
+  soundProfile: string | null;
+  weight: number | null;
+  weightFeel: string | null;
+  gripFeel: string | null;
+  warmingSensation: boolean;
+  coolingSensation: boolean;
+}
+
+interface Feature {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  iconType: string | null;
+  imageUrl: string | null;
+  videoUrl: string | null;
+  benefits: string | null;
+  isKeyFeature: boolean;
+  sortOrder: number;
+}
+
+interface SizeVisualization {
+  id: string;
+  length: number | null;
+  width: number | null;
+  height: number | null;
+  diameter: number | null;
+  insertableLength: number | null;
+  circumference: number | null;
+  comparisons: string | null;
+  silhouettes: string | null;
+}
+
+interface SizeRecommendation {
+  id: string;
+  fitType: string;
+  notes: string | null;
+}
+
+interface Model3D {
+  id: string;
+  thumbnailUrl: string | null;
+  modelUrl: string;
+  modelType: string;
+  animations: string | null;
+  arSupported: boolean;
+  arScale: number | null;
+  isProcessing: boolean;
+  isReady: boolean;
+}
+
+interface RegionalPrice {
+  id: string;
+  countryCode: string;
+  currency: string;
+  priceCents: number;
+  compareAtPriceCents: number | null;
+  isActive: boolean;
+}
+
 interface Product {
   id: string;
   slug: string;
@@ -79,17 +167,32 @@ interface Product {
   shortDescription: string;
   fullDescription: string;
   badge: string | null;
+  originalPrice: number | null;
   isDigital: boolean;
+  isRestricted: boolean;
+  requiresConsentGate: boolean;
   inventoryCount: number;
   materialInfo: string | null;
   safetyInfo: string | null;
   cleaningGuide: string | null;
   usageGuide: string | null;
   estimatedDeliveryDays: number | null;
+  waterproofRating: string | null;
+  whatsInTheBox: string | null;
+  batteryType: string | null;
+  chargeTimeMinutes: number | null;
+  usageTimeMinutes: number | null;
+  chargingMethod: string | null;
   category: Category;
   variants: Variant[];
   images: ProductImage[];
   videos: ProductVideo[];
+  sensoryProfile?: SensoryProfile | null;
+  features: Feature[];
+  sizeVisualization?: SizeVisualization | null;
+  sizeRecommendation?: SizeRecommendation | null;
+  model3D?: Model3D | null;
+  regionalPrices: RegionalPrice[];
 }
 
 interface RelatedProduct {
@@ -98,9 +201,14 @@ interface RelatedProduct {
   name: string;
   shortDescription: string;
   badge: string | null;
+  originalPrice: number | null;
+  viewCount: number;
+  purchaseCount: number;
+  isDigital: boolean;
   category: { name: string; slug: string };
   variants: Array<{ id: string; price: number }>;
   images: Array<{ url: string; altText: string }>;
+  videos?: Array<{ url: string; title: string | null; videoType?: string }>;
 }
 
 interface PackagingPhoto {
@@ -365,43 +473,52 @@ export default function ProductDetailClient({
                 </button>
               )}
 
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span
-                  className="font-display text-charcoal/10 text-8xl"
-                  style={{ fontWeight: 300 }}
-                >
-                  {product.name.charAt(0)}
-                </span>
+              {/* Main Media Display */}
+              <div className="absolute inset-0">
+                {mediaItems[activeMediaIndex]?.type === 'image' ? (
+                  <img
+                    src={mediaItems[activeMediaIndex].url}
+                    alt={mediaItems[activeMediaIndex].altText || product.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : mediaItems[activeMediaIndex]?.type === 'video' ? (
+                  <video
+                    src={mediaItems[activeMediaIndex].url}
+                    controls
+                    className="w-full h-full object-cover"
+                    poster={mediaItems[activeMediaIndex].thumbnailUrl || ''}
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="font-display text-charcoal/10 text-8xl" style={{ fontWeight: 300 }}>
+                      {product.name.charAt(0)}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Thumbnail Strip with Videos */}
-            {(product.images.length > 1 || product.videos?.length > 0) && (
-              <div className="flex gap-2">
-                {product.images.map((image, idx) => (
+            {/* Thumbnail Strip */}
+            {mediaItems.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                {mediaItems.map((item, idx) => (
                   <div
-                    key={image.id}
-                    className={`w-16 h-16 bg-gradient-to-br from-cream to-sand cursor-pointer transition-opacity ${activeMediaIndex === idx
-                        ? "ring-2 ring-terracotta opacity-100"
-                        : "opacity-60 hover:opacity-100"
+                    key={item.id}
+                    className={`w-16 h-16 flex-shrink-0 cursor-pointer transition-all duration-300 relative ${activeMediaIndex === idx
+                      ? "ring-2 ring-terracotta opacity-100"
+                      : "opacity-60 hover:opacity-100"
                       }`}
                     onClick={() => setActiveMediaIndex(idx)}
-                  />
-                ))}
-                {product.videos?.map((video, idx) => (
-                  <button
-                    key={video.id}
-                    onClick={() => setSelectedVideo(video)}
-                    className={`w-16 h-16 bg-gradient-to-br from-sand to-warm-gray cursor-pointer transition-opacity relative flex items-center justify-center ${"opacity-60 hover:opacity-100"}`}
                   >
-                    <Play className="w-6 h-6 text-charcoal" />
-                    {video.duration && (
-                      <span className="absolute bottom-1 right-1 text-[10px] font-body bg-charcoal/80 text-cream px-1">
-                        {Math.floor(video.duration / 60)}:
-                        {(video.duration % 60).toString().padStart(2, "0")}
-                      </span>
+                    {item.type === 'image' ? (
+                      <img src={item.url} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full bg-sand flex items-center justify-center">
+                        <Play className="w-5 h-5 text-charcoal" />
+                        <div className="absolute inset-0 bg-charcoal/10" />
+                      </div>
                     )}
-                  </button>
+                  </div>
                 ))}
               </div>
             )}
@@ -491,10 +608,15 @@ export default function ProductDetailClient({
               >
                 {formatPrice(price)}
               </p>
-              {product.badge === "sale" && (
-                <span className="font-body text-sm text-terracotta line-through">
-                  {formatPrice(price * 1.2)}
-                </span>
+              {product.originalPrice && product.originalPrice > price && (
+                <div className="flex items-center gap-2">
+                  <span className="font-body text-sm text-warm-gray line-through">
+                    {formatPrice(product.originalPrice)}
+                  </span>
+                  <span className="px-1.5 py-0.5 bg-terracotta/10 text-terracotta text-[0.65rem] font-bold uppercase tracking-wider">
+                    {Math.round(((product.originalPrice - price) / product.originalPrice) * 100)}% OFF
+                  </span>
+                </div>
               )}
             </div>
 
@@ -515,6 +637,30 @@ export default function ProductDetailClient({
                 <p className="font-body text-warm-gray text-sm">
                   {product.materialInfo}
                 </p>
+              </div>
+            )}
+
+            {/* Waterproof Rating */}
+            {product.waterproofRating && (
+              <div className="mb-6 p-3 bg-blue-50/50 border border-blue-100 flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-100 flex items-center justify-center flex-shrink-0">
+                  <span className="text-blue-600 font-body text-xs font-bold">{product.waterproofRating}</span>
+                </div>
+                <div>
+                  <p className="font-body text-charcoal text-sm font-medium">
+                    {product.waterproofRating === "IPX7" ? "Fully Submersible" :
+                      product.waterproofRating === "IPX8" ? "Deep Submersible" :
+                        product.waterproofRating === "IPX6" ? "Water Jet Resistant" :
+                          product.waterproofRating === "IPX5" ? "Water Jet Resistant" :
+                            "Splash-Proof"}
+                  </p>
+                  <p className="font-body text-warm-gray text-xs">
+                    {product.waterproofRating === "IPX7" ? "Safe to use in bath or shower — submersible up to 1m" :
+                      product.waterproofRating === "IPX8" ? "Submersible beyond 1m depth" :
+                        product.waterproofRating === "IPX4" ? "Protected against water splashes" :
+                          "Protected against water jets"}
+                  </p>
+                </div>
               </div>
             )}
 
@@ -548,10 +694,10 @@ export default function ProductDetailClient({
                       onClick={() => setSelectedVariant(variant)}
                       disabled={variant.stock === 0}
                       className={`px-4 py-2 font-body text-sm border transition-colors ${selectedVariant?.id === variant.id
-                          ? "border-charcoal bg-charcoal text-cream"
-                          : variant.stock === 0
-                            ? "border-sand bg-sand/50 text-warm-gray/50 cursor-not-allowed"
-                            : "border-sand hover:border-terracotta"
+                        ? "border-charcoal bg-charcoal text-cream"
+                        : variant.stock === 0
+                          ? "border-sand bg-sand/50 text-warm-gray/50 cursor-not-allowed"
+                          : "border-sand hover:border-terracotta"
                         }`}
                     >
                       {variant.name}
@@ -669,8 +815,8 @@ export default function ProductDetailClient({
                 <button
                   onClick={handleWishlistToggle}
                   className={`w-14 h-14 flex items-center justify-center border transition-colors ${isInWishlistState
-                      ? "border-terracotta bg-terracotta/10"
-                      : "border-sand hover:border-terracotta"
+                    ? "border-terracotta bg-terracotta/10"
+                    : "border-sand hover:border-terracotta"
                     }`}
                   aria-label={
                     isInWishlistState
@@ -805,13 +951,87 @@ export default function ProductDetailClient({
                     )
                   }
                 >
-                  <p className="font-body text-warm-gray text-sm leading-relaxed">
+                  <p className="font-body text-warm-gray text-sm leading-relaxed whitespace-pre-line">
                     {product.usageGuide}
                   </p>
                 </AccordionItem>
               )}
 
-              {/* Shipping */}
+              {/* What's in the Box */}
+              {product.whatsInTheBox && (
+                <AccordionItem
+                  title="What's in the Box"
+                  isOpen={activeAccordion === "box"}
+                  onToggle={() =>
+                    setActiveAccordion(
+                      activeAccordion === "box" ? null : "box",
+                    )
+                  }
+                >
+                  <ul className="space-y-2">
+                    {product.whatsInTheBox.split("\n").filter(Boolean).map((item, i) => (
+                      <li key={i} className="font-body text-warm-gray text-sm flex items-center gap-2">
+                        <Check className="w-4 h-4 text-terracotta flex-shrink-0" />
+                        {item.trim()}
+                      </li>
+                    ))}
+                  </ul>
+                </AccordionItem>
+              )}
+
+              {/* Battery & Charging */}
+              {(product.batteryType || product.chargeTimeMinutes || product.usageTimeMinutes || product.chargingMethod) && (
+                <AccordionItem
+                  title="Battery & Charging"
+                  isOpen={activeAccordion === "battery"}
+                  onToggle={() =>
+                    setActiveAccordion(
+                      activeAccordion === "battery" ? null : "battery",
+                    )
+                  }
+                >
+                  <div className="grid grid-cols-2 gap-4">
+                    {product.batteryType && (
+                      <div className="bg-sand/20 p-3 border border-sand">
+                        <span className="block text-[10px] text-warm-gray uppercase tracking-widest mb-1">Battery</span>
+                        <span className="block font-body text-charcoal text-sm">
+                          {product.batteryType === "rechargeable_lithium" ? "Rechargeable Li-Ion" :
+                            product.batteryType === "usb_powered" ? "USB Powered" :
+                              product.batteryType.toUpperCase()}
+                        </span>
+                      </div>
+                    )}
+                    {product.chargingMethod && (
+                      <div className="bg-sand/20 p-3 border border-sand">
+                        <span className="block text-[10px] text-warm-gray uppercase tracking-widest mb-1">Charging</span>
+                        <span className="block font-body text-charcoal text-sm capitalize">{product.chargingMethod.replace("-", " ")}</span>
+                      </div>
+                    )}
+                    {product.chargeTimeMinutes && (
+                      <div className="bg-sand/20 p-3 border border-sand">
+                        <span className="block text-[10px] text-warm-gray uppercase tracking-widest mb-1">Charge Time</span>
+                        <span className="block font-body text-charcoal text-sm">
+                          {product.chargeTimeMinutes >= 60
+                            ? `${Math.floor(product.chargeTimeMinutes / 60)}h ${product.chargeTimeMinutes % 60 > 0 ? `${product.chargeTimeMinutes % 60}m` : ""}`
+                            : `${product.chargeTimeMinutes} min`}
+                        </span>
+                      </div>
+                    )}
+                    {product.usageTimeMinutes && (
+                      <div className="bg-sand/20 p-3 border border-sand">
+                        <span className="block text-[10px] text-warm-gray uppercase tracking-widest mb-1">Usage Time</span>
+                        <span className="block font-body text-charcoal text-sm">
+                          {product.usageTimeMinutes >= 60
+                            ? `${Math.floor(product.usageTimeMinutes / 60)}h ${product.usageTimeMinutes % 60 > 0 ? `${product.usageTimeMinutes % 60}m` : ""}`
+                            : `${product.usageTimeMinutes} min`}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </AccordionItem>
+              )}
+
+              {/* Reviews */}
               <AccordionItem
                 title="Shipping & Returns"
                 isOpen={activeAccordion === "shipping"}
@@ -864,22 +1084,215 @@ export default function ProductDetailClient({
           </div>
         </div>
 
-        {/* Related Products */}
-        {relatedProducts.length > 0 && (
-          <div className="mt-16 pt-16 border-t border-sand">
-            <h2
-              className="font-display text-charcoal text-2xl mb-8"
-              style={{ fontWeight: 300 }}
-            >
-              You might also like
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {relatedProducts.slice(0, 4).map((p) => (
-                <ProductCard key={p.id} product={p} />
+        {/* Product Experience Hub */}
+        <div className="mt-16 pt-16 border-t border-sand">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+            <div>
+              <span className="eyebrow">The Experience</span>
+              <h2 className="font-display text-charcoal text-3xl mt-2" style={{ fontWeight: 300 }}>
+                Sensory & Technical Profile
+              </h2>
+            </div>
+          </div>
+
+          <div className="grid lg:grid-cols-3 gap-8">
+            {/* Sensory Breakdown */}
+            {product.sensoryProfile && (
+              <div className="col-span-1 bg-cream/50 border border-sand p-8 rounded-none">
+                <div className="flex items-center gap-3 mb-8">
+                  <Activity className="w-5 h-5 text-terracotta" />
+                  <h3 className="font-display text-charcoal text-xl">Tactile & Haptic</h3>
+                </div>
+
+                <div className="space-y-6">
+                  {product.sensoryProfile.textureType && (
+                    <div className="flex justify-between items-center py-3 border-b border-sand/30">
+                      <span className="font-body text-warm-gray text-sm">Texture</span>
+                      <span className="font-body text-charcoal text-sm capitalize">{product.sensoryProfile.textureType}</span>
+                    </div>
+                  )}
+                  {product.sensoryProfile.firmness && (
+                    <div className="flex justify-between items-center py-3 border-b border-sand/30">
+                      <span className="font-body text-warm-gray text-sm">Firmness</span>
+                      <span className="font-body text-charcoal text-sm capitalize">{product.sensoryProfile.firmness}</span>
+                    </div>
+                  )}
+                  {product.sensoryProfile.flexibility && (
+                    <div className="flex justify-between items-center py-3 border-b border-sand/30">
+                      <span className="font-body text-warm-gray text-sm">Flexibility</span>
+                      <span className="font-body text-charcoal text-sm capitalize">{product.sensoryProfile.flexibility}</span>
+                    </div>
+                  )}
+                  {product.sensoryProfile.vibrationLevels && (
+                    <div className="flex justify-between items-center py-3 border-b border-sand/30">
+                      <span className="font-body text-warm-gray text-sm">Vibrations</span>
+                      <span className="font-body text-charcoal text-sm">{product.sensoryProfile.vibrationLevels} Levels</span>
+                    </div>
+                  )}
+                  {product.sensoryProfile.noiseLevel && (
+                    <div className="flex justify-between items-center py-3 border-b border-sand/30">
+                      <span className="font-body text-warm-gray text-sm">Acoustics</span>
+                      <span className="font-body text-charcoal text-sm capitalize">{product.sensoryProfile.noiseLevel}</span>
+                    </div>
+                  )}
+                  {(product.sensoryProfile.warmingSupported || product.sensoryProfile.temperatureResponsive) && (
+                    <div className="flex justify-between items-center py-3 border-b border-sand/30">
+                      <span className="font-body text-warm-gray text-sm">Thermal</span>
+                      <span className="font-body text-charcoal text-sm">
+                        {product.sensoryProfile.warmingSupported ? "Warming Content" : "Temp. Responsive"}
+                      </span>
+                    </div>
+                  )}
+                  {product.sensoryProfile.surfaceFeel && (
+                    <div className="flex justify-between items-center py-3 border-b border-sand/30">
+                      <span className="font-body text-warm-gray text-sm">Surface</span>
+                      <span className="font-body text-charcoal text-sm capitalize">{product.sensoryProfile.surfaceFeel}</span>
+                    </div>
+                  )}
+                  {product.sensoryProfile.gripFeel && (
+                    <div className="flex justify-between items-center py-3 border-b border-sand/30">
+                      <span className="font-body text-warm-gray text-sm">Grip</span>
+                      <span className="font-body text-charcoal text-sm capitalize">{product.sensoryProfile.gripFeel}</span>
+                    </div>
+                  )}
+                  {product.sensoryProfile.weight && (
+                    <div className="flex justify-between items-center py-3 border-b border-sand/30">
+                      <span className="font-body text-warm-gray text-sm">Weight</span>
+                      <span className="font-body text-charcoal text-sm">{product.sensoryProfile.weight}g</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Feature Explorer */}
+            <div className={`lg:col-span-${product.sensoryProfile ? '2' : '3'} grid md:grid-cols-2 gap-4`}>
+              {product.features.map((feature) => (
+                <div key={feature.id} className="bg-warm-white border border-sand p-6 flex items-start gap-4">
+                  <div className="w-10 h-10 bg-cream flex items-center justify-center flex-shrink-0">
+                    {feature.iconType === 'zap' ? <Zap className="w-5 h-5 text-terracotta" /> :
+                      feature.iconType === 'box' ? <Box className="w-5 h-5 text-terracotta" /> :
+                        feature.iconType === 'maximize' ? <Maximize className="w-5 h-5 text-terracotta" /> :
+                          feature.iconType === 'activity' ? <Activity className="w-5 h-5 text-terracotta" /> :
+                            feature.iconType === 'settings' ? <Settings className="w-5 h-5 text-terracotta" /> :
+                              feature.iconType === 'wind' ? <Wind className="w-5 h-5 text-terracotta" /> :
+                                feature.iconType === 'mouse-pointer' ? <MousePointer2 className="w-5 h-5 text-terracotta" /> :
+                                  <Layers className="w-5 h-5 text-terracotta" />}
+                  </div>
+                  <div>
+                    <h4 className="font-display text-charcoal text-lg mb-1">{feature.name}</h4>
+                    <p className="font-body text-warm-gray text-xs leading-relaxed">{feature.description}</p>
+                    {feature.isKeyFeature && (
+                      <span className="inline-block mt-2 px-1.5 py-0.5 bg-terracotta/5 text-terracotta text-[10px] uppercase font-bold tracking-tighter">Key Feature</span>
+                    )}
+                  </div>
+                </div>
               ))}
             </div>
           </div>
-        )}
+
+          <div className="grid md:grid-cols-2 gap-8 mt-8">
+            {/* Dimensions & Sizing */}
+            {(product.sizeVisualization || product.sizeRecommendation) && (
+              <div className="bg-sand/20 border border-sand p-8 flex flex-col md:flex-row gap-8 rounded-none">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-6">
+                    <Ruler className="w-5 h-5 text-charcoal" />
+                    <h3 className="font-display text-charcoal text-xl">Dimensions</h3>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    {product.sizeVisualization?.length && (
+                      <div className="bg-warm-white p-3 border border-sand">
+                        <span className="block text-[10px] text-warm-gray uppercase tracking-widest mb-1">Length</span>
+                        <span className="block font-body text-charcoal">{product.sizeVisualization?.length}cm</span>
+                      </div>
+                    )}
+                    {product.sizeVisualization?.insertableLength && (
+                      <div className="bg-warm-white p-3 border border-sand">
+                        <span className="block text-[10px] text-warm-gray uppercase tracking-widest mb-1">Insertable</span>
+                        <span className="block font-body text-charcoal">{product.sizeVisualization?.insertableLength}cm</span>
+                      </div>
+                    )}
+                    {product.sizeVisualization?.diameter && (
+                      <div className="bg-warm-white p-3 border border-sand">
+                        <span className="block text-[10px] text-warm-gray uppercase tracking-widest mb-1">Diameter</span>
+                        <span className="block font-body text-charcoal">{product.sizeVisualization?.diameter}cm</span>
+                      </div>
+                    )}
+                    {product.sizeVisualization?.circumference && (
+                      <div className="bg-warm-white p-3 border border-sand">
+                        <span className="block text-[10px] text-warm-gray uppercase tracking-widest mb-1">Girth</span>
+                        <span className="block font-body text-charcoal">{product.sizeVisualization?.circumference}cm</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {product.sizeRecommendation && (
+                  <div className="flex-1 border-t md:border-t-0 md:border-l border-sand pt-6 md:pt-0 md:pl-8">
+                    <div className="flex items-center gap-3 mb-6">
+                      <User className="w-5 h-5 text-charcoal" />
+                      <h3 className="font-display text-charcoal text-xl">Fit & Recommendations</h3>
+                    </div>
+                    <div className="space-y-4">
+                      <div className="bg-terracotta/5 p-4 border border-terracotta/10">
+                        <span className="block text-[10px] text-terracotta uppercase font-bold tracking-widest mb-1">Fit Type</span>
+                        <p className="font-display text-charcoal capitalize">{product.sizeRecommendation.fitType.replace('_', ' ')}</p>
+                      </div>
+                      {product.sizeRecommendation.notes && (
+                        <p className="font-body text-warm-gray text-xs leading-relaxed italic">
+                          &ldquo;{product.sizeRecommendation.notes}&rdquo;
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* 3D Model Explorer */}
+            {product.model3D && (
+              <div className="bg-charcoal p-8 flex flex-col items-center justify-center text-center border border-charcoal">
+                <Box className="w-12 h-12 text-terracotta mb-4" />
+                <h3 className="font-display text-cream text-2xl mb-2">Interactive 3D View</h3>
+                <p className="font-body text-warm-gray text-sm mb-8 max-w-xs">
+                  Explore every detail from any angle. Compatible with AR for real-world visualization.
+                </p>
+                <div className="flex flex-col gap-3 w-full max-w-xs">
+                  <button className="w-full bg-terracotta text-cream py-3 px-6 font-body text-sm uppercase tracking-widest hover:bg-terracotta-dark transition-colors flex items-center justify-center gap-2">
+                    <Maximize className="w-4 h-4" />
+                    Launch Explorer
+                  </button>
+                  {product.model3D.arSupported && (
+                    <button className="w-full bg-charcoal border border-warm-gray/30 text-cream py-3 px-6 font-body text-sm uppercase tracking-widest hover:bg-warm-gray/10 transition-colors flex items-center justify-center gap-2">
+                      <Camera className="w-4 h-4" />
+                      View in My Space
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Related Products */}
+        {
+          relatedProducts.length > 0 && (
+            <div className="mt-16 pt-16 border-t border-sand">
+              <h2
+                className="font-display text-charcoal text-2xl mb-8"
+                style={{ fontWeight: 300 }}
+              >
+                You might also like
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                {relatedProducts.slice(0, 4).map((p) => (
+                  <ProductCard key={p.id} product={p} />
+                ))}
+              </div>
+            </div>
+          )
+        }
 
         {/* Reviews Section */}
         <div className="mt-16 pt-16 border-t border-sand">
@@ -890,65 +1303,65 @@ export default function ProductDetailClient({
             initialReviewSummary={initialReviewSummary}
           />
         </div>
-      </div>
 
-      {/* Video Modal */}
-      {selectedVideo && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-charcoal/90 p-4">
-          <div className="relative w-full max-w-4xl">
-            <button
-              onClick={() => setSelectedVideo(null)}
-              className="absolute -top-12 right-0 text-cream hover:text-terracotta transition-colors"
-            >
-              <X className="w-6 h-6" />
-            </button>
-
-            {selectedVideo.title && (
-              <h3
-                className="font-display text-cream text-xl mb-4"
-                style={{ fontWeight: 300 }}
+        {/* Video Modal */}
+        {selectedVideo && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-charcoal/90 p-4">
+            <div className="relative w-full max-w-4xl">
+              <button
+                onClick={() => setSelectedVideo(null)}
+                className="absolute -top-12 right-0 text-cream hover:text-terracotta transition-colors"
               >
-                {selectedVideo.title}
-              </h3>
-            )}
+                <X className="w-6 h-6" />
+              </button>
 
-            <div className="aspect-video bg-warm-gray">
-              {selectedVideo.source === "youtube" ? (
-                <iframe
-                  src={selectedVideo.url.replace("watch?v=", "embed/")}
-                  className="w-full h-full"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
-              ) : selectedVideo.source === "vimeo" ? (
-                <iframe
-                  src={selectedVideo.url.replace(
-                    "vimeo.com/",
-                    "player.vimeo.com/video/",
-                  )}
-                  className="w-full h-full"
-                  allow="autoplay; fullscreen; picture-in-picture"
-                  allowFullScreen
-                />
-              ) : (
-                <video
-                  src={selectedVideo.url}
-                  className="w-full h-full"
-                  controls
-                  autoPlay
-                  poster={selectedVideo.thumbnailUrl || undefined}
-                />
+              {selectedVideo.title && (
+                <h3
+                  className="font-display text-cream text-xl mb-4"
+                  style={{ fontWeight: 300 }}
+                >
+                  {selectedVideo.title}
+                </h3>
+              )}
+
+              <div className="aspect-video bg-warm-gray">
+                {selectedVideo.source === "youtube" ? (
+                  <iframe
+                    src={selectedVideo.url.replace("watch?v=", "embed/")}
+                    className="w-full h-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                ) : selectedVideo.source === "vimeo" ? (
+                  <iframe
+                    src={selectedVideo.url.replace(
+                      "vimeo.com/",
+                      "player.vimeo.com/video/",
+                    )}
+                    className="w-full h-full"
+                    allow="autoplay; fullscreen; picture-in-picture"
+                    allowFullScreen
+                  />
+                ) : (
+                  <video
+                    src={selectedVideo.url}
+                    className="w-full h-full"
+                    controls
+                    autoPlay
+                    poster={selectedVideo.thumbnailUrl || undefined}
+                  />
+                )}
+              </div>
+
+              {selectedVideo.description && (
+                <p className="font-body text-warm-gray text-sm mt-4">
+                  {selectedVideo.description}
+                </p>
               )}
             </div>
-
-            {selectedVideo.description && (
-              <p className="font-body text-warm-gray text-sm mt-4">
-                {selectedVideo.description}
-              </p>
-            )}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
@@ -981,3 +1394,5 @@ function AccordionItem({
     </div>
   );
 }
+
+

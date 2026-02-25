@@ -10,6 +10,10 @@ interface Product {
   name: string
   shortDescription: string
   badge: string | null
+  originalPrice: number | null
+  viewCount: number
+  purchaseCount: number
+  isDigital: boolean
   category: {
     name: string
     slug: string
@@ -21,6 +25,11 @@ interface Product {
   images: Array<{
     url: string
     altText: string
+  }>
+  videos?: Array<{
+    url: string
+    title: string | null
+    videoType?: string
   }>
 }
 
@@ -44,7 +53,7 @@ export default function ShopClient({ initialProducts, categories }: ShopClientPr
   const filteredProducts = useMemo(() => {
     return initialProducts.filter((product) => {
       const matchesCategory = !selectedCategory || product.category.slug === selectedCategory
-      const matchesSearch = !searchQuery || 
+      const matchesSearch = !searchQuery ||
         product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         product.shortDescription.toLowerCase().includes(searchQuery.toLowerCase())
       return matchesCategory && matchesSearch
@@ -56,7 +65,7 @@ export default function ShopClient({ initialProducts, categories }: ShopClientPr
       {/* Header */}
       <div className="bg-charcoal py-16">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 text-center">
-          <h1 
+          <h1
             className="font-display text-cream mb-4"
             style={{ fontSize: 'clamp(2.5rem, 4vw, 4rem)', fontWeight: 300 }}
           >
@@ -87,11 +96,10 @@ export default function ShopClient({ initialProducts, categories }: ShopClientPr
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setSelectedCategory(null)}
-              className={`px-4 py-2 font-body text-sm transition-colors ${
-                !selectedCategory 
-                  ? 'bg-charcoal text-cream' 
-                  : 'bg-cream text-mid-gray hover:bg-sand'
-              }`}
+              className={`px-4 py-2 font-body text-sm transition-colors ${!selectedCategory
+                ? 'bg-charcoal text-cream'
+                : 'bg-cream text-mid-gray hover:bg-sand'
+                }`}
             >
               All
             </button>
@@ -99,11 +107,10 @@ export default function ShopClient({ initialProducts, categories }: ShopClientPr
               <button
                 key={category.id}
                 onClick={() => setSelectedCategory(category.slug)}
-                className={`px-4 py-2 font-body text-sm transition-colors ${
-                  selectedCategory === category.slug 
-                    ? 'bg-charcoal text-cream' 
-                    : 'bg-cream text-mid-gray hover:bg-sand'
-                }`}
+                className={`px-4 py-2 font-body text-sm transition-colors ${selectedCategory === category.slug
+                  ? 'bg-charcoal text-cream'
+                  : 'bg-cream text-mid-gray hover:bg-sand'
+                  }`}
               >
                 {category.name}
               </button>

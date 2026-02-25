@@ -1,6 +1,7 @@
-'use client'
+"use client";
 
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown } from "lucide-react";
+import Link from "next/link";
 
 export default function Hero() {
   return (
@@ -9,28 +10,38 @@ export default function Hero() {
       <div className="flex-1 flex flex-col justify-center px-6 lg:px-16 py-16 lg:py-24 relative z-10">
         {/* Eyebrow */}
         <span className="eyebrow mb-6">Intimacy & Wellness</span>
-        
+
         {/* Headline */}
-        <h1 className="font-display font-light leading-[0.95] mb-6" style={{ fontSize: 'clamp(3rem, 5vw, 5.5rem)' }}>
-          Where{' '}
-          <span className="italic text-terracotta">warmth</span>
+        <h1
+          className="font-display font-light leading-[0.95] mb-6"
+          style={{ fontSize: "clamp(3rem, 5vw, 5.5rem)" }}
+        >
+          Where <span className="italic text-terracotta">warmth</span>
           <br />
           lives in every touch.
         </h1>
-        
+
         {/* Subtitle */}
         <p className="font-body font-light text-lg text-warm-gray max-w-md mb-10 leading-relaxed">
-          An elevated destination for intimacy, wellness, and pleasure. Curated with care. Delivered discreetly.
+          An elevated destination for intimacy, wellness, and pleasure. Curated
+          with care. Delivered discreetly.
         </p>
-        
+
         {/* CTAs */}
         <div className="flex flex-col sm:flex-row gap-4">
-          <button className="bg-charcoal text-cream px-8 py-4 font-body font-medium text-sm tracking-wider uppercase transition-all duration-300 hover:bg-terracotta">
+          <Link
+            href="/shop"
+            className="bg-charcoal text-cream px-8 py-4 font-body font-medium text-sm tracking-wider uppercase transition-all duration-300 hover:bg-terracotta text-center"
+          >
             Explore Collection
-          </button>
-          <button className="border border-charcoal text-charcoal px-8 py-4 font-body font-medium text-sm tracking-wider uppercase transition-all duration-300 hover:bg-charcoal hover:text-cream">
+          </Link>
+
+          <Link
+            href="/shop"
+            className="border border-charcoal text-center text-charcoal px-8 py-4 font-body font-medium text-sm tracking-wider uppercase transition-all duration-300 hover:bg-charcoal hover:text-cream"
+          >
             Shop Gift Sets
-          </button>
+          </Link>
         </div>
       </div>
 
@@ -38,18 +49,18 @@ export default function Hero() {
       <div className="hidden lg:flex flex-1 relative overflow-hidden bg-gradient-to-br from-cream via-sand to-blush">
         {/* Decorative oversized initial letter */}
         <div className="absolute inset-0 flex items-center justify-center">
-          <span 
+          <span
             className="font-display font-light select-none"
-            style={{ 
-              fontSize: '12rem', 
-              color: 'rgba(196, 120, 90, 0.15)',
-              lineHeight: 1 
+            style={{
+              fontSize: "12rem",
+              color: "rgba(196, 120, 90, 0.15)",
+              lineHeight: 1,
             }}
           >
             C
           </span>
         </div>
-        
+
         {/* Rotating badge */}
         <div className="absolute bottom-12 right-12">
           <RotatingBadge />
@@ -64,7 +75,7 @@ export default function Hero() {
         <ChevronDown className="w-4 h-4 text-terracotta animate-bounce" />
       </div>
     </section>
-  )
+  );
 }
 
 function RotatingBadge() {
@@ -77,8 +88,18 @@ function RotatingBadge() {
             d="M 50, 50 m -37, 0 a 37,37 0 1,1 74,0 a 37,37 0 1,1 -74,0"
           />
         </defs>
-        <circle cx="50" cy="50" r="48" fill="none" stroke="rgba(196, 120, 90, 0.2)" />
-        <text fill="#C4785A" className="font-body" style={{ fontSize: '7px', letterSpacing: '0.1em' }}>
+        <circle
+          cx="50"
+          cy="50"
+          r="48"
+          fill="none"
+          stroke="rgba(196, 120, 90, 0.2)"
+        />
+        <text
+          fill="#C4785A"
+          className="font-body"
+          style={{ fontSize: "7px", letterSpacing: "0.1em" }}
+        >
           <textPath href="#circlePath" startOffset="0%">
             DISCREET · DELIVERY · ALWAYS ·
           </textPath>
@@ -89,5 +110,5 @@ function RotatingBadge() {
         <div className="w-2 h-2 bg-terracotta opacity-30" />
       </div>
     </div>
-  )
+  );
 }

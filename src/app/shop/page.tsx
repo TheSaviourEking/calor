@@ -16,9 +16,14 @@ async function getProducts() {
         select: { id: true, price: true, stock: true },
       },
       images: {
-        take: 1,
+        take: 2,
         orderBy: { sortOrder: 'asc' },
         select: { url: true, altText: true },
+      },
+      videos: {
+        take: 1,
+        orderBy: { sortOrder: 'asc' },
+        select: { url: true, title: true, videoType: true },
       },
     },
     orderBy: { createdAt: 'desc' },

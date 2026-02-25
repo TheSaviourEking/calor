@@ -20,6 +20,11 @@ async function getFeaturedProducts() {
         take: 1,
         orderBy: { sortOrder: 'asc' },
       },
+      videos: {
+        take: 1,
+        orderBy: { sortOrder: 'asc' },
+        select: { url: true, title: true, videoType: true }
+      },
     },
     orderBy: {
       createdAt: 'desc',
@@ -42,7 +47,7 @@ export default async function FeaturedProducts() {
             <span className="eyebrow">New Arrivals</span>
             <span className="w-10 h-px bg-terracotta/40" />
           </div>
-          <h2 
+          <h2
             className="font-display text-charcoal"
             style={{ fontSize: 'clamp(2rem, 3.5vw, 3rem)', fontWeight: 300 }}
           >

@@ -27,7 +27,12 @@ async function getProductsByCategory(categorySlug: string) {
         select: { name: true, slug: true },
       },
       variants: { take: 1 },
-      images: { take: 1, orderBy: { sortOrder: "asc" } },
+      images: { take: 2, orderBy: { sortOrder: "asc" } },
+      videos: {
+        take: 1,
+        orderBy: { sortOrder: "asc" },
+        select: { url: true, title: true, videoType: true }
+      },
     },
     orderBy: { createdAt: "desc" },
   });

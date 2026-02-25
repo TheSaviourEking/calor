@@ -5,7 +5,9 @@ import AdminDashboard from './AdminClient'
 
 export default async function AdminPage() {
   const session = await getSession()
-  
+
+  console.log(session, "SESSIon")
+
   // In production, check for admin flag in user record
   // For now, allow access for demo purposes
   // if (!session) redirect('/account')
@@ -44,7 +46,7 @@ export default async function AdminPage() {
   }
 
   return (
-    <AdminDashboard 
+    <AdminDashboard
       stats={stats}
       recentOrders={recentOrders.map(o => ({
         id: o.id,
