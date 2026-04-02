@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Search, User, ShoppingBag, Menu, X, Heart, Radio } from 'lucide-react'
 import { useCartStore, useWishlistStore } from '@/stores'
 import SearchModal from './SearchModal'
@@ -25,13 +25,25 @@ export default function Navigation() {
   const itemCount = getItemCount()
   const wishlistCount = wishlistItems.length
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50)
-    }
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
+  const handleScroll = useCallback(() => {
+    const scrolled = window.scrollY > 50
+    setIsScrolled((prev) => (prev !== scrolled ? scrolled : prev))
   }, [])
+
+  useEffect(() => {
+    let ticking = false
+    const onScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          handleScroll()
+          ticking = false
+        })
+        ticking = true
+      }
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [handleScroll])
 
   return (
     <>

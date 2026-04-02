@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-interface Customer {
+export interface Customer {
   id: string
   email: string
   firstName: string
@@ -41,6 +41,13 @@ export const useAuthStore = create<AuthState>()(
           isLoading: false,
           hasFetched: false
         })
+        // Clear other user-scoped stores
+        try {
+          localStorage.removeItem('calor-cart')
+          localStorage.removeItem('calor-wishlist')
+          localStorage.removeItem('calor-checkout')
+          localStorage.removeItem('calor-quiz')
+        } catch { /* ignore */ }
         // Also call the logout API
         fetch('/api/auth/logout', { method: 'POST' }).catch(() => { })
       },
@@ -80,7 +87,7 @@ export const useAuthStore = create<AuthState>()(
     {
       name: 'calor-auth',
       partialize: (state) => ({
-        customer: state.customer,
+        customer: state.customer ? { id: state.customer.id, firstName: state.customer.firstName } : null,
         isAuthenticated: state.isAuthenticated
       }),
     }

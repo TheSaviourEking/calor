@@ -13,6 +13,8 @@
 export type Serialised<T> =
     T extends Date
     ? string
+    : T extends bigint
+    ? string
     : T extends Array<infer U>
     ? Serialised<U>[]
     : T extends object
@@ -22,6 +24,9 @@ export type Serialised<T> =
 export function serialise<T>(value: T): Serialised<T> {
     if (value instanceof Date) {
         return value.toISOString() as Serialised<T>
+    }
+    if (typeof value === 'bigint') {
+        return value.toString() as Serialised<T>
     }
     if (Array.isArray(value)) {
         return value.map(serialise) as Serialised<T>
