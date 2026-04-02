@@ -43,6 +43,7 @@ export default function SubscriptionsClient() {
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null)
   const [subscribing, setSubscribing] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
+  const [managingBilling, setManagingBilling] = useState(false)
 
   useEffect(() => {
     fetchPlans()
@@ -107,14 +108,31 @@ export default function SubscriptionsClient() {
       })
       
       const data = await res.json()
-      if (data.success) {
-        setShowSuccess(true)
-        checkAuth() // Refresh subscriptions
+      if (data.checkoutUrl) {
+        window.location.href = data.checkoutUrl
       }
     } catch (error) {
       console.error('Failed to subscribe:', error)
     } finally {
       setSubscribing(false)
+    }
+  }
+
+  const handleManageBilling = async () => {
+    setManagingBilling(true)
+    try {
+      const res = await fetch('/api/subscriptions/portal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      })
+      const data = await res.json()
+      if (data.url) {
+        window.location.href = data.url
+      }
+    } catch (error) {
+      console.error('Failed to open billing portal:', error)
+    } finally {
+      setManagingBilling(false)
     }
   }
 
@@ -199,7 +217,21 @@ export default function SubscriptionsClient() {
       {/* Active Subscriptions */}
       {isLoggedIn && userSubscriptions.length > 0 && (
         <div className="max-w-6xl mx-auto px-6 lg:px-8 py-12">
-          <h2 className="font-display text-charcoal text-2xl mb-6" style={{ fontWeight: 300 }}>Your Subscriptions</h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="font-display text-charcoal text-2xl" style={{ fontWeight: 300 }}>Your Subscriptions</h2>
+            <button
+              onClick={handleManageBilling}
+              disabled={managingBilling}
+              className="px-4 py-2 border border-charcoal text-charcoal font-body text-xs uppercase tracking-wider hover:bg-charcoal hover:text-cream transition-colors flex items-center gap-2"
+            >
+              {managingBilling ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <CreditCard className="h-3 w-3" />
+              )}
+              Manage Billing
+            </button>
+          </div>
           <div className="grid md:grid-cols-2 gap-6">
             {userSubscriptions.map((sub) => (
               <div key={sub.id} className="bg-warm-white border border-sand p-6">

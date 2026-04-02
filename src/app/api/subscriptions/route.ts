@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { verifyToken } from '@/lib/auth'
 import { cookies } from 'next/headers'
+import { stripe } from '@/lib/payments/stripe'
+import { createSubscriptionCheckout } from '@/lib/payments/stripe-subscriptions'
+import { config } from '@/lib/config'
 
 export async function GET(request: NextRequest) {
   try {
@@ -52,56 +55,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
     }
 
-    const { planId, shippingAddressId, preferences } = await request.json()
+    const { planId } = await request.json()
 
     if (!planId) {
       return NextResponse.json({ error: 'Plan ID is required' }, { status: 400 })
     }
 
-    // Get plan details
-    const plan = await db.subscriptionPlan.findUnique({
-      where: { id: planId }
-    })
+    const successUrl = `${config.app.baseUrl}/subscriptions`
+    const cancelUrl = `${config.app.baseUrl}/subscriptions`
 
-    if (!plan) {
-      return NextResponse.json({ error: 'Plan not found' }, { status: 404 })
-    }
+    const checkoutUrl = await createSubscriptionCheckout(
+      decoded.customerId,
+      planId,
+      successUrl,
+      cancelUrl
+    )
 
-    // Calculate dates
-    const startDate = new Date()
-    const currentPeriodEnd = new Date()
-    if (plan.interval === 'monthly') {
-      currentPeriodEnd.setMonth(currentPeriodEnd.getMonth() + plan.intervalCount)
-    } else if (plan.interval === 'quarterly') {
-      currentPeriodEnd.setMonth(currentPeriodEnd.getMonth() + 3)
-    } else {
-      currentPeriodEnd.setFullYear(currentPeriodEnd.getFullYear() + 1)
-    }
-
-    // Create subscription
-    const subscription = await db.subscription.create({
-      data: {
-        customerId: decoded.customerId,
-        planId,
-        shippingAddressId: shippingAddressId || null,
-        status: 'active',
-        startDate,
-        currentPeriodStart: startDate,
-        currentPeriodEnd,
-        preferences: preferences ? JSON.stringify(preferences) : null,
-        nextBoxDate: startDate
-      },
-      include: {
-        plan: true,
-        shippingAddress: true
-      }
-    })
-
-    return NextResponse.json({ 
-      success: true, 
-      subscription,
-      message: 'Subscription created successfully!'
-    })
+    return NextResponse.json({ checkoutUrl })
   } catch (error) {
     console.error('Error creating subscription:', error)
     return NextResponse.json({ error: 'Failed to create subscription' }, { status: 500 })
@@ -149,22 +119,37 @@ export async function PUT(request: NextRequest) {
           pauseStartDate: pauseStart,
           pauseEndDate: pauseEnd
         }
+        if (existingSub.stripeSubscriptionId) {
+          await stripe.subscriptions.update(existingSub.stripeSubscriptionId, {
+            pause_collection: { behavior: 'void' },
+          })
+        }
         break
-      
+
       case 'resume':
         updateData = {
           status: 'active',
           pauseStartDate: null,
           pauseEndDate: null
         }
+        if (existingSub.stripeSubscriptionId) {
+          await stripe.subscriptions.update(existingSub.stripeSubscriptionId, {
+            pause_collection: '',
+          })
+        }
         break
-      
+
       case 'cancel':
         updateData = {
           status: 'cancelled',
           cancelledAt: new Date(),
           cancellationReason: reason || null,
           cancelAtPeriodEnd: true
+        }
+        if (existingSub.stripeSubscriptionId) {
+          await stripe.subscriptions.update(existingSub.stripeSubscriptionId, {
+            cancel_at_period_end: true,
+          })
         }
         break
       

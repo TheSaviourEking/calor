@@ -113,6 +113,7 @@ model Customer {
   passwordResetToken String? @unique
   passwordResetExpires DateTime?
   locale            String   @default("US")
+  stripeCustomerId  String?  @unique
   // Social Login (OAuth)
   googleId          String?  @unique
   googleEmail       String?
@@ -843,6 +844,8 @@ model SubscriptionPlan {
   features        String   // JSON: list of features
   boxContents     String   // JSON: what's typically included
   imageUrl        String?
+  stripeProductId String?
+  stripePriceId   String?
   isActive        Boolean  @default(true)
   sortOrder       Int      @default(0)
   createdAt       DateTime @default(now())
