@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { RoomServiceClient } from 'livekit-server-sdk'
 import { db } from '@/lib/db'
+import { config } from '@/lib/config'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -58,6 +60,18 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       where: { streamId: id, leftAt: null },
       data: { leftAt: new Date() },
     })
+
+    // Clean up LiveKit room
+    try {
+      const roomService = new RoomServiceClient(
+        config.livekit.wsUrl.replace('ws://', 'http://').replace('wss://', 'https://'),
+        config.livekit.apiKey,
+        config.livekit.apiSecret
+      )
+      await roomService.deleteRoom(`stream-${id}`)
+    } catch {
+      // Room may not exist, ignore
+    }
 
     // Create system message
     await db.streamChatMessage.create({

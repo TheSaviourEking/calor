@@ -34,4 +34,9 @@ export const config = {
   },
   resend: { apiKey: process.env.RESEND_API_KEY! },
   app: { baseUrl: process.env.NEXT_PUBLIC_BASE_URL! },
+  livekit: {
+    apiKey: process.env.LIVEKIT_API_KEY || 'devkey',
+    apiSecret: process.env.LIVEKIT_API_SECRET || 'secret',
+    wsUrl: process.env.NEXT_PUBLIC_LIVEKIT_URL || 'ws://localhost:7880',
+  },
 } as const

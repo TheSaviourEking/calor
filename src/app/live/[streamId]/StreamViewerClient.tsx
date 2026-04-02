@@ -6,11 +6,29 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { io, Socket } from 'socket.io-client'
 import {
-  Users, Send, Play, Clock, Zap
+  Users, Send, Clock, Zap, Loader2
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { LiveKitRoom, useTracks, VideoTrack, RoomAudioRenderer } from '@livekit/components-react'
+import { Track } from 'livekit-client'
+import '@livekit/components-styles'
 import ClientWrapper from '@/components/layout/ClientWrapper'
 import { useCartStore, useLocaleStore } from '@/stores'
+
+function StreamVideo() {
+  const tracks = useTracks([Track.Source.Camera, Track.Source.ScreenShare])
+  const videoTrack = tracks.find(t => t.source === Track.Source.Camera || t.source === Track.Source.ScreenShare)
+
+  if (!videoTrack) {
+    return (
+      <div className="flex items-center justify-center h-full bg-black text-warm-gray">
+        <p className="font-body text-sm">Waiting for host video...</p>
+      </div>
+    )
+  }
+
+  return <VideoTrack trackRef={videoTrack} className="w-full h-full object-contain" />
+}
 
 interface Product {
   id: string
@@ -102,6 +120,10 @@ export default function StreamViewerClient() {
   const [activeOffer, setActiveOffer] = useState<Offer | null>(null)
   const [showProducts, setShowProducts] = useState(true)
   const [pinnedMessage, setPinnedMessage] = useState<ChatMessage | null>(null)
+
+  // LiveKit state
+  const [livekitToken, setLivekitToken] = useState<string | null>(null)
+  const [livekitUrl, setLivekitUrl] = useState<string>('')
 
   const socketRef = useRef<Socket | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -231,6 +253,26 @@ export default function StreamViewerClient() {
     }
   }, [stream?.id, stream?.status, guestId, guestName])
 
+  // Fetch LiveKit token when stream is live
+  useEffect(() => {
+    if (stream?.status === 'live') {
+      const identity = `viewer-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
+      fetch(`/api/streams/${streamId}/token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identity, role: 'viewer' }),
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.token) {
+            setLivekitToken(data.token)
+            setLivekitUrl(data.wsUrl)
+          }
+        })
+        .catch(err => console.error('Failed to get LiveKit token:', err))
+    }
+  }, [stream?.status, streamId])
+
   // Scroll to bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -336,14 +378,16 @@ export default function StreamViewerClient() {
           <div className="flex-1 flex flex-col">
             {/* Video Player */}
             <div className="relative aspect-video bg-black">
-              {/* Placeholder for video stream */}
               <div className="absolute inset-0 flex items-center justify-center">
-                {stream.status === 'live' ? (
-                  <div className="text-center">
-                    <div className="w-20 h-20 bg-terracotta/20 flex items-center justify-center mx-auto mb-4">
-                      <Play className="w-10 h-10 text-terracotta" />
-                    </div>
-                    <p className="font-body text-warm-gray">Stream is live</p>
+                {stream.status === 'live' && livekitToken ? (
+                  <LiveKitRoom serverUrl={livekitUrl} token={livekitToken} connect={true}
+                    style={{ height: '100%', width: '100%' }}>
+                    <StreamVideo />
+                    <RoomAudioRenderer />
+                  </LiveKitRoom>
+                ) : stream.status === 'live' ? (
+                  <div className="flex items-center justify-center h-full">
+                    <Loader2 className="w-8 h-8 animate-spin text-warm-gray" />
                   </div>
                 ) : stream.status === 'scheduled' ? (
                   <div className="text-center">
