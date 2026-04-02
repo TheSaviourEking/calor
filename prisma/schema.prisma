@@ -70,16 +70,21 @@ model Product {
   regionalPrices   RegionalPrice[]
   // Option D relations (Gift Registry)
   registryItems    RegistryItem[]
+
+  @@index([categoryId])
+  @@index([published])
 }
 
 model Variant {
   id        String   @id @default(cuid())
   productId String
-  product   Product  @relation(fields: [productId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   name      String   // e.g. "Ivory / Small", "Rose Gold"
   price     Int      // stored in cents to avoid float precision issues
   sku       String   @unique
   stock     Int      @default(0)
+
+  @@index([productId])
 }
 
 model Category {
@@ -187,7 +192,7 @@ model Customer {
 model Address {
   id         String   @id @default(cuid())
   customerId String
-  customer   Customer @relation(fields: [customerId], references: [id])
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
   line1      String
   line2      String?
   city       String
@@ -233,33 +238,42 @@ model Order {
   updatedAt       DateTime    @updatedAt
   // Phase 3 relation
   returnRequests  ReturnRequest[]
+
+  @@index([customerId])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model OrderItem {
   id         String  @id @default(cuid())
   orderId    String
-  order      Order   @relation(fields: [orderId], references: [id])
+  order      Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
   productId  String
   product    Product @relation(fields: [productId], references: [id])
   variantId  String?
   name       String  // snapshot at time of purchase
   priceCents Int
   quantity   Int
+
+  @@index([orderId])
+  @@index([productId])
 }
 
 model ProductImage {
   id        String  @id @default(cuid())
   productId String
-  product   Product @relation(fields: [productId], references: [id])
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   url       String
   altText   String
   sortOrder Int     @default(0)
+
+  @@index([productId])
 }
 
 model ProductVideo {
   id           String  @id @default(cuid())
   productId    String
-  product      Product @relation(fields: [productId], references: [id])
+  product      Product @relation(fields: [productId], references: [id], onDelete: Cascade)
   url          String  // Video URL (YouTube, Vimeo, or direct)
   thumbnailUrl String?
   title        String?
@@ -287,7 +301,7 @@ model NewsletterSubscriber {
 model Session {
   id         String   @id @default(cuid())
   customerId String
-  customer   Customer @relation(fields: [customerId], references: [id])
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
   token      String   @unique
   ipAddress  String?
   userAgent  String?
@@ -295,15 +309,18 @@ model Session {
   deviceInfo String?
   expiresAt  DateTime
   createdAt  DateTime @default(now())
+
+  @@index([customerId])
+  @@index([expiresAt])
 }
 
 // Price Drop Alerts
 model PriceDropAlert {
   id          String   @id @default(cuid())
   customerId  String
-  customer    Customer @relation(fields: [customerId], references: [id])
+  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
   productId   String
-  product     Product  @relation(fields: [productId], references: [id])
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   targetPrice Int      // Alert when price drops to or below this
   currentPrice Int     // Price when alert was created
   isNotified  Boolean  @default(false)
@@ -318,9 +335,9 @@ model PriceDropAlert {
 model StockAlert {
   id          String   @id @default(cuid())
   customerId  String
-  customer    Customer @relation(fields: [customerId], references: [id])
+  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
   productId   String
-  product     Product  @relation(fields: [productId], references: [id])
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   variantId   String?  // Specific variant if applicable
   isNotified  Boolean  @default(false)
   isActive    Boolean  @default(true)
@@ -333,7 +350,7 @@ model StockAlert {
 model LoyaltyAccount {
   id          String   @id @default(cuid())
   customerId  String   @unique
-  customer    Customer @relation(fields: [customerId], references: [id])
+  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
   points      Int      @default(0)
   totalEarned Int      @default(0)
   totalUsed   Int      @default(0)
@@ -346,12 +363,14 @@ model LoyaltyAccount {
 model LoyaltyTransaction {
   id              String        @id @default(cuid())
   accountId       String
-  account         LoyaltyAccount @relation(fields: [accountId], references: [id])
+  account         LoyaltyAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
   points          Int           // Positive for earned, negative for used
   type            String        // "purchase", "bonus", "referral", "redemption", "expiry"
   description     String
   orderId         String?
   createdAt       DateTime      @default(now())
+
+  @@index([accountId])
 }
 
 // Gift Wrapping Options
@@ -382,7 +401,7 @@ model SupportChatSession {
 model SupportMessage {
   id        String   @id @default(cuid())
   sessionId String
-  session   SupportChatSession @relation(fields: [sessionId], references: [id])
+  session   SupportChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   isFromCustomer Boolean @default(true)
   message   String
   createdAt DateTime @default(now())
@@ -392,7 +411,7 @@ model SupportMessage {
 model AlertPreferences {
   id                    String   @id @default(cuid())
   customerId            String   @unique
-  customer              Customer @relation(fields: [customerId], references: [id])
+  customer              Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
   priceDropAlerts       Boolean  @default(true)
   backInStockAlerts     Boolean  @default(true)
   orderUpdates          Boolean  @default(true)
@@ -444,7 +463,7 @@ model Review {
 model ReviewVote {
   id        String   @id @default(cuid())
   reviewId  String
-  review    Review   @relation(fields: [reviewId], references: [id])
+  review    Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
   customerId String?
   sessionId String?  // For guest voters
   isHelpful Boolean
@@ -489,7 +508,7 @@ model GiftCard {
 model GiftCardTransaction {
   id          String   @id @default(cuid())
   giftCardId  String
-  giftCard    GiftCard @relation(fields: [giftCardId], references: [id])
+  giftCard    GiftCard @relation(fields: [giftCardId], references: [id], onDelete: Cascade)
   amountCents Int      // Amount used (positive) or refunded (negative)
   type        String   // "redemption", "refund", "adjustment"
   orderId     String?  // Order this was used on
@@ -501,7 +520,7 @@ model GiftCardTransaction {
 model ProductView {
   id        String   @id @default(cuid())
   productId String
-  product   Product  @relation(fields: [productId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   sessionId String?  // Session identifier
   customerId String?
   viewedAt  DateTime @default(now())
@@ -571,9 +590,9 @@ model ProductBundle {
 model BundleItem {
   id        String   @id @default(cuid())
   bundleId  String
-  bundle    ProductBundle @relation(fields: [bundleId], references: [id])
+  bundle    ProductBundle @relation(fields: [bundleId], references: [id], onDelete: Cascade)
   productId String
-  product   Product  @relation(fields: [productId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   quantity  Int      @default(1)
   sortOrder Int      @default(0)
 }
@@ -594,7 +613,7 @@ model ReferralCode {
 model Referral {
   id            String   @id @default(cuid())
   codeId        String
-  code          ReferralCode @relation(fields: [codeId], references: [id])
+  code          ReferralCode @relation(fields: [codeId], references: [id], onDelete: Cascade)
   referrerId    String   // Customer who made the referral
   referrer      Customer @relation("Referrer", fields: [referrerId], references: [id])
   referredEmail String
@@ -634,7 +653,7 @@ model SizeChart {
 model SizeRecommendation {
   id          String   @id @default(cuid())
   productId   String   @unique
-  product     Product  @relation(fields: [productId], references: [id])
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   fitType     String   // "runs_small", "true_to_size", "runs_large"
   notes       String?
 }
@@ -955,7 +974,7 @@ model CouplesLink {
 model PackagingPreference {
   id                String   @id @default(cuid())
   customerId        String   @unique
-  customer          Customer @relation(fields: [customerId], references: [id])
+  customer          Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
   // Discretion options
   senderName        String?  // Custom sender name on package
   senderNameEnabled Boolean  @default(false)
@@ -1096,7 +1115,7 @@ model SupportTicket {
 model TicketMessage {
   id          String   @id @default(cuid())
   ticketId    String
-  ticket      SupportTicket @relation(fields: [ticketId], references: [id])
+  ticket      SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
 
   senderType  String   // "customer", "admin", "system"
   senderId    String?  // Customer ID (for admin responses)
@@ -1223,7 +1242,7 @@ model EmailCampaign {
 model CampaignRecipient {
   id            String   @id @default(cuid())
   campaignId    String
-  campaign      EmailCampaign @relation(fields: [campaignId], references: [id])
+  campaign      EmailCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
 
   email         String
   customerId    String?  // If recipient is a customer
@@ -1322,7 +1341,7 @@ model ChatbotConversation {
 model ChatbotMessage {
   id              String   @id @default(cuid())
   conversationId  String
-  conversation    ChatbotConversation @relation(fields: [conversationId], references: [id])
+  conversation    ChatbotConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   // Sender
   senderType      String   // "user", "bot", "agent"
   // Content
@@ -1405,7 +1424,7 @@ model VIPBenefit {
 model CustomerVIPProgress {
   id              String   @id @default(cuid())
   customerId      String   @unique
-  customer        Customer @relation(fields: [customerId], references: [id])
+  customer        Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
   // Points tracking
   currentTierId   String?
   currentTier     VIPTier? @relation(fields: [currentTierId], references: [id])
@@ -1490,7 +1509,7 @@ model PointsRedemption {
 model CustomerPreferences {
   id              String   @id @default(cuid())
   customerId      String   @unique
-  customer        Customer @relation(fields: [customerId], references: [id])
+  customer        Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
   // Category preferences (derived from behavior)
   categoryAffinity String? // JSON: { "categoryId": affinity_score }
   // Price sensitivity
@@ -1520,7 +1539,7 @@ model CustomerPreferences {
 model StreamHost {
   id              String   @id @default(cuid())
   customerId      String   @unique  // Link to Customer (must be admin/host)
-  customer        Customer @relation(fields: [customerId], references: [id])
+  customer        Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
   // Profile Information
   displayName     String
@@ -1846,7 +1865,7 @@ model SmartToyBrand {
 model SmartToyModel {
   id              String   @id @default(cuid())
   brandId         String
-  brand           SmartToyBrand @relation(fields: [brandId], references: [id])
+  brand           SmartToyBrand @relation(fields: [brandId], references: [id], onDelete: Cascade)
   name            String   // "Lush 3", "We-Vibe Chorus", etc.
   modelCode       String   // Brand's model identifier
   productSlug     String?  // Link to CALOR product if sold
@@ -1866,7 +1885,7 @@ model SmartToyModel {
 model CustomerSmartToy {
   id              String   @id @default(cuid())
   customerId      String
-  customer        Customer @relation(fields: [customerId], references: [id])
+  customer        Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
   toyModelId      String
   toyModel        SmartToyModel @relation(fields: [toyModelId], references: [id])
 
@@ -1990,7 +2009,7 @@ model Challenge {
 model ChallengeCompletion {
   id              String   @id @default(cuid())
   challengeId     String
-  challenge       Challenge @relation(fields: [challengeId], references: [id])
+  challenge       Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
   customerId      String
   customer        Customer @relation(fields: [customerId], references: [id])
 
@@ -2015,7 +2034,7 @@ model ChallengeCompletion {
 model UserStreak {
   id              String   @id @default(cuid())
   customerId      String   @unique
-  customer        Customer @relation(fields: [customerId], references: [id])
+  customer        Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
   // Current streak
   currentStreak   Int      @default(0)
@@ -2220,7 +2239,7 @@ model WellnessEntry {
 model WellnessProfile {
   id              String   @id @default(cuid())
   customerId      String   @unique
-  customer        Customer @relation(fields: [customerId], references: [id])
+  customer        Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
   // Time preferences
   preferredTime   String?  // "morning", "afternoon", "evening", "night"
@@ -2302,7 +2321,7 @@ model LeaderboardEntry {
 model Product3DModel {
   id              String   @id @default(cuid())
   productId       String   @unique
-  product         Product  @relation(fields: [productId], references: [id])
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   // Model files
   modelUrl        String   // URL to GLB/GLTF file
@@ -2330,7 +2349,7 @@ model Product3DModel {
 model ProductHotspot {
   id              String   @id @default(cuid())
   modelId         String
-  model           Product3DModel @relation(fields: [modelId], references: [id])
+  model           Product3DModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
 
   // Position
   positionX       Float    // Normalized 0-1
@@ -2359,7 +2378,7 @@ model ProductHotspot {
 model ProductConfiguration {
   id              String   @id @default(cuid())
   productId       String
-  product         Product  @relation(fields: [productId], references: [id])
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   // Configuration type
   configType      String   // "color", "size", "material", "accessory"
@@ -2494,7 +2513,7 @@ model ExperienceComment {
 model SensoryProfile {
   id              String   @id @default(cuid())
   productId       String   @unique
-  product         Product  @relation(fields: [productId], references: [id])
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   hasElectronics  Boolean  @default(true)
 
   // Texture
@@ -2536,7 +2555,7 @@ model SensoryProfile {
 model SizeVisualization {
   id              String   @id @default(cuid())
   productId       String   @unique
-  product         Product  @relation(fields: [productId], references: [id])
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   // Dimensions
   length          Float?   // cm
@@ -2560,7 +2579,7 @@ model SizeVisualization {
 model ProductFeature {
   id              String   @id @default(cuid())
   productId       String
-  product         Product  @relation(fields: [productId], references: [id])
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   // Feature details
   name            String
@@ -3098,7 +3117,7 @@ model AbandonedCartEmailLog {
 model RegionalPrice {
   id              String   @id @default(cuid())
   productId       String
-  product         Product  @relation(fields: [productId], references: [id])
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   countryCode     String   // ISO 3166-1 alpha-2, e.g., "US", "GB", "EU"
   currency        String   // ISO 4217, e.g., "USD", "GBP", "EUR"
   priceCents      Int
@@ -3111,4 +3130,21 @@ model RegionalPrice {
   @@unique([productId, countryCode])
   @@index([productId])
   @@index([countryCode])
+}
+
+model CheckoutSession {
+  id         String   @id @default(uuid())
+  customerId String?
+  guestEmail String?
+  data       Json
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+
+  @@index([expiresAt])
+}
+
+model ExchangeRate {
+  currency  String   @id
+  rate      Float
+  updatedAt DateTime @updatedAt
 }
