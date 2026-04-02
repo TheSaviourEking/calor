@@ -3,19 +3,34 @@ import { db } from '@/lib/db'
 import { hashPassword, createSession } from '@/lib/auth/session'
 import { sendVerificationEmail, sendSecurityAlert } from '@/lib/email'
 import { getGeoInfo, parseUserAgent, formatLocation } from '@/lib/geo'
+import { rateLimitByIp } from '@/lib/rate-limit'
 import crypto from 'crypto'
 
 import { z } from 'zod'
 
 const registerSchema = z.object({
   email: z.string().email('Invalid email format'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  password: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+    .regex(/[0-9]/, 'Password must contain at least one number')
+    .regex(/[^A-Za-z0-9]/, 'Password must contain at least one special character'),
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
 })
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limit: 3 registrations per minute per IP
+    const rl = await rateLimitByIp(request, 'auth:register', { windowMs: 60_000, maxRequests: 3 })
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: 'Too many registration attempts. Please try again later.' },
+        { status: 429, headers: { 'Retry-After': String(Math.ceil((rl.resetAt - Date.now()) / 1000)) } }
+      )
+    }
+
     const rawBody = await request.json()
     const parsed = registerSchema.safeParse(rawBody)
 

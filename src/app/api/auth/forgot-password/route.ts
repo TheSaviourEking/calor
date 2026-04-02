@@ -1,10 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { sendPasswordResetEmail } from '@/lib/email'
+import { rateLimitByIp } from '@/lib/rate-limit'
 import crypto from 'crypto'
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limit: 3 requests per minute per IP
+    const rl = await rateLimitByIp(request, 'auth:forgot-password', { windowMs: 60_000, maxRequests: 3 })
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please try again later.' },
+        { status: 429, headers: { 'Retry-After': String(Math.ceil((rl.resetAt - Date.now()) / 1000)) } }
+      )
+    }
+
     const { email } = await request.json()
 
     if (!email) {

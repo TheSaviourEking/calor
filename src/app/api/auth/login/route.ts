@@ -3,6 +3,7 @@ import { db } from '@/lib/db'
 import { verifyPassword, createSession } from '@/lib/auth/session'
 import { sendSecurityAlert } from '@/lib/email'
 import { getGeoInfo, parseUserAgent, formatLocation } from '@/lib/geo'
+import { rateLimitByIp } from '@/lib/rate-limit'
 
 import { z } from 'zod'
 
@@ -16,6 +17,15 @@ const DUMMY_HASH = '$2a$10$U.9Y.o2g9Qf.P55.sB1oD.24w0uH75B9U8c/2F6D1F1u/T1h7H9nK
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limit: 5 attempts per minute per IP
+    const rl = await rateLimitByIp(request, 'auth:login', { windowMs: 60_000, maxRequests: 5 })
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: 'Too many login attempts. Please try again later.' },
+        { status: 429, headers: { 'Retry-After': String(Math.ceil((rl.resetAt - Date.now()) / 1000)) } }
+      )
+    }
+
     const rawBody = await request.json()
     const parsed = loginSchema.safeParse(rawBody)
 

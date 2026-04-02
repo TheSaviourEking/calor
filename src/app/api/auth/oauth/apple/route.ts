@@ -3,18 +3,26 @@ import { db } from '@/lib/db'
 import { randomBytes } from 'crypto'
 import { jwtVerify, SignJWT, importPKCS8, importX509 } from 'jose'
 import { config } from '@/lib/config'
+import { createSession } from '@/lib/auth/session'
 
 // Apple OAuth callback
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData()
     const idToken = formData.get('id_token') as string
-    const code = formData.get('code') as string
+    const _code = formData.get('code') as string
     const state = formData.get('state') as string
     const user = formData.get('user') as string | null
 
     if (!idToken) {
       return NextResponse.redirect(new URL('/account?error=no_token', request.url))
+    }
+
+    // Validate OAuth state parameter to prevent CSRF
+    const cookieStore = request.cookies
+    const storedState = cookieStore.get('oauth_state')?.value
+    if (!storedState || storedState !== state) {
+      return NextResponse.redirect(new URL('/account?error=invalid_state', request.url))
     }
 
     // Verify Apple ID token
@@ -81,28 +89,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Create session
-    const sessionToken = randomBytes(32).toString('hex')
-    const expiresAt = new Date()
-    expiresAt.setDate(expiresAt.getDate() + 30) // 30 days
+    // Create session using shared JWT-based session (same as email auth)
+    await createSession(customer.id, customer.email)
 
-    await db.session.create({
-      data: {
-        customerId: customer.id,
-        token: sessionToken,
-        expiresAt,
-      }
-    })
-
-    // Redirect to account with session cookie
+    // Redirect to account — clear the oauth_state cookie
     const response = NextResponse.redirect(new URL('/account', request.url))
-    response.cookies.set('session', sessionToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      expires: expiresAt,
-      path: '/',
-    })
+    response.cookies.delete('oauth_state')
 
     return response
   } catch (error) {
@@ -135,6 +127,7 @@ export async function GET(request: NextRequest) {
       .sign(await importPKCS8(privateKey.replace(/\\n/g, '\n'), 'ES256'))
 
     const redirectUri = `${config.app.baseUrl}/api/auth/oauth/apple`
+    const state = randomBytes(16).toString('hex')
 
     const authUrl = new URL('https://appleid.apple.com/auth/authorize')
     authUrl.searchParams.set('client_id', clientId)
@@ -142,12 +135,22 @@ export async function GET(request: NextRequest) {
     authUrl.searchParams.set('response_type', 'code id_token')
     authUrl.searchParams.set('scope', 'email name')
     authUrl.searchParams.set('response_mode', 'form_post')
-    authUrl.searchParams.set('state', randomBytes(16).toString('hex'))
+    authUrl.searchParams.set('state', state)
 
-    return NextResponse.json({
+    // Store state in cookie for CSRF validation on callback
+    const response = NextResponse.json({
       url: authUrl.toString(),
       clientSecret
     })
+    response.cookies.set('oauth_state', state, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 10, // 10 minutes
+      path: '/',
+    })
+
+    return response
   } catch (error) {
     console.error('Apple OAuth URL generation error:', error)
     return NextResponse.json({ error: 'Failed to generate auth URL' }, { status: 500 })
