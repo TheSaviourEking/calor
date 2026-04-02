@@ -19,8 +19,106 @@ function generateSessionId(): string {
   return `session_${randomBytes(16).toString('hex')}`
 }
 
+const adminSockets = new Map<string, string>() // socketId -> adminId
+
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id)
+
+  // Admin authentication
+  socket.on('admin_auth', (data: { adminId: string }) => {
+    adminSockets.set(socket.id, data.adminId)
+    socket.join('admin_dashboard')
+    socket.emit('admin_authenticated', { success: true })
+  })
+
+  // Admin lists all sessions
+  socket.on('admin_list_sessions', async () => {
+    try {
+      const sessions = await db.supportChatSession.findMany({
+        where: { status: { in: ['active', 'closed'] } },
+        include: {
+          customer: { select: { id: true, firstName: true, lastName: true, email: true } },
+          messages: { orderBy: { createdAt: 'desc' }, take: 1 },
+          _count: { select: { messages: true } },
+        },
+        orderBy: { updatedAt: 'desc' },
+        take: 50,
+      })
+      socket.emit('sessions_list', { sessions })
+    } catch (error) {
+      console.error('Error listing sessions:', error)
+      socket.emit('error', { message: 'Failed to list sessions' })
+    }
+  })
+
+  // Admin joins a specific session
+  socket.on('admin_join_session', async (data: { sessionId: string }) => {
+    try {
+      const session = await db.supportChatSession.findUnique({
+        where: { sessionId: data.sessionId },
+        include: {
+          messages: { orderBy: { createdAt: 'asc' } },
+          customer: { select: { id: true, firstName: true, lastName: true, email: true } },
+        },
+      })
+      if (session) {
+        socket.join(data.sessionId)
+        socket.emit('session_messages', {
+          sessionId: data.sessionId,
+          messages: session.messages.map(m => ({
+            id: m.id,
+            isFromCustomer: m.isFromCustomer,
+            message: m.message,
+            timestamp: m.createdAt,
+          })),
+          customer: session.customer,
+        })
+      }
+    } catch (error) {
+      console.error('Error joining session:', error)
+    }
+  })
+
+  // Admin sends a message to a session
+  socket.on('admin_send_message', async (data: { sessionId: string; message: string }) => {
+    try {
+      const session = await db.supportChatSession.findUnique({
+        where: { sessionId: data.sessionId },
+      })
+      if (!session) return
+
+      const message = await db.supportMessage.create({
+        data: {
+          sessionId: session.id,
+          isFromCustomer: false,
+          message: data.message,
+        },
+      })
+
+      io.to(data.sessionId).emit('message', {
+        id: message.id,
+        isFromCustomer: false,
+        message: message.message,
+        timestamp: message.createdAt,
+      })
+    } catch (error) {
+      console.error('Error sending admin message:', error)
+    }
+  })
+
+  // Admin closes a session
+  socket.on('admin_close_session', async (data: { sessionId: string }) => {
+    try {
+      await db.supportChatSession.updateMany({
+        where: { sessionId: data.sessionId },
+        data: { status: 'resolved', closedAt: new Date() },
+      })
+      io.to(data.sessionId).emit('session_ended', { sessionId: data.sessionId })
+      socket.leave(data.sessionId)
+    } catch (error) {
+      console.error('Error closing session:', error)
+    }
+  })
 
   // Customer initiates a support chat
   socket.on('start_session', async (data: { customerId?: string }) => {
@@ -36,6 +134,13 @@ io.on('connection', (socket) => {
 
       socket.join(sessionId)
       socket.emit('session_started', { sessionId })
+
+      // Notify admin dashboard of new session
+      io.to('admin_dashboard').emit('new_session', {
+        sessionId,
+        customerId: data.customerId,
+        createdAt: new Date(),
+      })
 
       // Send welcome message and persist it
       const welcomeMessage = await db.supportMessage.create({
@@ -120,31 +225,44 @@ io.on('connection', (socket) => {
         timestamp: message.createdAt,
       })
 
-      // Auto-response (in production, route to real support agents)
-      setTimeout(async () => {
-        const autoResponses = [
-          "Thanks for your message. Let me look into that for you.",
-          "I understand. Can you tell me a bit more about what you're looking for?",
-          "Great question! I'm happy to help with that.",
-          "I'll check on that right away. Is there anything else you'd like to know?",
-          "Thanks for your patience. I'm looking into this now.",
-        ]
+      // Notify admin dashboard of new message
+      io.to('admin_dashboard').emit('new_session_message', {
+        sessionId: data.sessionId,
+        message: message.message,
+        timestamp: message.createdAt,
+      })
 
-        const response = await db.supportMessage.create({
-          data: {
-            sessionId: session.id,
+      // Check if an admin is in this session room
+      const room = io.sockets.adapter.rooms.get(data.sessionId)
+      const adminInRoom = room ? [...room].some(sid => adminSockets.has(sid)) : false
+
+      if (!adminInRoom) {
+        // Auto-response (in production, route to real support agents)
+        setTimeout(async () => {
+          const autoResponses = [
+            "Thanks for your message. Let me look into that for you.",
+            "I understand. Can you tell me a bit more about what you're looking for?",
+            "Great question! I'm happy to help with that.",
+            "I'll check on that right away. Is there anything else you'd like to know?",
+            "Thanks for your patience. I'm looking into this now.",
+          ]
+
+          const response = await db.supportMessage.create({
+            data: {
+              sessionId: session.id,
+              isFromCustomer: false,
+              message: autoResponses[Math.floor(Math.random() * autoResponses.length)],
+            },
+          })
+
+          io.to(data.sessionId).emit('message', {
+            id: response.id,
             isFromCustomer: false,
-            message: autoResponses[Math.floor(Math.random() * autoResponses.length)],
-          },
-        })
-
-        io.to(data.sessionId).emit('message', {
-          id: response.id,
-          isFromCustomer: false,
-          message: response.message,
-          timestamp: response.createdAt,
-        })
-      }, 1500)
+            message: response.message,
+            timestamp: response.createdAt,
+          })
+        }, 1500)
+      }
     } catch (error) {
       console.error('Error sending message:', error)
       socket.emit('error', { message: 'Failed to send message' })
@@ -175,6 +293,7 @@ io.on('connection', (socket) => {
   })
 
   socket.on('disconnect', () => {
+    adminSockets.delete(socket.id)
     console.log('Client disconnected:', socket.id)
   })
 })
