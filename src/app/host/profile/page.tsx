@@ -1,21 +1,94 @@
-import { db } from '@/lib/db'
-import { getSession } from '@/lib/auth/session'
-import { redirect } from 'next/navigation'
-import Link from 'next/link'
-import { ArrowLeft, User, Link as LinkIcon } from 'lucide-react'
+'use client'
 
-export default async function HostProfileSettingsPage() {
-    const session = await getSession()
-    if (!session?.customerId) {
-        redirect('/account/login')
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import { ArrowLeft, User, Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
+
+interface HostProfile {
+    displayName: string
+    bio: string | null
+    avatar: string | null
+    socialLinks: string | null
+}
+
+export default function HostProfileSettingsPage() {
+    const [loading, setLoading] = useState(true)
+    const [saving, setSaving] = useState(false)
+    const [hostProfile, setHostProfile] = useState<HostProfile | null>(null)
+
+    const [displayName, setDisplayName] = useState('')
+    const [bio, setBio] = useState('')
+    const [avatarUrl, setAvatarUrl] = useState('')
+
+    useEffect(() => {
+        async function fetchProfile() {
+            try {
+                const res = await fetch('/api/hosts/me')
+                if (!res.ok) {
+                    if (res.status === 401) {
+                        window.location.href = '/account/login'
+                        return
+                    }
+                    throw new Error('Failed to fetch profile')
+                }
+                const data = await res.json()
+                if (!data.host) {
+                    window.location.href = '/host/dashboard'
+                    return
+                }
+                setHostProfile(data.host)
+                setDisplayName(data.host.displayName || '')
+                setBio(data.host.bio || '')
+                setAvatarUrl(data.host.avatar || '')
+            } catch {
+                toast.error('Failed to load profile')
+            } finally {
+                setLoading(false)
+            }
+        }
+        fetchProfile()
+    }, [])
+
+    async function handleSubmit(e: React.FormEvent) {
+        e.preventDefault()
+        setSaving(true)
+        try {
+            const res = await fetch('/api/hosts/me', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    displayName,
+                    bio,
+                    avatarUrl: avatarUrl || undefined,
+                }),
+            })
+
+            if (!res.ok) {
+                const data = await res.json()
+                throw new Error(data.error || 'Failed to update profile')
+            }
+
+            const data = await res.json()
+            setHostProfile(data.host)
+            toast.success('Profile updated successfully')
+        } catch (err) {
+            toast.error(err instanceof Error ? err.message : 'Failed to update profile')
+        } finally {
+            setSaving(false)
+        }
     }
 
-    const hostProfile = await db.streamHost.findUnique({
-        where: { customerId: session.customerId },
-    })
+    if (loading) {
+        return (
+            <div className="min-h-screen pt-20 bg-cream flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-charcoal" />
+            </div>
+        )
+    }
 
     if (!hostProfile) {
-        redirect('/host/dashboard')
+        return null
     }
 
     return (
@@ -35,11 +108,11 @@ export default async function HostProfileSettingsPage() {
                     </div>
                 </div>
 
-                <div className="bg-warm-white p-8 border border-sand space-y-6">
+                <form onSubmit={handleSubmit} className="bg-warm-white p-8 border border-sand space-y-6">
                     <div className="flex items-center justify-center mb-8">
                         <div className="w-24 h-24 bg-sand border border-charcoal/10 rounded-full flex items-center justify-center overflow-hidden">
-                            {hostProfile.avatar ? (
-                                <img src={hostProfile.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                            {avatarUrl ? (
+                                <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
                             ) : (
                                 <User className="w-10 h-10 text-warm-gray" />
                             )}
@@ -49,30 +122,43 @@ export default async function HostProfileSettingsPage() {
                     <div>
                         <label className="font-body text-sm text-charcoal mb-2 block">Display Name</label>
                         <input
-                            readOnly
-                            value={hostProfile.displayName}
-                            className="w-full px-4 py-3 bg-sand/20 border border-sand font-body text-charcoal outline-none opacity-70"
+                            value={displayName}
+                            onChange={(e) => setDisplayName(e.target.value)}
+                            className="w-full px-4 py-3 bg-sand/20 border border-sand font-body text-charcoal outline-none focus:border-terracotta transition-colors"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="font-body text-sm text-charcoal mb-2 block">Avatar URL</label>
+                        <input
+                            value={avatarUrl}
+                            onChange={(e) => setAvatarUrl(e.target.value)}
+                            placeholder="https://example.com/avatar.jpg"
+                            className="w-full px-4 py-3 bg-sand/20 border border-sand font-body text-charcoal outline-none focus:border-terracotta transition-colors"
                         />
                     </div>
 
                     <div>
                         <label className="font-body text-sm text-charcoal mb-2 block">Bio</label>
                         <textarea
-                            readOnly
-                            value={hostProfile.bio || ''}
+                            value={bio}
+                            onChange={(e) => setBio(e.target.value)}
                             rows={4}
-                            className="w-full px-4 py-3 bg-sand/20 border border-sand font-body text-charcoal outline-none opacity-70 resize-none"
-                            placeholder="No biography written yet."
+                            className="w-full px-4 py-3 bg-sand/20 border border-sand font-body text-charcoal outline-none focus:border-terracotta transition-colors resize-none"
+                            placeholder="Tell viewers about yourself..."
                         />
                     </div>
 
                     <div className="pt-4 border-t border-sand">
-                        <p className="font-body text-sm text-warm-gray mb-4">Settings modification form goes here. In this version, settings are read-only.</p>
-                        <button disabled className="w-full py-4 bg-charcoal text-cream font-body uppercase text-sm opacity-50 cursor-not-allowed">
-                            Save Changes
+                        <button
+                            type="submit"
+                            disabled={saving}
+                            className="w-full py-4 bg-charcoal text-cream font-body uppercase text-sm hover:bg-charcoal/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {saving ? 'Saving...' : 'Save Changes'}
                         </button>
                     </div>
-                </div>
+                </form>
             </div>
         </div>
     )
