@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import ClientWrapper from '@/components/layout/ClientWrapper'
 import ShopClient from './ShopClient'
+import { serialise } from '@/lib/serialise'
 
 export const revalidate = 3600 // Revalidate every hour
 
@@ -50,8 +51,8 @@ export default async function ShopPage() {
   return (
     <ClientWrapper>
       <ShopClient
-        initialProducts={products}
-        categories={categories}
+        initialProducts={serialise(products) as any}
+        categories={serialise(categories) as any}
       />
     </ClientWrapper>
   )

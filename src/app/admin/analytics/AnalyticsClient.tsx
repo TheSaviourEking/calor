@@ -3,8 +3,7 @@
 import { useState, useEffect } from 'react'
 import { format } from 'date-fns'
 import { 
-  TrendingUp, DollarSign, ShoppingBag, Users, 
-  Package, BarChart3, Loader2, RefreshCw
+  TrendingUp, DollarSign, ShoppingBag, Users, BarChart3, Loader2, RefreshCw
 } from 'lucide-react'
 import { toast } from 'sonner'
 

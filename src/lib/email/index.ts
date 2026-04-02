@@ -1,5 +1,4 @@
 import { Resend } from 'resend'
-import { db } from '@/lib/db'
 import { config } from '@/lib/config'
 
 // Initialize Resend with API key
@@ -74,7 +73,7 @@ async function sendEmail(
     }
 
     await logEmail(type, Array.isArray(to) ? to.join(', ') : to, subject, true)
-    return { success: true, id: data?.id }
+    return { success: true, id: data?.id } as { success: boolean; id?: string; error?: string }
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : 'Unknown error'
     await logEmail(type, Array.isArray(to) ? to.join(', ') : to, subject, false, errorMsg)

@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import Link from 'next/link'
 import { Package, ChevronRight, Tag, Heart, ShoppingBag } from 'lucide-react'
 import { toast } from 'sonner'

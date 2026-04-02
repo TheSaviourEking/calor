@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { ChevronLeft, ChevronRight, Play, Pause, RotateCcw, Check, Clock, Lightbulb, AlertTriangle, Sparkles } from 'lucide-react'
+import { ChevronLeft, ChevronRight, RotateCcw, Check, Clock, Lightbulb, AlertTriangle, Sparkles } from 'lucide-react'
 
 interface GuideStep {
   id: string

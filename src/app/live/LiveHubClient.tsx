@@ -5,7 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { 
   Radio, Calendar, Play, Users, Clock, ChevronRight, 
-  Video, Bell, Sparkles, ArrowRight
+  Video, Sparkles
 } from 'lucide-react'
 import ClientWrapper from '@/components/layout/ClientWrapper'
 
@@ -75,7 +75,7 @@ export default function LiveHubClient() {
     fetchData()
   }, [])
 
-  const formatDateTime = (dateStr: string) => {
+  const _formatDateTime = (dateStr: string) => {
     const date = new Date(dateStr)
     return date.toLocaleDateString('en-US', {
       weekday: 'short',

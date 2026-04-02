@@ -2,6 +2,7 @@ import { Metadata } from 'next'
 import { db } from '@/lib/db'
 import { notFound } from 'next/navigation'
 import SharedWishlistClient from './SharedWishlistClient'
+import { serialise } from '@/lib/serialise'
 
 interface Props {
   params: Promise<{ code: string }>
@@ -75,11 +76,11 @@ export default async function SharedWishlistPage({ params }: Props) {
 
   return (
     <SharedWishlistClient
-      wishlist={{
+      wishlist={serialise({
         ...sharedWishlist,
         productIds,
         products: sortedProducts,
-      }}
+      }) as any}
     />
   )
 }

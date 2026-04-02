@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { format } from 'date-fns'
 import {
@@ -76,7 +76,7 @@ const priorityColors: Record<string, string> = {
 }
 
 export default function SupportClient({ initialTickets, initialCategories, initialOrders }: SupportClientProps) {
-  const [tickets, setTickets] = useState<Ticket[]>(initialTickets)
+  const [tickets, _setTickets] = useState<Ticket[]>(initialTickets)
   const [categories] = useState<Category[]>(initialCategories)
   const [orders] = useState<Order[]>(initialOrders)
   const [showCreateForm, setShowCreateForm] = useState(false)

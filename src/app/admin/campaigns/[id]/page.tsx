@@ -7,10 +7,10 @@ export const metadata: Metadata = {
   description: 'View and edit email campaign details'
 }
 
-export default function CampaignDetailPage() {
+export default function CampaignDetailPage({ params }: { params: Promise<{ id: string }> }) {
   return (
     <ClientWrapper>
-      <CampaignDetailClient />
+      <CampaignDetailClient params={params} />
     </ClientWrapper>
   )
 }

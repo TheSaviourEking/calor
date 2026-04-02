@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import {
-  Image as ImageIcon, Video, MessageCircle, Heart, Eye, Clock,
+  Image as ImageIcon, MessageCircle, Heart, Eye, Clock,
   ChevronLeft, ChevronRight, Loader2, Plus, X, Star
 } from 'lucide-react'
 import Image from 'next/image'

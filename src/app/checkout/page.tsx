@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import CheckoutClient from './CheckoutClient'
 import { getSession } from '@/lib/auth'
+import { serialise } from '@/lib/serialise'
 
 async function getGiftWrappingOptions() {
   return db.giftWrappingOption.findMany({
@@ -32,7 +33,7 @@ export default async function CheckoutPage() {
 
   return (
     <CheckoutClient
-      giftWrappingOptions={giftWrappingOptions}
+      giftWrappingOptions={serialise(giftWrappingOptions) as any}
       initialAvailablePoints={initialAvailablePoints}
     />
   )

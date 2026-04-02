@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Save, UploadCloud, Video, Plus, Trash2, Info, X, Lock } from 'lucide-react'
+import { Save, UploadCloud, Video, Plus, Trash2, Info, X, Lock } from 'lucide-react'
 import Link from 'next/link'
 import {
     Tooltip,
@@ -20,7 +20,6 @@ import {
 import {
     Dialog,
     DialogContent,
-    DialogDescription,
     DialogHeader,
     DialogTitle,
     DialogTrigger,
@@ -35,7 +34,6 @@ import {
 import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 
@@ -66,7 +64,7 @@ export default function AdminProductForm() {
     const [newCategoryName, setNewCategoryName] = useState('')
 
     const [badges, setBadges] = useState<string[]>([])
-    const [showNewBadge, setShowNewBadge] = useState(false)
+    const [_showNewBadge, setShowNewBadge] = useState(false)
     const [newBadgeName, setNewBadgeName] = useState('')
 
     useEffect(() => {
@@ -87,7 +85,7 @@ export default function AdminProductForm() {
             .catch(err => console.error('Failed to fetch badges:', err))
     }, [])
 
-    const handleAddBadge = () => {
+    const _handleAddBadge = () => {
         const trimmed = newBadgeName.trim().toLowerCase()
         if (!trimmed) return
         if (!badges.includes(trimmed)) {

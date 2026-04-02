@@ -1,13 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useToast } from '@/hooks/use-toast'
-import AccountLayout from '@/components/account/AccountLayout'
 import { format } from 'date-fns'
 import {
-  Flame, Trophy, Target, Heart, Zap, Calendar, Gift, Star, Clock,
-  Check, ChevronRight, Play, Pause, Settings, Users, Award, TrendingUp,
-  Sun, Moon, Activity, Bell, Plus, X, Loader2, RefreshCw, Send
+  Flame, Trophy, Target, Heart, Star,
+  Check, ChevronRight, Users, TrendingUp,
+  Sun, Activity, Loader2
 } from 'lucide-react'
 
 export interface UserProfile {
@@ -108,7 +107,7 @@ export default function WellnessClient({ initialData }: { initialData: WellnessD
   const [challenges] = useState<Challenge[]>(initialData.challenges)
   const [dailyRewards] = useState<DailyReward[]>(initialData.dailyRewards)
   const [todayCheckIn, setTodayCheckIn] = useState<CheckIn | null>(initialData.todayCheckIn)
-  const [wellnessProfile] = useState<WellnessProfile | null>(initialData.wellnessProfile)
+  const [_wellnessProfile] = useState<WellnessProfile | null>(initialData.wellnessProfile)
   const [coupleGoals] = useState<CoupleGoal[]>(initialData.coupleGoals)
   const [activeTab, setActiveTab] = useState<'overview' | 'achievements' | 'challenges' | 'couple'>('overview')
 

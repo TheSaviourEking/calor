@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import ClientWrapper from '@/components/layout/ClientWrapper'
 import SizeGuideClient from './SizeGuideClient'
+import { serialise } from '@/lib/serialise'
 
 async function getSizeGuides() {
   const guides = await db.sizeGuide.findMany({
@@ -21,7 +22,7 @@ export default async function SizeGuidePage() {
   
   return (
     <ClientWrapper>
-      <SizeGuideClient guides={guides} />
+      <SizeGuideClient guides={serialise(guides) as any} />
     </ClientWrapper>
   )
 }

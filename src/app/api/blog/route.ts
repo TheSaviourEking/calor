@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
     const total = await db.blogPost.count({ where })
 
     // Get featured post if requested
-    let featuredPost = null
+    let featuredPost: any = null
     if (featured === 'true' && offset === 0) {
       featuredPost = await db.blogPost.findFirst({
         where,

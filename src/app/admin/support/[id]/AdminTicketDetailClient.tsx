@@ -105,7 +105,7 @@ const priorityConfig: Record<string, { label: string; color: string }> = {
 }
 
 export default function AdminTicketDetailClient({ initialData }: { initialData: InitialData }) {
-  const router = useRouter()
+  const _router = useRouter()
   const [ticket, setTicket] = useState<Ticket>(initialData.ticket)
   const [isUpdating, setIsUpdating] = useState(false)
   const [replyContent, setReplyContent] = useState('')

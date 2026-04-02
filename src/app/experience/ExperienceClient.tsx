@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import ClientWrapper from '@/components/layout/ClientWrapper'
 import { 
-  Box, Shuffle, Camera, BookOpen, ChevronRight, Sparkles,
-  RotateCcw, ZoomIn, Move, Star, ArrowRight, Palette, 
-  Hand, Ruler, Image, Settings, Loader2, Heart
+  Box, Shuffle, Camera, BookOpen, Sparkles,
+  RotateCcw, Star, ArrowRight, Palette, 
+  Hand, Ruler, Image
 } from 'lucide-react'
 import Link from 'next/link'
 import ProductViewer3D from '@/components/experience/ProductViewer3D'
@@ -93,7 +93,7 @@ const sampleProducts = [
 export default function ExperienceClient() {
   const [activeFeature, setActiveFeature] = useState<string | null>(null)
   const [selectedProduct, setSelectedProduct] = useState(sampleProducts[0])
-  const [isLoading, setIsLoading] = useState(false)
+  const [_isLoading, _setIsLoading] = useState(false)
 
   const renderActiveFeature = () => {
     switch (activeFeature) {

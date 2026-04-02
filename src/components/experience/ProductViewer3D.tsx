@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { RotateCcw, ZoomIn, ZoomOut, Move, Maximize2, Play, Pause, Loader2 } from 'lucide-react'
+import { RotateCcw, ZoomIn, ZoomOut, Move, Play, Pause, Loader2 } from 'lucide-react'
 
 interface ProductModel {
   id: string
@@ -29,7 +29,7 @@ interface ProductViewer3DProps {
 
 export default function ProductViewer3D({ product, model }: ProductViewer3DProps) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const [isRotating, setIsRotating] = useState(false)
+  const [_isRotating, _setIsRotating] = useState(false)
   const [zoom, setZoom] = useState(1)
   const [rotation, setRotation] = useState({ x: 0, y: 0 })
   const [isDragging, setIsDragging] = useState(false)

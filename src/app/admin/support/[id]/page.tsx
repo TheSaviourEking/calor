@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { db } from '@/lib/db'
 import ClientWrapper from '@/components/layout/ClientWrapper'
 import AdminTicketDetailClient from './AdminTicketDetailClient'
+import { serialise } from '@/lib/serialise'
 
 async function getTicketWithDetails(id: string) {
   const ticket = await db.supportTicket.findUnique({
@@ -33,7 +34,7 @@ async function getTicketWithDetails(id: string) {
   if (!ticket) notFound()
 
   // Get related order if exists
-  let relatedOrder = null
+  let relatedOrder: { id: string; reference: string; status: string; totalCents: number; createdAt: Date } | null = null
   if (ticket.orderId) {
     relatedOrder = await db.order.findUnique({
       where: { id: ticket.orderId },
@@ -48,7 +49,7 @@ async function getTicketWithDetails(id: string) {
   }
 
   // Get related product if exists
-  let relatedProduct = null
+  let relatedProduct: { id: string; name: string; slug: string } | null = null
   if (ticket.productId) {
     relatedProduct = await db.product.findUnique({
       where: { id: ticket.productId },
@@ -105,7 +106,7 @@ export default async function AdminTicketDetailPage({
 
   return (
     <ClientWrapper>
-      <AdminTicketDetailClient initialData={data} />
+      <AdminTicketDetailClient initialData={serialise(data) as any} />
     </ClientWrapper>
   )
 }

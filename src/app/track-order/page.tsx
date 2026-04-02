@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import ClientWrapper from '@/components/layout/ClientWrapper'
-import { Search } from 'lucide-react'
 
 export default function TrackOrderPage() {
   const router = useRouter()

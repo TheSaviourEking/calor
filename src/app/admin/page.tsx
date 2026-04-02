@@ -1,6 +1,5 @@
 import { db } from '@/lib/db'
 import { getSession } from '@/lib/auth/session'
-import { redirect } from 'next/navigation'
 import AdminDashboard from './AdminClient'
 
 export default async function AdminPage() {

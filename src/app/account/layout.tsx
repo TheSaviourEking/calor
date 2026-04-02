@@ -23,7 +23,7 @@ export default function AccountLayout({
   const isLoginPage = pathname === '/account'
 
   // Show sidebar for authenticated users on protected pages
-  const showSidebar = !isLoading && isAuthenticated && !isLoginPage
+  const _showSidebar = !isLoading && isAuthenticated && !isLoginPage
 
   // Loading state while hydrating
   if (isLoading) {

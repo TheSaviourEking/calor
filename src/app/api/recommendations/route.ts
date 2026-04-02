@@ -99,7 +99,7 @@ export async function GET(request: NextRequest) {
       })
 
       // Get user preferences if available
-      let userPreferences = null
+      let userPreferences: Awaited<ReturnType<typeof db.customerPreferences.findUnique>> = null
       if (customerId) {
         userPreferences = await db.customerPreferences.findUnique({
           where: { customerId },
@@ -120,9 +120,8 @@ export async function GET(request: NextRequest) {
         const productIds = storedRecommendations.map(r => r.productId)
         const products = await db.product.findMany({ /* take: handled */
           where: {
-            id: { in: productIds },
+            id: { in: productIds.filter(id => !purchasedProductIds.has(id)) },
             published: true,
-            id: { notIn: [...Array.from(purchasedProductIds)] as string[] }, // Exclude purchased
           },
           include: {
             images: { orderBy: { sortOrder: 'asc' }, take: 1 },
@@ -243,17 +242,13 @@ export async function POST(request: NextRequest) {
 
     // Store user recommendation
     if (customerId || sessionId) {
+      const orConditions = [
+        ...(customerId ? [{ customerId }] : []),
+        ...(sessionId ? [{ sessionId }] : []),
+      ]
       const existing = await db.userRecommendation.findFirst({
         where: {
-          OR: [
-            customerId ? { customerId } : {},
-            sessionId ? { sessionId } : {},
-          ].filter(Boolean).length > 0 ? {
-            OR: [
-              ...(customerId ? [{ customerId }] : []),
-              ...(sessionId ? [{ sessionId }] : []),
-            ],
-          } as never : {},
+          OR: orConditions,
           productId,
         },
       })

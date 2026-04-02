@@ -6,7 +6,7 @@ import { format } from 'date-fns'
 import { toast } from 'sonner'
 import {
   MessageSquare, Clock, User, AlertCircle, CheckCircle,
-  Filter, Search, ChevronDown, Loader2, Eye, ArrowLeft
+  Filter, Search, ChevronDown, Loader2, Eye
 } from 'lucide-react'
 
 interface Customer {
@@ -112,10 +112,10 @@ export default function AdminSupportClient({ initialData }: { initialData: Initi
       const response = await fetch('/api/tickets')
       if (!response.ok) throw new Error('Failed to fetch tickets')
       const data = await response.json()
-      setTickets(data.tickets.map((ticket: Ticket) => ({
+      setTickets(data.tickets.map((ticket: any) => ({
         ...ticket,
-        messageCount: ticket._count?.messages || 0,
-        lastMessage: ticket.messages?.[0] || null,
+        messageCount: ticket._count?.messages || ticket.messageCount || 0,
+        lastMessage: ticket.messages?.[0] || ticket.lastMessage || null,
       })))
     } catch {
       toast.error('Failed to refresh tickets')
@@ -124,7 +124,7 @@ export default function AdminSupportClient({ initialData }: { initialData: Initi
     }
   }
 
-  const formatDate = (dateStr: string) => {
+  const _formatDate = (dateStr: string) => {
     return format(new Date(dateStr), 'MMM d, yyyy h:mm a')
   }
 

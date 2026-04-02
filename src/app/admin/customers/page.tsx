@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import { requireAdmin } from '@/lib/admin/middleware'
 import AdminCustomersClient from './AdminCustomersClient'
+import { serialise } from '@/lib/serialise'
 
 async function getCustomersWithStats() {
   const customers = await db.customer.findMany({
@@ -31,5 +32,5 @@ export default async function AdminCustomersPage() {
   await requireAdmin()
   const customers = await getCustomersWithStats()
 
-  return <AdminCustomersClient initialCustomers={customers} />
+  return <AdminCustomersClient initialCustomers={serialise(customers) as any} />
 }

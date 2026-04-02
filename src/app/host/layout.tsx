@@ -3,8 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { 
-  Video, Plus, LayoutDashboard, Calendar, Settings, 
+import { Plus, LayoutDashboard, 
   Menu, X, ChevronLeft
 } from 'lucide-react'
 import ClientWrapper from '@/components/layout/ClientWrapper'

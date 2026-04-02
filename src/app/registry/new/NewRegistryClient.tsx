@@ -2,8 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { 
-  Gift, ChevronRight, ChevronLeft, Check, Calendar, MapPin, 
+import { ChevronRight, ChevronLeft, Calendar, 
   Lock, Globe, Palette, Sparkles
 } from 'lucide-react'
 import { toast } from 'sonner'

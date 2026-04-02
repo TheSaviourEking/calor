@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 
 // GET /api/wellness/daily-rewards - Get daily rewards
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const dailyRewards = await db.dailyReward.findMany({
       where: { isActive: true },
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
 }
 
 // POST /api/wellness/daily-rewards - Seed daily rewards
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     // Default 7-day reward cycle
     const rewards = [
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
       { day: 7, rewardType: 'points', rewardValue: 100 }, // Big weekly bonus
     ]
 
-    const created = []
+    const created: unknown[] = []
     for (const reward of rewards) {
       const dailyReward = await db.dailyReward.upsert({
         where: { day: reward.day },

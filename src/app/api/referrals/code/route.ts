@@ -10,7 +10,7 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    let referralCode = await db.referralCode.findUnique({
+    let referralCode = await db.referralCode.findFirst({
       where: { customerId: session.customerId },
       include: {
         referrals: {
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
     const { customCode } = body
 
     // Check if user already has a referral code
-    const existing = await db.referralCode.findUnique({
+    const existing = await db.referralCode.findFirst({
       where: { customerId: session.customerId },
     })
 

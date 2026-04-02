@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Bell, Trash2, Tag, Package, Settings, Check } from 'lucide-react'
+import { Trash2, Tag, Package, Settings, Check } from 'lucide-react'
 import { toast } from 'sonner'
 import Link from 'next/link'
 

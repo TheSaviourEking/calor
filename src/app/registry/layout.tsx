@@ -1,15 +1,15 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
-  Gift, Plus, Settings, ChevronLeft, Menu, X
+  Gift, Plus, ChevronLeft, Menu, X
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth'
 import ClientWrapper from '@/components/layout/ClientWrapper'
 
-const registryNavItems = [
+const _registryNavItems = [
   { href: '/registry', label: 'All Registries', icon: Gift },
 ]
 

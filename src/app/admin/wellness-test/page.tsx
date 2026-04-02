@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { 
   RefreshCw, Check, X, Loader2, Database, Play, AlertTriangle,
-  Target, Flame, Trophy, Calendar, Heart, Zap, Settings, Users
+  Target, Flame, Trophy, Heart
 } from 'lucide-react'
 import { toast } from 'sonner'
 import ClientWrapper from '@/components/layout/ClientWrapper'

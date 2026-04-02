@@ -1,5 +1,4 @@
 import { db } from '@/lib/db'
-import { useLocaleStore } from '@/stores'
 import { Gift } from 'lucide-react'
 
 async function getGiftSets() {
@@ -20,8 +19,9 @@ async function getGiftSets() {
   })
 
   // Add a placeholder for the date-night-duo if it doesn't exist
-  const result = [...products]
+  const result: any[] = [...products]
   if (!products.find(p => p.slug === 'date-night-duo')) {
+     
     result.push({
       id: 'placeholder-date-night',
       slug: 'date-night-duo',
@@ -31,7 +31,6 @@ async function getGiftSets() {
       categoryId: '',
       category: { name: 'For Connection' },
       variants: [{ id: 'v1', price: 7500, name: 'Standard', sku: 'SKU-DND', stock: 20, productId: 'placeholder-date-night' }],
-      images: [],
       tags: '[]',
       isDigital: false,
       isRestricted: false,

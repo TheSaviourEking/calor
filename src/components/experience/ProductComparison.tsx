@@ -120,7 +120,7 @@ export default function ProductComparison() {
         return product.category?.slug?.includes('advanced') ? 'Advanced' : 
                product.category?.slug?.includes('beginner') ? 'Beginner' : 'All Levels'
       default:
-        return (product as Record<string, unknown>)[attr.key] || 'N/A'
+        return (product as unknown as Record<string, unknown>)[attr.key] || 'N/A'
     }
   }
 
@@ -166,7 +166,7 @@ export default function ProductComparison() {
       default:
         return (
           <span className="font-body text-warm-gray text-sm">
-            {value || '—'}
+            {String(value || '—')}
           </span>
         )
     }

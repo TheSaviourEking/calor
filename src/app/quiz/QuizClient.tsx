@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useQuizStore, QuizQuestion } from '@/stores/quiz'
+import { useQuizStore } from '@/stores/quiz'
 import { useCartStore } from '@/stores'
 import {
   ArrowLeft, ArrowRight, RotateCcw, Sparkles, Heart,

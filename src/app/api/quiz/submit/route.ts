@@ -101,9 +101,9 @@ function buildUserProfile(answers: QuizAnswer[]): Record<string, string | string
   const goalsAnswer = answers.find(a => Array.isArray(a.answer))
   
   return {
-    experience: experienceAnswer?.answer || 'intermediate',
-    goals: goalsAnswer?.answer || ['pleasure'],
-    allAnswers: answers
+    experience: (typeof experienceAnswer?.answer === 'string' ? experienceAnswer.answer : 'intermediate') as string,
+    goals: (Array.isArray(goalsAnswer?.answer) ? goalsAnswer.answer : ['pleasure']) as string[],
+    allAnswers: JSON.stringify(answers)
   }
 }
 

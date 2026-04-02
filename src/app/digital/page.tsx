@@ -2,6 +2,7 @@ import { db } from '@/lib/db'
 import ClientWrapper from '@/components/layout/ClientWrapper'
 import ProductCard from '@/components/product/ProductCard'
 import { Headphones, Video, BookOpen, Download } from 'lucide-react'
+import { serialise } from '@/lib/serialise'
 
 async function getDigitalProducts() {
   return db.product.findMany({
@@ -65,7 +66,7 @@ export default async function DigitalPage() {
         {/* Products Grid */}
         <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12">
-            {products.map((product) => (
+            {serialise(products).map((product: any) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>

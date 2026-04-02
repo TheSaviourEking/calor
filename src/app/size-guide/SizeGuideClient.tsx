@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Ruler, ChevronDown, Check, AlertCircle } from 'lucide-react'
+import { Ruler, Check } from 'lucide-react'
 
 interface SizeChart {
   id: string

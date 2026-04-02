@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { 
-  ArrowLeft, Loader2, Mail, Users, Calendar, Send, Eye
+  ArrowLeft, Loader2, Calendar
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -17,7 +17,7 @@ const segments = [
 export default function NewCampaignClient() {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
-  const [sending, setSending] = useState(false)
+  const [_sending, _setSending] = useState(false)
   
   const [form, setForm] = useState({
     name: '',

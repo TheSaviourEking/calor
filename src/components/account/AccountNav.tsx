@@ -18,7 +18,6 @@ import {
   MessageSquare,
   Crown,
   Sparkles,
-  Activity,
   Flame,
   Gamepad2,
   LogOut

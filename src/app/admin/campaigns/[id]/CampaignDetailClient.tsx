@@ -5,8 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { format } from 'date-fns'
 import { 
-  ArrowLeft, Loader2, Mail, Users, BarChart3, Send, Calendar, 
-  Clock, Eye, MousePointer, AlertCircle
+  ArrowLeft, Loader2, Mail, Users, Eye, MousePointer, AlertCircle
 } from 'lucide-react'
 import { toast } from 'sonner'
 

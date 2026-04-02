@@ -24,7 +24,7 @@ interface PackagingPreference {
 export default function PackagingClient() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [preference, setPreference] = useState<PackagingPreference | null>(null)
+  const [_preference, setPreference] = useState<PackagingPreference | null>(null)
   
   // Form state with defaults
   const [senderName, setSenderName] = useState('')

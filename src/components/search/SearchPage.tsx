@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Search, Sparkles, Filter, X } from 'lucide-react'
+import { Search, Filter, X } from 'lucide-react'
 import EnhancedSearchBar from './EnhancedSearchBar'
 import SearchFilters from './SearchFilters'
 import SearchResults from './SearchResults'
@@ -120,7 +120,7 @@ export default function SearchPage({ initialQuery = '', onProductClick }: Search
         setAggregations(null) // Semantic search doesn't return aggregations
       } else {
         // Use regular faceted search
-        const url = buildSearchUrl(searchQuery, activeFilters, sortBy, page)
+        const url = buildSearchUrl(searchQuery, activeFilters, sortBy, page, false)
         const response = await fetch(url)
         const data = await response.json()
         

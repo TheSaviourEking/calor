@@ -3,9 +3,9 @@
 import { useState, useEffect, use } from 'react'
 import Link from 'next/link'
 import { 
-  ArrowLeft, Users, Mail, Target, Loader2, Send, Calendar,
-  DollarSign, ShoppingBag, Clock, TrendingUp, AlertTriangle,
-  Plus, X, ChevronDown
+  ArrowLeft, Users, Mail, Target, Loader2,
+  DollarSign, TrendingUp,
+  Plus, X
 } from 'lucide-react'
 
 interface Segment {

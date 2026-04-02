@@ -4,9 +4,8 @@ import { useEffect, useState } from 'react'
 import { format } from 'date-fns'
 import Link from 'next/link'
 import Image from 'next/image'
-import { 
-  Calendar, Clock, Video, Phone, MessageSquare, Star, 
-  ChevronRight, Loader2, Check, X, User, ArrowLeft
+import { Clock, Video, Phone, MessageSquare, Star, 
+  ChevronRight, Loader2, Check, User
 } from 'lucide-react'
 
 interface Consultant {

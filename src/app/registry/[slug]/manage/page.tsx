@@ -112,5 +112,5 @@ export default async function ManageRegistryPage({ params }: { params: Promise<{
     },
   }
 
-  return <ManageRegistryClient initialRegistry={serialise(formattedRegistry)} />
+  return <ManageRegistryClient initialRegistry={serialise(formattedRegistry) as any} />
 }

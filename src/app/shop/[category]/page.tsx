@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import ClientWrapper from "@/components/layout/ClientWrapper";
 import CategoryClient from "./CategoryClient";
 import Link from "next/link";
+import { serialise } from "@/lib/serialise";
 
 interface PageProps {
   params: Promise<{ category: string }>;
@@ -67,7 +68,7 @@ export default async function CategoryPage({ params }: PageProps) {
 
   return (
     <ClientWrapper>
-      <CategoryClient category={category} products={products} />
+      <CategoryClient category={serialise(category) as any} products={serialise(products) as any} />
     </ClientWrapper>
   );
 }

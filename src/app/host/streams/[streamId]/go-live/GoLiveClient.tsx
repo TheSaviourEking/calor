@@ -6,8 +6,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { io, Socket } from 'socket.io-client'
 import {
-  ArrowLeft, Video, VideoOff, Users, MessageCircle, ShoppingCart,
-  Plus, X, Clock, Zap, Eye, Send, Pin, Check, Loader2, Copy
+  ArrowLeft, Video, VideoOff, MessageCircle, X, Zap, Eye, Pin, Loader2, Copy
 } from 'lucide-react'
 import { toast } from 'sonner'
 import ClientWrapper from '@/components/layout/ClientWrapper'

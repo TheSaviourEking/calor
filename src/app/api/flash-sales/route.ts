@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 
 // Get active flash sales
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const now = new Date()
 
@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     })
 
     // Get products that are part of flash sales
-    const productsWithFlashSale = []
+    const productsWithFlashSale: any[] = []
     
     for (const sale of flashSales) {
       if (sale.appliesTo) {

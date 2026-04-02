@@ -130,7 +130,7 @@ export default async function PublicRegistryPage({ params }: { params: Promise<{
   return (
     <Suspense fallback={<div className="min-h-screen pt-20 flex items-center justify-center font-body text-warm-gray">Loading...</div>}>
       <PublicRegistryClient
-        initialRegistry={serialise(formattedRegistry)}
+        initialRegistry={serialise(formattedRegistry) as any}
         initialRequiresPassword={false}
       />
     </Suspense>

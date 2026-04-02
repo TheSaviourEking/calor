@@ -11,7 +11,7 @@ export default async function ConfirmationPage({ searchParams }: PageProps) {
   const { ref, order_id } = await searchParams
 
   // If we have a reference or order_id, try to fetch the order
-  let order = null
+  let order: Awaited<ReturnType<typeof db.order.findUnique>> & { items: Array<{ name: string; quantity: number; priceCents: number; product: unknown }>; address: unknown } | null = null
   if (ref) {
     order = await db.order.findUnique({
       where: { reference: ref },

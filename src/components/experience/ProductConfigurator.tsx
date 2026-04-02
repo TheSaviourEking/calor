@@ -135,7 +135,7 @@ export default function ProductConfigurator({
   }
 
   const handleAddToCart = () => {
-    const configDescription = configurations.map(c => {
+    const _configDescription = configurations.map(c => {
       const opt = c.options.find(o => o.value === selectedOptions[c.id])
       return `${c.name}: ${opt?.label}`
     }).join(', ')
@@ -253,7 +253,7 @@ export default function ProductConfigurator({
               className="w-full accent-terracotta"
             />
             <div className="flex justify-between">
-              {config.options.map((option, idx) => (
+              {config.options.map((option, _idx) => (
                 <button
                   key={option.value}
                   onClick={() => handleOptionSelect(config.id, option.value)}

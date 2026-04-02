@@ -6,9 +6,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { io, Socket } from 'socket.io-client'
 import {
-  Users, Heart, Send, ChevronLeft, Share2, Bell,
-  ShoppingCart, Plus, Minus, Check, X, Play, Clock,
-  MessageCircle, Sparkles, Zap
+  Users, Send, Play, Clock, Zap
 } from 'lucide-react'
 import { toast } from 'sonner'
 import ClientWrapper from '@/components/layout/ClientWrapper'
@@ -69,6 +67,7 @@ interface Stream {
   description: string | null
   status: string
   streamKey: string
+  scheduledStart: string | null
   allowChat: boolean
   allowQuestions: boolean
   host: {
@@ -353,7 +352,7 @@ export default function StreamViewerClient() {
                       Stream Starting Soon
                     </p>
                     <p className="font-body text-warm-gray">
-                      {new Date(stream.scheduledStart).toLocaleString()}
+                      {stream.scheduledStart ? new Date(stream.scheduledStart).toLocaleString() : 'TBD'}
                     </p>
                   </div>
                 ) : (

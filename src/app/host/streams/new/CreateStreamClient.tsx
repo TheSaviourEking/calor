@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
-  ArrowLeft, Calendar, Clock, Video, Lock, Globe, Users,
+  ArrowLeft, Calendar, Clock, Lock,
   MessageCircle, HelpCircle, Plus, X, Loader2
 } from 'lucide-react'
 import { toast } from 'sonner'

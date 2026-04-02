@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { format } from 'date-fns'
 import { 
   Gift, Check, Star, ChevronRight, Loader2, Package, 
-  Truck, Pause, Play, Calendar, CreditCard, ArrowRight
+  Truck, Pause, Play, Calendar, CreditCard
 } from 'lucide-react'
 
 interface SubscriptionPlan {

@@ -24,7 +24,7 @@ export async function getGeoInfo(): Promise<GeoInfo> {
   const timezone = headersList.get('cf-timezone') || 'Unknown'
 
   // Get device info
-  const userAgent = headersList.get('user-agent') || 'Unknown'
+  const _userAgent = headersList.get('user-agent') || 'Unknown'
 
   return {
     ip,

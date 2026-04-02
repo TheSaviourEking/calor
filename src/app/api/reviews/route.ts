@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
     })
 
     // Calculate summary statistics if productId is provided
-    let summary = null
+    let summary: { averageRating: number; totalReviews: number; distribution: Record<number, number> } | null = null
     if (productId) {
       const stats = await db.review.aggregate({
         where: { productId, isApproved: true },

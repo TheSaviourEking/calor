@@ -1,5 +1,6 @@
 import { db } from '@/lib/db'
 import AdminSupportClient from './AdminSupportClient'
+import { serialise } from '@/lib/serialise'
 
 async function getTicketsWithStats() {
   const [tickets, stats, categories, admins] = await Promise.all([
@@ -87,5 +88,5 @@ async function getTicketsWithStats() {
 
 export default async function AdminSupportPage() {
   const data = await getTicketsWithStats()
-  return <AdminSupportClient initialData={data} />
+  return <AdminSupportClient initialData={serialise(data) as any} />
 }
