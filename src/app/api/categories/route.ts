@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getSession } from '@/lib/auth/session'
+import { requireAdmin } from '@/lib/admin/middleware'
 
 export async function GET() {
     try {
@@ -10,7 +11,7 @@ export async function GET() {
         }
 
         const categories = await db.category.findMany({
-            orderBy: { name: 'asc' }
+            orderBy: { sortOrder: 'asc' }
         })
 
         return NextResponse.json(categories)
@@ -22,12 +23,12 @@ export async function GET() {
 
 export async function POST(req: Request) {
     try {
-        const session = await getSession()
-        if (!session?.customerId) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        const auth = await requireAdmin()
+        if (!auth.authorized) {
+            return NextResponse.json({ error: auth.error }, { status: 401 })
         }
 
-        const { name } = await req.json()
+        const { name, description, iconName, sortOrder } = await req.json()
         if (!name) return NextResponse.json({ error: 'Name is required' }, { status: 400 })
 
         const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '')
@@ -36,8 +37,9 @@ export async function POST(req: Request) {
             data: {
                 name,
                 slug,
-                iconName: 'box', // Default icon
-                description: `Category for ${name}`
+                iconName: iconName || 'box',
+                description: description || `Category for ${name}`,
+                sortOrder: sortOrder ?? 0,
             }
         })
 
