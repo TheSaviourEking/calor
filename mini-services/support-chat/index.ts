@@ -1,132 +1,172 @@
 import { createServer } from 'http'
 import { Server } from 'socket.io'
+import { PrismaClient } from '@prisma/client'
+import { randomBytes } from 'crypto'
 
 const PORT = 3031
+const db = new PrismaClient()
 
 const httpServer = createServer()
 const io = new Server(httpServer, {
   cors: {
-    origin: ['http://localhost:3000', 'https://calorco.com'],
+    origin: process.env.SOCKET_IO_ORIGINS?.split(',') || ['http://localhost:3000', 'https://calorco.com'],
     methods: ['GET', 'POST'],
     credentials: true,
   },
 })
 
-// Store active support sessions
-const sessions = new Map<string, {
-  id: string
-  customerId?: string
-  messages: Array<{
-    id: string
-    isFromCustomer: boolean
-    message: string
-    timestamp: Date
-  }>
-  createdAt: Date
-}>()
-
-// Generate unique session ID
 function generateSessionId(): string {
-  return `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
-}
-
-// Generate message ID
-function generateMessageId(): string {
-  return `msg_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
+  return `session_${randomBytes(16).toString('hex')}`
 }
 
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id)
 
   // Customer initiates a support chat
-  socket.on('start_session', (data: { customerId?: string }) => {
-    const sessionId = generateSessionId()
-    
-    const session = {
-      id: sessionId,
-      customerId: data.customerId,
-      messages: [],
-      createdAt: new Date(),
+  socket.on('start_session', async (data: { customerId?: string }) => {
+    try {
+      const sessionId = generateSessionId()
+
+      const session = await db.supportChatSession.create({
+        data: {
+          sessionId,
+          customerId: data.customerId || null,
+        },
+      })
+
+      socket.join(sessionId)
+      socket.emit('session_started', { sessionId })
+
+      // Send welcome message and persist it
+      const welcomeMessage = await db.supportMessage.create({
+        data: {
+          sessionId: session.id,
+          isFromCustomer: false,
+          message: 'Hello! Thanks for reaching out. How can we help you today? Your privacy is important to us - this conversation is anonymous and secure.',
+        },
+      })
+
+      socket.emit('message', {
+        id: welcomeMessage.id,
+        isFromCustomer: false,
+        message: welcomeMessage.message,
+        timestamp: welcomeMessage.createdAt,
+      })
+
+      console.log('Session started:', sessionId)
+    } catch (error) {
+      console.error('Error starting session:', error)
+      socket.emit('error', { message: 'Failed to start session' })
     }
-    
-    sessions.set(sessionId, session)
-    socket.join(sessionId)
-    socket.emit('session_started', { sessionId })
-    
-    // Send welcome message
-    const welcomeMessage = {
-      id: generateMessageId(),
-      isFromCustomer: false,
-      message: 'Hello! Thanks for reaching out. How can we help you today? Your privacy is important to us - this conversation is anonymous and secure.',
-      timestamp: new Date(),
-    }
-    
-    session.messages.push(welcomeMessage)
-    socket.emit('message', welcomeMessage)
-    
-    console.log('Session started:', sessionId)
   })
 
   // Customer rejoins existing session
-  socket.on('rejoin_session', (data: { sessionId: string }) => {
-    const session = sessions.get(data.sessionId)
-    if (session) {
-      socket.join(data.sessionId)
-      socket.emit('session_rejoined', { 
-        sessionId: data.sessionId,
-        messages: session.messages 
+  socket.on('rejoin_session', async (data: { sessionId: string }) => {
+    try {
+      const session = await db.supportChatSession.findUnique({
+        where: { sessionId: data.sessionId },
+        include: {
+          messages: {
+            orderBy: { createdAt: 'asc' },
+          },
+        },
       })
-    } else {
-      socket.emit('error', { message: 'Session not found' })
+
+      if (session) {
+        socket.join(data.sessionId)
+        socket.emit('session_rejoined', {
+          sessionId: data.sessionId,
+          messages: session.messages.map((m) => ({
+            id: m.id,
+            isFromCustomer: m.isFromCustomer,
+            message: m.message,
+            timestamp: m.createdAt,
+          })),
+        })
+      } else {
+        socket.emit('error', { message: 'Session not found' })
+      }
+    } catch (error) {
+      console.error('Error rejoining session:', error)
+      socket.emit('error', { message: 'Failed to rejoin session' })
     }
   })
 
   // Customer sends message
-  socket.on('send_message', (data: { sessionId: string; message: string }) => {
-    const session = sessions.get(data.sessionId)
-    if (!session) {
-      socket.emit('error', { message: 'Session not found' })
-      return
-    }
+  socket.on('send_message', async (data: { sessionId: string; message: string }) => {
+    try {
+      const session = await db.supportChatSession.findUnique({
+        where: { sessionId: data.sessionId },
+      })
 
-    const message = {
-      id: generateMessageId(),
-      isFromCustomer: true,
-      message: data.message,
-      timestamp: new Date(),
-    }
-
-    session.messages.push(message)
-    
-    // Broadcast to the session room (customer and any support agents)
-    io.to(data.sessionId).emit('message', message)
-
-    // Simulate support response (in production, this would be a real support agent)
-    setTimeout(() => {
-      const autoResponses = [
-        "Thanks for your message. Let me look into that for you.",
-        "I understand. Can you tell me a bit more about what you're looking for?",
-        "Great question! I'm happy to help with that.",
-        "I'll check on that right away. Is there anything else you'd like to know?",
-        "Thanks for your patience. I'm looking into this now.",
-      ]
-      
-      const response = {
-        id: generateMessageId(),
-        isFromCustomer: false,
-        message: autoResponses[Math.floor(Math.random() * autoResponses.length)],
-        timestamp: new Date(),
+      if (!session) {
+        socket.emit('error', { message: 'Session not found' })
+        return
       }
-      
-      session.messages.push(response)
-      io.to(data.sessionId).emit('message', response)
-    }, 1500)
+
+      const message = await db.supportMessage.create({
+        data: {
+          sessionId: session.id,
+          isFromCustomer: true,
+          message: data.message,
+        },
+      })
+
+      // Broadcast to the session room
+      io.to(data.sessionId).emit('message', {
+        id: message.id,
+        isFromCustomer: true,
+        message: message.message,
+        timestamp: message.createdAt,
+      })
+
+      // Auto-response (in production, route to real support agents)
+      setTimeout(async () => {
+        const autoResponses = [
+          "Thanks for your message. Let me look into that for you.",
+          "I understand. Can you tell me a bit more about what you're looking for?",
+          "Great question! I'm happy to help with that.",
+          "I'll check on that right away. Is there anything else you'd like to know?",
+          "Thanks for your patience. I'm looking into this now.",
+        ]
+
+        const response = await db.supportMessage.create({
+          data: {
+            sessionId: session.id,
+            isFromCustomer: false,
+            message: autoResponses[Math.floor(Math.random() * autoResponses.length)],
+          },
+        })
+
+        io.to(data.sessionId).emit('message', {
+          id: response.id,
+          isFromCustomer: false,
+          message: response.message,
+          timestamp: response.createdAt,
+        })
+      }, 1500)
+    } catch (error) {
+      console.error('Error sending message:', error)
+      socket.emit('error', { message: 'Failed to send message' })
+    }
   })
 
   // End session
-  socket.on('end_session', (data: { sessionId: string }) => {
-    socket.leave(data.sessionId)
-    socket.emit('session_ended', { sessionId: data.sessionId })
+  socket.on('end_session', async (data: { sessionId: string }) => {
+    try {
+      await db.supportChatSession.updateMany({
+        where: { sessionId: data.sessionId },
+        data: {
+          status: 'closed',
+          closedAt: new Date(),
+        },
+      })
+
+      socket.leave(data.sessionId)
+      socket.emit('session_ended', { sessionId: data.sessionId })
+    } catch (error) {
+      console.error('Error ending session:', error)
+    }
   })
 
   // Typing indicator
