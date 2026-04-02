@@ -9,7 +9,28 @@ import {
   ArrowLeft, Video, VideoOff, MessageCircle, X, Zap, Eye, Pin, Loader2, Copy
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { LiveKitRoom, useTracks, VideoTrack, RoomAudioRenderer } from '@livekit/components-react'
+import { Track } from 'livekit-client'
+import '@livekit/components-styles'
 import ClientWrapper from '@/components/layout/ClientWrapper'
+
+function HostVideo() {
+  const tracks = useTracks([Track.Source.Camera, Track.Source.ScreenShare])
+  const videoTrack = tracks.find(t => t.source === Track.Source.Camera || t.source === Track.Source.ScreenShare)
+
+  if (!videoTrack) {
+    return (
+      <div className="flex items-center justify-center h-full bg-black text-warm-gray">
+        <div className="text-center">
+          <Video className="w-12 h-12 text-warm-gray mx-auto mb-2" />
+          <p className="font-body text-sm">Camera connecting...</p>
+        </div>
+      </div>
+    )
+  }
+
+  return <VideoTrack trackRef={videoTrack} className="w-full h-full object-contain" />
+}
 
 interface Product {
   id: string
@@ -66,6 +87,10 @@ export default function GoLiveClient() {
   const [loading, setLoading] = useState(true)
   const [isLive, setIsLive] = useState(false)
   const [ending, setEnding] = useState(false)
+
+  // LiveKit state
+  const [livekitToken, setLivekitToken] = useState<string | null>(null)
+  const [livekitUrl, setLivekitUrl] = useState<string>('')
 
   // Offer form
   const [showOfferForm, setShowOfferForm] = useState(false)
@@ -146,6 +171,22 @@ export default function GoLiveClient() {
       if (res.ok) {
         setIsLive(true)
         toast.success('You are now live!')
+
+        // Fetch LiveKit host token
+        try {
+          const tokenRes = await fetch(`/api/streams/${streamId}/token`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ identity: `host-${stream?.host.id}`, role: 'host' }),
+          })
+          const tokenData = await tokenRes.json()
+          if (tokenData.token) {
+            setLivekitToken(tokenData.token)
+            setLivekitUrl(tokenData.wsUrl)
+          }
+        } catch (tokenErr) {
+          console.error('Failed to get LiveKit token:', tokenErr)
+        }
       } else {
         const error = await res.json()
         toast.error(error.error || 'Failed to go live')
@@ -339,15 +380,16 @@ export default function GoLiveClient() {
           <div className="flex-1 flex flex-col">
             {/* Preview Area */}
             <div className="flex-1 bg-black flex items-center justify-center">
-              {isLive ? (
+              {isLive && livekitToken ? (
+                <LiveKitRoom serverUrl={livekitUrl} token={livekitToken} connect={true}
+                  style={{ height: '100%', width: '100%' }}>
+                  <HostVideo />
+                  <RoomAudioRenderer />
+                </LiveKitRoom>
+              ) : isLive ? (
                 <div className="text-center">
-                  <div className="w-24 h-24 bg-terracotta/20 flex items-center justify-center mx-auto mb-4">
-                    <Video className="w-12 h-12 text-terracotta" />
-                  </div>
-                  <p className="font-body text-cream">Stream is live</p>
-                  <p className="font-body text-warm-gray text-sm mt-2">
-                    Viewing in preview mode
-                  </p>
+                  <Loader2 className="w-8 h-8 animate-spin text-warm-gray mx-auto mb-4" />
+                  <p className="font-body text-cream">Connecting to video...</p>
                 </div>
               ) : (
                 <div className="text-center max-w-md px-4">
@@ -356,7 +398,7 @@ export default function GoLiveClient() {
                     Ready to Go Live?
                   </h2>
                   <p className="font-body text-warm-gray text-sm mb-6">
-                    Click "Go Live" to start streaming. Your stream key is:
+                    Click &quot;Go Live&quot; to start streaming. Your stream key is:
                   </p>
                   <div className="flex items-center gap-2 bg-warm-gray/10 p-3">
                     <code className="flex-1 font-body text-cream text-sm truncate">
