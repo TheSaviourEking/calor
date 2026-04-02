@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useRef } from 'react'
-import { Heart, ShoppingBag, Scale, Video, X, Play } from 'lucide-react'
+import { useState, useRef, memo } from 'react'
+import { Heart, Scale, Video, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { useCartStore, useWishlistStore, useLocaleStore } from '@/stores'
 import { useComparison } from '@/components/comparison/ComparisonContext'
@@ -47,8 +47,8 @@ interface ProductCardProps {
   product: Product
 }
 
-export default function ProductCard({ product }: ProductCardProps) {
-  const [quantity, setQuantity] = useState(1)
+const ProductCard = memo(function ProductCard({ product }: ProductCardProps) {
+  const [_quantity, _setQuantity] = useState(1)
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
 
@@ -274,4 +274,6 @@ export default function ProductCard({ product }: ProductCardProps) {
       </Dialog>
     </div>
   )
-}
+})
+
+export default ProductCard

@@ -162,8 +162,38 @@ export default async function ProductPage({ params }: PageProps) {
     getReviews(product.id),
   ]);
 
+  const price = product.variants[0]?.price || 0
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    description: product.shortDescription || product.fullDescription?.substring(0, 300),
+    image: product.images.map(img => img.url),
+    sku: product.variants[0]?.sku,
+    brand: { '@type': 'Brand', name: 'CALOR' },
+    offers: {
+      '@type': 'Offer',
+      price: (price / 100).toFixed(2),
+      priceCurrency: 'USD',
+      availability: product.inventoryCount > 0
+        ? 'https://schema.org/InStock'
+        : 'https://schema.org/OutOfStock',
+    },
+    ...(reviewsData.summary.totalReviews > 0 && {
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: reviewsData.summary.averageRating.toFixed(1),
+        reviewCount: reviewsData.summary.totalReviews,
+      },
+    }),
+  }
+
   return (
     <ClientWrapper>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <ProductDetailClient
         product={serialise(product)}
         relatedProducts={serialise(relatedProducts)}
