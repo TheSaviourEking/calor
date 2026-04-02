@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import bcrypt from 'bcryptjs'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -108,7 +109,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         scheduledStart: scheduledStart ? new Date(scheduledStart) : undefined,
         scheduledEnd: scheduledEnd ? new Date(scheduledEnd) : undefined,
         isPrivate,
-        password: isPrivate ? password : null,
+        password: isPrivate && password ? await bcrypt.hash(password, 10) : isPrivate === false ? null : undefined,
         maxViewers,
         allowChat,
         allowQuestions,

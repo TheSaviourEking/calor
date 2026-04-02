@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { nanoid } from 'nanoid'
 import { randomBytes } from 'crypto'
+import bcrypt from 'bcryptjs'
+
+async function hashStreamPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, 10)
+}
 
 // GET /api/streams - List streams with filters
 export async function GET(request: NextRequest) {
@@ -135,7 +140,7 @@ export async function POST(request: NextRequest) {
         scheduledStart: new Date(scheduledStart),
         scheduledEnd: scheduledEnd ? new Date(scheduledEnd) : null,
         isPrivate: isPrivate || false,
-        password: isPrivate ? password : null,
+        password: isPrivate && password ? await hashStreamPassword(password) : null,
         maxViewers,
         allowChat: allowChat ?? true,
         allowQuestions: allowQuestions ?? true,

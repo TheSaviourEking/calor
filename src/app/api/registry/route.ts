@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getSession } from '@/lib/auth/session'
+import bcrypt from 'bcryptjs'
 
 // GET /api/registry - List user's registries
 export async function GET() {
@@ -112,7 +113,7 @@ export async function POST(request: Request) {
         primaryColor,
         coverImage,
         isPublic: isPublic ?? true,
-        password,
+        password: password ? await bcrypt.hash(password, 10) : null,
         allowGiftMessages: allowGiftMessages ?? true,
         allowPartialPurchases: allowPartialPurchases ?? true,
         allowThankYouNotes: allowThankYouNotes ?? true,
