@@ -1,8 +1,9 @@
 import { db } from '@/lib/db'
 import ClientWrapper from '@/components/layout/ClientWrapper'
 import BlogPageClient from './BlogPageClient'
+import { serialise } from '@/lib/serialise'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 300 // Revalidate every 5 minutes
 
 async function getBlogData() {
   const [posts, categories, featuredPost] = await Promise.all([
@@ -39,10 +40,10 @@ export default async function BlogPage() {
   
   return (
     <ClientWrapper>
-      <BlogPageClient 
-        initialPosts={posts} 
-        categories={categories}
-        featuredPost={featuredPost}
+      <BlogPageClient
+        initialPosts={serialise(posts) as any}
+        categories={serialise(categories) as any}
+        featuredPost={serialise(featuredPost) as any}
       />
     </ClientWrapper>
   )

@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { Cormorant_Garamond, DM_Sans } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
-
-export const dynamic = "force-dynamic";
+import CookieConsent from "@/components/layout/CookieConsent";
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
@@ -67,11 +66,33 @@ export default function RootLayout({
 }>) {
   return (
     <html data-scroll-behavior="smooth" lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'Organization',
+              name: 'CALOR',
+              url: 'https://calorco.com',
+              logo: 'https://calorco.com/android-chrome-512x512.png',
+              description: 'An elevated destination for intimacy, wellness, and pleasure.',
+              sameAs: [],
+              contactPoint: {
+                '@type': 'ContactPoint',
+                contactType: 'customer service',
+                url: 'https://calorco.com/support',
+              },
+            }),
+          }}
+        />
+      </head>
       <body
         className={`${cormorant.variable} ${dmSans.variable} antialiased bg-warm-white text-charcoal min-h-screen flex flex-col`}
       >
         {children}
         <Toaster position="bottom-center" />
+        <CookieConsent />
       </body>
     </html>
   );
