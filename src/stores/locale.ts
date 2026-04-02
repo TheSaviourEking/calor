@@ -42,16 +42,19 @@ export const EXCHANGE_RATES: Record<Currency, number> = {
 
 interface LocaleStore {
   locale: Locale
+  exchangeRates: Record<Currency, number>
   setLocale: (locale: Locale) => void
   getCurrency: () => Currency
   getSymbol: () => string
   formatPrice: (cents: number) => string
+  fetchRates: () => Promise<void>
 }
 
 export const useLocaleStore = create<LocaleStore>()(
   persist(
     (set, get) => ({
       locale: 'US',
+      exchangeRates: { ...EXCHANGE_RATES },
 
       setLocale: (locale) => set({ locale }),
 
@@ -61,7 +64,7 @@ export const useLocaleStore = create<LocaleStore>()(
 
       formatPrice: (cents) => {
         const config = LOCALE_CONFIG[get().locale]
-        const rate = EXCHANGE_RATES[config.currency]
+        const rate = get().exchangeRates[config.currency] ?? EXCHANGE_RATES[config.currency]
 
         // Convert USD cents to target currency, accounting for decimal places
         const amount = (cents / 100) * rate
@@ -72,6 +75,19 @@ export const useLocaleStore = create<LocaleStore>()(
         }
 
         return `${config.symbol}${amount.toFixed(2)}`
+      },
+
+      fetchRates: async () => {
+        try {
+          const res = await fetch('/api/exchange-rates')
+          if (res.ok) {
+            const { rates } = await res.json()
+            // Update the rates in the store
+            set({ exchangeRates: rates })
+          }
+        } catch {
+          // Keep fallback rates
+        }
       },
     }),
     { name: 'calor-locale' }
