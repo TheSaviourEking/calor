@@ -13,23 +13,33 @@ import PaymentTrust from '@/components/home/PaymentTrust'
 import Newsletter from '@/components/home/Newsletter'
 import ClientWrapper from '@/components/layout/ClientWrapper'
 
+function SectionSkeleton() {
+  return <div className="w-full h-64 bg-sand/30 animate-pulse" />
+}
+
 export default function Home() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
-      <ClientWrapper>
-        <Hero />
-        <Marquee />
+    <ClientWrapper>
+      <Hero />
+      <Marquee />
+      <Suspense fallback={<SectionSkeleton />}>
         <CategoryGrid />
+      </Suspense>
+      <Suspense fallback={<SectionSkeleton />}>
         <FeaturedProducts />
-        <FeaturesShowcase />
-        <VIPTeaser />
-        <SearchSection />
-        <Philosophy />
+      </Suspense>
+      <FeaturesShowcase />
+      <VIPTeaser />
+      <SearchSection />
+      <Philosophy />
+      <Suspense fallback={<SectionSkeleton />}>
         <GiftSets />
+      </Suspense>
+      <Suspense fallback={<SectionSkeleton />}>
         <DigitalProducts />
-        <PaymentTrust />
-        <Newsletter />
-      </ClientWrapper>
-    </Suspense>
+      </Suspense>
+      <PaymentTrust />
+      <Newsletter />
+    </ClientWrapper>
   )
 }
