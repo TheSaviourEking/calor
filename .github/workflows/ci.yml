@@ -62,3 +62,27 @@ jobs:
 
       - name: Build
         run: bun run build
+
+  deploy:
+    needs: check
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy web app
+        run: flyctl deploy --app calor-web --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      - name: Deploy support chat service
+        run: flyctl deploy --app calor-support-chat --config mini-services/support-chat/fly.toml --dockerfile mini-services/support-chat/Dockerfile --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      - name: Deploy live stream service
+        run: flyctl deploy --app calor-live-stream --config mini-services/live-stream/fly.toml --dockerfile mini-services/live-stream/Dockerfile --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
