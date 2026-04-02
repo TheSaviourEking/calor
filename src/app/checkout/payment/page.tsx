@@ -16,7 +16,6 @@ import {
   Bitcoin,
   Check,
   Loader2,
-  ExternalLink,
 } from "lucide-react";
 import { useCartStore, useLocaleStore } from "@/stores";
 import Link from "next/link";
@@ -161,15 +160,20 @@ export default function PaymentPage() {
   const wrappingCost = checkoutData?.isGift ? 0 : 0; // Gift wrapping cost is handled in checkout
   const grandTotal = total + shipping + wrappingCost;
 
-  // Load checkout data from sessionStorage
+  // Load checkout data from server-side session to avoid PII in client storage
   useEffect(() => {
-    const stored = sessionStorage.getItem("calor_checkout");
-    if (stored) {
-      try {
-        setCheckoutData(JSON.parse(stored));
-      } catch {
-        router.push("/checkout");
-      }
+    const sid = sessionStorage.getItem("calor_checkout_sid");
+    if (sid) {
+      fetch(`/api/checkout/session?id=${sid}`)
+        .then((res) => res.json())
+        .then((result) => {
+          if (result.data) {
+            setCheckoutData(result.data as CheckoutData);
+          } else {
+            router.push("/checkout");
+          }
+        })
+        .catch(() => router.push("/checkout"));
     } else {
       router.push("/checkout");
     }
@@ -330,7 +334,7 @@ export default function PaymentPage() {
   // Handle successful payment
   const handlePaymentSuccess = () => {
     clearCart();
-    sessionStorage.removeItem("calor_checkout");
+    sessionStorage.removeItem("calor_checkout_sid");
     router.push(`/checkout/confirmation?order_id=${orderId}`);
   };
 
