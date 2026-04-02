@@ -92,7 +92,7 @@ export default function CheckoutClient({
   const [giftCardLoading, setGiftCardLoading] = useState(false);
 
   // Loyalty points
-  const [pointsLoading, setPointsLoading] = useState(false);
+  const [_pointsLoading, _setPointsLoading] = useState(false);
   const [pointsToUse, setPointsToUse] = useState<number>(0);
 
   // Initialize loyalty points from server props
@@ -110,7 +110,7 @@ export default function CheckoutClient({
     promoDiscount,
     giftCardDiscount,
     pointsDiscount,
-    total: discountedTotal,
+    total: _discountedTotal,
   } = getTotalDiscount(subtotal, shipping + wrappingCost);
   const grandTotal = Math.max(
     0,
@@ -208,10 +208,9 @@ export default function CheckoutClient({
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Store checkout data in sessionStorage for payment page
     const checkoutData = {
       ...formData,
       isGift,
@@ -227,9 +226,20 @@ export default function CheckoutClient({
       loyaltyPointsUsed: loyaltyPoints?.pointsUsed || 0,
       loyaltyDiscountCents: pointsDiscount,
     };
-    sessionStorage.setItem("calor_checkout", JSON.stringify(checkoutData));
 
-    router.push("/checkout/payment");
+    // Store checkout data server-side to avoid PII in client storage
+    const res = await fetch('/api/checkout/session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(checkoutData),
+    })
+    const { sessionId } = await res.json()
+    if (!sessionId) {
+      toast.error('Failed to save checkout data')
+      return
+    }
+    sessionStorage.setItem("calor_checkout_sid", sessionId)
+    router.push("/checkout/payment")
   };
 
   if (items.length === 0) {
