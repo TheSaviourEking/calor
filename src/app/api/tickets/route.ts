@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getSession } from '@/lib/auth'
+import { ticketCreateSchema } from '@/lib/validations/tickets'
 
 // Get support tickets (for both customers and admins)
 export async function GET(request: NextRequest) {
@@ -45,7 +46,7 @@ export async function GET(request: NextRequest) {
             take: 1,
             select: { createdAt: true, senderType: true }
           },
-          _count: { messages: true }
+          _count: { select: { messages: true } }
         },
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * limit,
@@ -74,15 +75,19 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getSession()
     const body = await request.json()
-    
-    const { subject, categoryId, message, orderId, productId, priority, guestEmail, guestName } = body
 
-    if (!subject || !message) {
-      return NextResponse.json({ error: 'Subject and message are required' }, { status: 400 })
+    const parsed = ticketCreateSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: parsed.error.flatten().fieldErrors },
+        { status: 400 }
+      )
     }
 
+    const { subject, categoryId, message, orderId, productId, priority, guestEmail, guestName } = parsed.data
+
     // Get category for auto-assignment
-    let category = null
+    let category: Awaited<ReturnType<typeof db.supportTicketCategory.findUnique>> = null
     if (categoryId) {
       category = await db.supportTicketCategory.findUnique({
         where: { id: categoryId },

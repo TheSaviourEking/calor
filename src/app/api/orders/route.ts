@@ -2,10 +2,20 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getSession } from '@/lib/auth'
 import { sendOrderConfirmation } from '@/lib/email'
+import { orderCreateSchema } from '@/lib/validations/orders'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
+    const parsed = orderCreateSchema.safeParse(body)
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: parsed.error.flatten().fieldErrors },
+        { status: 400 }
+      )
+    }
+
     const {
       items,
       shippingAddress,
@@ -21,12 +31,7 @@ export async function POST(request: NextRequest) {
       promoCodeId,
       giftCardId,
       giftCardAppliedCents,
-    } = body
-
-    // Validate items
-    if (!items || items.length === 0) {
-      return NextResponse.json({ error: 'No items in order' }, { status: 400 })
-    }
+    } = parsed.data
 
     // Get customer from session if not guest
     let customerId: string | null = null
@@ -45,11 +50,6 @@ export async function POST(request: NextRequest) {
           customerName = `${customer.firstName} ${customer.lastName}`
         }
       }
-    }
-
-    // Validate guest has email
-    if (isGuest && !guestEmail) {
-      return NextResponse.json({ error: 'Guest email required' }, { status: 400 })
     }
 
     // Validate and get product details
@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
     if (!address) {
       address = await db.address.create({
         data: {
-          customerId: customerId || undefined,
+          customerId: customerId!,
           line1: shippingAddress.line1,
           line2: shippingAddress.line2 || null,
           city: shippingAddress.city,
@@ -144,7 +144,7 @@ export async function POST(request: NextRequest) {
 
     // Apply promo code discount
     let promoDiscountCents = 0
-    let promotion = null
+    let promotion: Awaited<ReturnType<typeof db.promotion.findUnique>> = null
     if (promoCodeId) {
       promotion = await db.promotion.findUnique({ where: { id: promoCodeId } })
       if (promotion && promotion.isActive) {
@@ -163,11 +163,11 @@ export async function POST(request: NextRequest) {
 
     // Apply gift card discount
     let giftCardDiscountCents = 0
-    let giftCard = null
-    if (giftCardId && giftCardAppliedCents > 0) {
+    let giftCard: Awaited<ReturnType<typeof db.giftCard.findUnique>> = null
+    if (giftCardId && (giftCardAppliedCents ?? 0) > 0) {
       giftCard = await db.giftCard.findUnique({ where: { id: giftCardId } })
-      if (giftCard && giftCard.balanceCents >= giftCardAppliedCents) {
-        giftCardDiscountCents = giftCardAppliedCents
+      if (giftCard && giftCard.balanceCents >= (giftCardAppliedCents ?? 0)) {
+        giftCardDiscountCents = giftCardAppliedCents ?? 0
       }
     }
 
