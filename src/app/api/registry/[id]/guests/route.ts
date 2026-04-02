@@ -60,7 +60,7 @@ export async function POST(request: Request, { params }: RouteParams) {
     // Support bulk add
     const guestsToAdd = Array.isArray(guests) ? guests : [body]
 
-    const created = []
+    const created: unknown[] = []
     for (const guest of guestsToAdd) {
       try {
         const newGuest = await db.registryGuest.create({

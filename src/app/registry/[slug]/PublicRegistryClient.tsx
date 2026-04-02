@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
-  Gift, Calendar, MapPin, Lock, ShoppingBag, Heart, Users,
-  Package, ChevronRight, Share2, Copy, Check
+  Gift, Calendar, MapPin, Lock,
+  Package, Copy, Check
 } from 'lucide-react'
 import { toast } from 'sonner'
 import ClientWrapper from '@/components/layout/ClientWrapper'
@@ -92,7 +92,7 @@ export default function PublicRegistryClient({
   initialRequiresPassword = false
 }: PublicRegistryClientProps) {
   const params = useParams()
-  const router = useRouter()
+  const _router = useRouter()
   const slug = params.slug as string
 
   const [registry, setRegistry] = useState<PublicRegistry | null>(initialRegistry)

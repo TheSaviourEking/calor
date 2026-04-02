@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { Prisma } from '@prisma/client'
 import { db } from '@/lib/db'
 import { getSession } from '@/lib/auth/session'
 
@@ -80,7 +81,7 @@ export async function POST(request: Request, { params }: RouteParams) {
     } = body
 
     // If product ID provided, get product info
-    let itemData: Record<string, unknown> = {
+    let itemData: Omit<Prisma.RegistryItemUncheckedCreateInput, 'sortOrder'> = {
       registryId: id,
       name,
       description,

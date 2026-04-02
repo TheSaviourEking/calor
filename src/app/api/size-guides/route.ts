@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     })
 
     // If productId provided, get size recommendation
-    let sizeRecommendation = null
+    let sizeRecommendation: Awaited<ReturnType<typeof db.sizeRecommendation.findUnique>> = null
     if (productId) {
       sizeRecommendation = await db.sizeRecommendation.findUnique({
         where: { productId },

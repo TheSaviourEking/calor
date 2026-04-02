@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Gift, Users, Copy, Check, Share2, ExternalLink, Loader2 } from 'lucide-react'
+import { useState } from 'react'
+import { Gift, Users, Copy, Check, Share2, ExternalLink } from 'lucide-react'
 import { toast } from 'sonner'
 
 export interface ReferralCode {

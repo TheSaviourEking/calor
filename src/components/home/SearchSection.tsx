@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Search, Sparkles, TrendingUp, Clock, ArrowRight } from 'lucide-react'
+import { Search, Sparkles, TrendingUp, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 
 interface SearchSectionProps {

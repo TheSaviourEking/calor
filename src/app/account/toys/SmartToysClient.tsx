@@ -1,34 +1,23 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
-import { format } from "date-fns";
 import {
   Gamepad2,
   Plus,
   Play,
   Pause,
-  Settings,
   Trash2,
   Heart,
   Zap,
   Waves,
-  Music,
   Timer,
   Users,
-  ChevronRight,
   X,
-  Loader2,
   Power,
-  Volume2,
-  VolumeX,
-  Share2,
-  Edit3,
   Flame,
-  Trophy,
   Clock,
-  TrendingUp,
   Bluetooth,
 } from "lucide-react";
 

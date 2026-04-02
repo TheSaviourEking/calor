@@ -45,9 +45,9 @@ export async function POST(request: NextRequest) {
         const result = await sendGiftCardEmail({
           recipientEmail: giftCard.recipientEmail,
           recipientName: giftCard.recipientName || 'Valued Customer',
-          senderName: giftCard.senderName || giftCard.purchaser
+          senderName: giftCard.senderName || (giftCard.purchaser
             ? `${giftCard.purchaser.firstName} ${giftCard.purchaser.lastName}`
-            : 'A Friend',
+            : 'A Friend'),
           code: giftCard.code,
           value: giftCard.initialValueCents,
           message: giftCard.message || undefined,

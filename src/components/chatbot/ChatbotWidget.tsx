@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import {
-  MessageCircle, X, Send, Loader2, Package, RotateCcw,
+  MessageCircle, X, Send, Package, RotateCcw,
   ShoppingBag, HelpCircle, Sparkles, ChevronRight, Heart,
   Truck, CreditCard, User, Shield, ArrowRight
 } from 'lucide-react'
@@ -88,7 +88,7 @@ export default function ChatbotWidget() {
       // Focus input after open
       setTimeout(() => inputRef.current?.focus(), 300)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [isOpen, sessionId])
 
   useEffect(() => {

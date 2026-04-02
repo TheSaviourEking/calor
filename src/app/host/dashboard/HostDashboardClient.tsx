@@ -1,10 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import {
-  Video, Plus, Calendar, Users, DollarSign, TrendingUp,
-  Clock, Eye, MessageCircle, ShoppingBag, Settings, ChevronRight
+  Video, Plus, Calendar, Users, DollarSign, TrendingUp, Eye, Settings, ChevronRight
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -46,8 +45,8 @@ export default function HostDashboardClient({
   initialStreams = []
 }: HostDashboardClientProps) {
   const [hostProfile, setHostProfile] = useState<HostProfile | null>(initialHostProfile)
-  const [streams, setStreams] = useState<Stream[]>(initialStreams)
-  const [loading, setLoading] = useState(false)
+  const [streams, _setStreams] = useState<Stream[]>(initialStreams)
+  const [loading, _setLoading] = useState(false)
   const [creatingProfile, setCreatingProfile] = useState(false)
   const [newDisplayName, setNewDisplayName] = useState('')
 

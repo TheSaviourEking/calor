@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Shield, Key, Bell, Eye, Lock, Smartphone } from "lucide-react";
+import { Key, Bell, Eye, Lock, Smartphone } from "lucide-react";
 import Link from "next/link";
 
 export default function SecurityPage() {

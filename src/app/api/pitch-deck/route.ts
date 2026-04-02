@@ -350,7 +350,7 @@ function addSlide(doc: jsPDF, slide: SlideContent, pageNum: number, totalPages: 
       const stats = slide.content.stats as Array<{ value: string; label: string }>
       stats.forEach((stat, i) => {
         const y = startY + 40 + i * 25
-        doc.setFillColor(...TERRACOTTA.map(c => Math.floor(c * 0.3)))
+        doc.setFillColor(...(TERRACOTTA.map(c => Math.floor(c * 0.3)) as [number, number, number]))
         doc.rect(margin, y, pageWidth - margin * 2, 20, 'F')
         setTextColor(doc, TERRACOTTA)
         doc.setFontSize(18)
@@ -458,7 +458,7 @@ function addSlide(doc: jsPDF, slide: SlideContent, pageNum: number, totalPages: 
       })
 
       const differentiators = slide.content.differentiators as string[]
-      doc.setFillColor(...TERRACOTTA.map(c => Math.floor(c * 0.2)))
+      doc.setFillColor(...(TERRACOTTA.map(c => Math.floor(c * 0.2)) as [number, number, number]))
       doc.rect(margin, startY + 95, pageWidth - margin * 2, 45, 'F')
       setTextColor(doc, CREAM)
       doc.setFontSize(11)
@@ -545,11 +545,11 @@ function addSlide(doc: jsPDF, slide: SlideContent, pageNum: number, totalPages: 
         
         // Status color
         if (phase.status === 'Complete') {
-          setTextColor(doc, 100, 200, 100)
+          setTextColor(doc, [100, 200, 100])
         } else if (phase.status === 'In Progress') {
-          setTextColor(doc, ...TERRACOTTA)
+          setTextColor(doc, TERRACOTTA)
         } else {
-          setTextColor(doc, ...WARM_GRAY)
+          setTextColor(doc, WARM_GRAY)
         }
         doc.setFontSize(8)
         doc.text(phase.status, margin, y + 12)
@@ -620,7 +620,7 @@ function addSlide(doc: jsPDF, slide: SlideContent, pageNum: number, totalPages: 
   }
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   const doc = new jsPDF({
     orientation: 'landscape',
     unit: 'mm',

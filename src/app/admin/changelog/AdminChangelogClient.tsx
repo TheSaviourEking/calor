@@ -3,10 +3,10 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { 
-  Sparkles, Gift, Heart, Camera, Bot, Crown, Shield, 
-  Package, Users, BarChart3, Video, Gamepad2, Box,
-  ChevronDown, ChevronUp, Calendar, Star, Zap, Globe,
-  Database, Server, Code, FileText
+  Sparkles, Gift, Heart, Bot, Shield, 
+  Package, BarChart3, Video, Gamepad2, Box,
+  ChevronDown, ChevronUp, Star, Zap,
+  Database, Server, Code
 } from 'lucide-react'
 
 interface ChangelogEntry {

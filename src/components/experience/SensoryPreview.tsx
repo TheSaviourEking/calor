@@ -273,7 +273,7 @@ export default function SensoryPreview({ productId, productName }: SensoryPrevie
                   <div className="flex items-center gap-2 mt-1">
                     <Volume2 className="w-4 h-4 text-warm-gray" />
                     <div className="flex gap-0.5">
-                      {['silent', 'quiet', 'moderate', 'loud'].map((level, i) => (
+                      {['silent', 'quiet', 'moderate', 'loud'].map((level, _i) => (
                         <div
                           key={level}
                           className={`w-2 h-3 ${

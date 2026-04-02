@@ -13,13 +13,9 @@ export async function GET(request: NextRequest) {
     const rewards = await db.pointsReward.findMany({ take: 50,
       where: {
         isActive: true,
-        OR: [
-          { availableFrom: null },
-          { availableFrom: { lte: now } },
-        ],
-        OR: [
-          { availableUntil: null },
-          { availableUntil: { gte: now } },
+        AND: [
+          { OR: [{ availableFrom: null }, { availableFrom: { lte: now } }] },
+          { OR: [{ availableUntil: null }, { availableUntil: { gte: now } }] },
         ],
         ...(featured === 'true' && { featured: true }),
       },
@@ -33,7 +29,7 @@ export async function GET(request: NextRequest) {
     const rewardsWithAvailability = await Promise.all(
       rewards.map(async (reward) => {
         let available = true
-        let unavailableReason = null
+        let unavailableReason: string | null = null
 
         // Check quantity
         if (reward.quantityAvailable !== null && reward.quantityClaimed >= reward.quantityAvailable) {

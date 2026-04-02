@@ -13,7 +13,7 @@ const presetAmounts = [
 ]
 
 export default function GiftCardsClient() {
-  const [step, setStep] = useState(1)
+  const [_step, setStep] = useState(1)
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null)
   const [customAmount, setCustomAmount] = useState('')
   const [formData, setFormData] = useState({

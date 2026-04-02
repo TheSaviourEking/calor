@@ -11,7 +11,7 @@ export async function POST(
     const session = await getSession()
 
     // Get or create session ID for tracking
-    let sessionId = request.headers.get('x-session-id')
+    const sessionId = request.headers.get('x-session-id')
     
     // Record the view
     await db.productView.create({

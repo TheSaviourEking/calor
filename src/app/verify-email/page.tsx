@@ -108,7 +108,7 @@ function VerifyEmailContent({
   )
 }
 
-function VerifyEmailPageInner({ searchParams }: { searchParams: Promise<{ success?: string; error?: string }> }) {
+function _VerifyEmailPageInner({ searchParams }: { searchParams: Promise<{ success?: string; error?: string }> }) {
   // Use React's use() to unwrap the promise
   return searchParams.then((params) => {
     const isSuccess = params.success === 'true'

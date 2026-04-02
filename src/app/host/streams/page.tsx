@@ -2,7 +2,7 @@ import { db } from '@/lib/db'
 import { getSession } from '@/lib/auth/session'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Video, Calendar, Clock, Edit } from 'lucide-react'
+import { ArrowLeft, Calendar, Clock } from 'lucide-react'
 
 export default async function HostStreamsPage() {
     const session = await getSession()

@@ -322,7 +322,7 @@ async function searchProducts(query: string, limit = 3) {
 }
 
 // Fetch a single product with full context
-async function getProductContext(productIdentifier: string) {
+async function _getProductContext(productIdentifier: string) {
   try {
     return await db.product.findFirst({
       where: {
@@ -420,7 +420,7 @@ async function generateAIResponse(
   message: string,
   conversation: { id: string; sessionId: string; customerId: string | null; intent?: string | null },
   customerId: string | null,
-  conversationContext: string
+  _conversationContext: string
 ): Promise<{
   content: string
   intent: string | null
@@ -676,7 +676,7 @@ async function generateIntentResponse(
 }> {
   let content = ''
   let suggestedActions: string[] | null = null
-  let relatedProducts: string[] | null = null
+  const relatedProducts: string[] | null = null
   const needsEscalation = false
 
   switch (intent) {

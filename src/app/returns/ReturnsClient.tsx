@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { format } from 'date-fns'
@@ -71,10 +71,10 @@ function ReturnsContent({
   initialReturns: ReturnRequest[]
 }) {
   const searchParams = useSearchParams()
-  const orderId = searchParams.get('orderId')
+  const _orderId = searchParams.get('orderId')
 
-  const [orders, setOrders] = useState<Order[]>(initialOrders)
-  const [returns, setReturns] = useState<ReturnRequest[]>(initialReturns)
+  const [orders, _setOrders] = useState<Order[]>(initialOrders)
+  const [returns, _setReturns] = useState<ReturnRequest[]>(initialReturns)
   const [step, setStep] = useState<'select' | 'form' | 'success'>('select')
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [submitting, setSubmitting] = useState(false)

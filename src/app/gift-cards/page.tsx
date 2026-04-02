@@ -1,4 +1,3 @@
-import { db } from '@/lib/db'
 import ClientWrapper from '@/components/layout/ClientWrapper'
 import GiftCardsClient from './GiftCardsClient'
 

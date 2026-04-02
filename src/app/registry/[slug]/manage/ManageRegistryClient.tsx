@@ -1,12 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import {
-  Gift, Plus, Settings, Users, Calendar, Package, Eye,
-  Trash2, Edit3, ChevronRight, Copy, Check, ExternalLink,
-  Mail, Send, X, Search, GripVertical
+import { Plus, Users, Calendar, Package,
+  Trash2, ChevronRight, Copy, Check, ExternalLink, X
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -83,7 +81,7 @@ interface Registry {
   }
 }
 
-const priorityOptions = [
+const _priorityOptions = [
   { value: 'must_have', label: 'Must Have' },
   { value: 'high', label: 'High' },
   { value: 'medium', label: 'Medium' },

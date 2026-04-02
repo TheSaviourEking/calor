@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Image from 'next/image'
-import { X, Plus, Minus, Check, ArrowRight, Trash2 } from 'lucide-react'
+import { X, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 
 interface Product {
@@ -24,7 +24,7 @@ export default function ProductComparison({ products, onClose }: ProductComparis
   const [comparisonProducts, setComparisonProducts] = useState<Product[]>(products)
 
   // Features to compare
-  const features = [
+  const _features = [
     { key: 'price', label: 'Price' },
     { key: 'category', label: 'Category' },
     { key: 'description', label: 'Description' },

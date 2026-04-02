@@ -3,7 +3,7 @@ import { db } from '@/lib/db'
 import { getSession } from '@/lib/auth/session'
 
 // GET /api/checkout/loyalty-points - Get customer's available points for checkout
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const session = await getSession()
     if (!session) {

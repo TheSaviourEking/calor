@@ -1,6 +1,5 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { Gift, Star, TrendingUp, Clock, Award } from 'lucide-react'
 import Link from 'next/link'
 

@@ -80,7 +80,7 @@ export async function GET(
     }
 
     // Similar products from same category
-    let similarProducts = await db.product.findMany({ /* take: handled */
+    const similarProducts = await db.product.findMany({ /* take: handled */
       where: {
         categoryId: product.categoryId,
         id: { not: productId },

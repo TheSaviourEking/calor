@@ -7,7 +7,7 @@ import { toast } from 'sonner'
 import ClientWrapper from '@/components/layout/ClientWrapper'
 
 export default function ForgotPasswordPage() {
-  const router = useRouter()
+  const _router = useRouter()
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)

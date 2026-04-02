@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { sendAbandonedCartEmail } from '@/lib/email'
 
 // Track abandoned carts - called when user leaves checkout without completing
 export async function POST(request: NextRequest) {

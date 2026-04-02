@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Clock, User, ArrowRight, Search, Tag } from 'lucide-react'
+import { Clock, User, Search, Tag } from 'lucide-react'
 
 interface BlogPost {
   id: string
@@ -43,7 +43,7 @@ export default function BlogPageClient({
   categories, 
   featuredPost 
 }: BlogPageClientProps) {
-  const [posts, setPosts] = useState(initialPosts)
+  const [posts, _setPosts] = useState(initialPosts)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -55,7 +55,7 @@ export default function BlogPageClient({
     return matchesCategory && matchesSearch
   })
 
-  const formatDate = (dateStr: string) => {
+  const _formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',

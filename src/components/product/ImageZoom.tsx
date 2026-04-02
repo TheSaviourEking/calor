@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback } from 'react'
-import { motion, useMotionValue, useTransform } from 'motion/react'
+import { motion, useMotionValue, useTransform } from 'framer-motion'
 
 interface ImageZoomProps {
   src: string
@@ -11,15 +11,15 @@ interface ImageZoomProps {
 
 export default function ImageZoom({ src, alt, className = '' }: ImageZoomProps) {
   const [isZoomed, setIsZoomed] = useState(false)
-  const [isPinching, setIsPinching] = useState(false)
+  const [_isPinching, setIsPinching] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
 
   const x = useMotionValue(0)
   const y = useMotionValue(0)
 
-  const scale = useTransform(
+  const _scale = useTransform(
     [x, y],
-    ([latestX, latestY]: number[]) => (isZoomed ? 2 : 1)
+    ([_latestX, _latestY]: number[]) => (isZoomed ? 2 : 1)
   )
 
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {

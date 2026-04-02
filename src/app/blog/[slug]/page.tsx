@@ -1,5 +1,4 @@
 import { db } from '@/lib/db'
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
 interface BlogPost {

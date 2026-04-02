@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ results: [] })
     }
 
-    const results = []
+    const results: any[] = []
 
     for (const item of items) {
       const product = await db.product.findUnique({

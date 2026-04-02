@@ -54,6 +54,9 @@ export default async function VIPPage() {
   // Get all tiers to calculate progress to next level
   const allTiers = await db.vIPTier.findMany({
     where: { isActive: true },
+    include: {
+      benefits: { where: { isActive: true }, orderBy: { sortOrder: 'asc' } },
+    },
     orderBy: { level: 'asc' },
   })
 

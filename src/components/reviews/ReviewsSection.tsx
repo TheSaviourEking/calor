@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Star, ThumbsUp, ThumbsDown, Check, ChevronDown, ChevronUp, PenLine } from 'lucide-react'
 
 interface Review {
@@ -85,8 +85,8 @@ export default function ReviewsSection({
   initialReviewSummary = null
 }: ReviewsSectionProps) {
   const [reviews, setReviews] = useState<Review[]>(initialReviews)
-  const [summary, setSummary] = useState<ReviewSummary | null>(initialReviewSummary)
-  const [loading, setLoading] = useState(false)
+  const [summary, _setSummary] = useState<ReviewSummary | null>(initialReviewSummary)
+  const [loading, _setLoading] = useState(false)
   const [showForm, setShowForm] = useState(false)
   const [expandedReviews, setExpandedReviews] = useState<Set<string>>(new Set())
   const [voting, setVoting] = useState<string | null>(null)

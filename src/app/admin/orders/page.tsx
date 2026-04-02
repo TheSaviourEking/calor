@@ -1,5 +1,6 @@
 import { db } from '@/lib/db'
 import AdminOrdersClient from './AdminOrdersClient'
+import { serialise } from '@/lib/serialise'
 
 async function getOrdersWithDetails() {
   const orders = await db.order.findMany({
@@ -33,5 +34,5 @@ async function getOrdersWithDetails() {
 export default async function AdminOrdersPage() {
   const orders = await getOrdersWithDetails()
   
-  return <AdminOrdersClient initialOrders={orders} />
+  return <AdminOrdersClient initialOrders={serialise(orders) as any} />
 }

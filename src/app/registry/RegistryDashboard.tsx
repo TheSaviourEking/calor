@@ -4,8 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
-  Gift, Plus, Calendar, Users, Package, Eye, Copy, Check,
-  Settings, ExternalLink, ChevronRight, Sparkles, Heart
+  Gift, Plus, Calendar, Users, Package, Eye, Copy, Check, ExternalLink, ChevronRight, Sparkles, Heart
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -55,7 +54,7 @@ const statusStyles: Record<string, string> = {
   archived: 'bg-mid-gray/20 text-warm-gray',
 }
 
-const themeColors: Record<string, string> = {
+const _themeColors: Record<string, string> = {
   classic: 'terracotta',
   romantic: 'blush',
   modern: 'charcoal',
@@ -104,7 +103,7 @@ export default function RegistryDashboard() {
     })
   }
 
-  const formatPrice = (cents: number) => `$${(cents / 100).toFixed(0)}`
+  const _formatPrice = (cents: number) => `$${(cents / 100).toFixed(0)}`
 
   if (loading) {
     return (

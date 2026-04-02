@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { 
   Mail, 
-  Send, 
   CheckCircle, 
   XCircle, 
   AlertCircle,

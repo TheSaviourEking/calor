@@ -40,7 +40,7 @@ const iconComponents: Record<string, React.ComponentType<{ className?: string; s
   pen: Pen,
 }
 
-const unitLabels = {
+const _unitLabels = {
   length: 'L',
   width: 'W', 
   height: 'H',

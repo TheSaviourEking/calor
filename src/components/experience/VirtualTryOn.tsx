@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback } from 'react'
 import Image from 'next/image'
-import { Camera, RotateCcw, Download, Share2, Check, X, Loader2, Maximize2, Move, Sparkles } from 'lucide-react'
+import { Camera, RotateCcw, Download, Share2, Check, X, Loader2, Sparkles } from 'lucide-react'
 
 interface VirtualTryOnProps {
   product?: {

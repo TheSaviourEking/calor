@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { format } from 'date-fns'
 import { 
-  Mail, Send, Users, BarChart3, Plus, ArrowLeft, Loader2, 
-  Copy, Trash2, Eye, Calendar, Clock
+  Mail, Send, Users, Plus, ArrowLeft, Loader2, 
+  Copy, Trash2, Eye, Calendar
 } from 'lucide-react'
 import { toast } from 'sonner'
 

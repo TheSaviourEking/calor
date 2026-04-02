@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Heart, Share2, Copy, Check, ShoppingBag, ExternalLink } from 'lucide-react'
+import { Heart, Copy, Check, ShoppingBag, ExternalLink } from 'lucide-react'
 import ClientWrapper from '@/components/layout/ClientWrapper'
 import { useCartStore, useWishlistStore, useLocaleStore } from '@/stores'
 import { toast } from 'sonner'

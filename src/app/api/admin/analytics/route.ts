@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const period = searchParams.get('period') || '30d'
     const startDate = searchParams.get('startDate')
-    const endDate = searchParams.get('endDate')
+    const _endDate = searchParams.get('endDate')
 
     // Calculate date range
     let dateFilter: Date

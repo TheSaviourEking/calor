@@ -3,11 +3,11 @@
 import Link from 'next/link'
 import ClientWrapper from '@/components/layout/ClientWrapper'
 import {
-  Sparkles, Gift, Heart, Camera, Crown, Shield,
+  Sparkles, Gift, Heart, Crown, Shield,
   Package, Users, Video, Focus,
-  Star, Radio, Calendar, Target, MessageSquare,
+  Star, Calendar, Target,
   ChevronRight, HeartHandshake,
-  Activity, Zap, User, Link2
+  Activity, Zap, Link2
 } from 'lucide-react'
 
 const featureCategories = [

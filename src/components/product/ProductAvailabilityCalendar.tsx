@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Calendar, Clock, Bell, Check } from 'lucide-react'
+import { useState } from 'react'
+import { Calendar, Bell, Check } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface AvailabilityCalendarProps {
@@ -15,7 +15,7 @@ export default function ProductAvailabilityCalendar({
   productName,
   isInStock,
 }: AvailabilityCalendarProps) {
-  const [showNotifyForm, setShowNotifyForm] = useState(false)
+  const [_showNotifyForm, _setShowNotifyForm] = useState(false)
   const [email, setEmail] = useState('')
   const [notified, setNotified] = useState(false)
   const [loading, setLoading] = useState(false)

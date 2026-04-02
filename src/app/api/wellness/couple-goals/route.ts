@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     const customerId = searchParams.get('customerId')
 
     // If customerId provided, find their couples link
-    let coupleLink = null
+    let coupleLink: Awaited<ReturnType<typeof db.couplesLink.findFirst>> = null
     if (customerId && !couplesLinkId) {
       coupleLink = await db.couplesLink.findFirst({
         where: {
