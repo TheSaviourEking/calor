@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
         const body = await req.json()
         const {
             name, shortDescription, fullDescription,
-            price, originalPrice, compareAtPrice, sku,
+            price, originalPrice, _compareAtPrice, sku,
             status, categoryId, images, videos,
             isDigital, isRestricted, requiresConsentGate, inventoryCount, badge,
             materialInfo, safetyInfo, cleaningGuide, usageGuide, estimatedDeliveryDays,
@@ -204,14 +204,11 @@ export async function POST(req: NextRequest) {
         })
 
         return NextResponse.json({ success: true, product })
-    } catch (error: any) {
+    } catch (error) {
         console.error('Error creating product:', error)
-        if (error.code) console.error('Prisma Error Code:', error.code)
-        if (error.meta) console.error('Prisma Error Meta:', error.meta)
-        return NextResponse.json({
-            error: 'Internal server error',
-            details: error.message,
-            code: error.code
-        }, { status: 500 })
+        return NextResponse.json(
+            { error: 'Failed to create product' },
+            { status: 500 }
+        )
     }
 }
