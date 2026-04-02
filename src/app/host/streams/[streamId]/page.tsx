@@ -133,9 +133,12 @@ export default async function StreamDetailsPage({ params }: { params: Promise<{ 
                             </div>
                         </div>
 
-                        <button disabled className="w-full py-3 border border-sand bg-warm-white font-body text-warm-gray flex justify-center items-center gap-2 cursor-not-allowed">
-                            <Settings className="w-4 h-4" /> Edit Details (Coming Soon)
-                        </button>
+                        <Link
+                            href={`/host/streams/${streamId}/edit`}
+                            className="w-full py-3 border border-sand bg-warm-white font-body text-charcoal flex justify-center items-center gap-2 hover:border-terracotta"
+                        >
+                            <Settings className="w-4 h-4" /> Edit Details
+                        </Link>
                     </div>
                 </div>
             </div>
