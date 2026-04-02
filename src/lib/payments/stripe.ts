@@ -2,9 +2,7 @@ import Stripe from 'stripe'
 import { db } from '@/lib/db'
 import { sendOrderConfirmation } from '@/lib/email'
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder', {
-  apiVersion: '2023-10-16',
-})
+export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder')
 
 export async function createPaymentIntent(orderId: string) {
   const order = await db.order.findUnique({
@@ -45,7 +43,7 @@ export async function handleStripeWebhook(event: Stripe.Event) {
   switch (event.type) {
     case 'payment_intent.succeeded': {
       const paymentIntent = event.data.object as Stripe.PaymentIntent
-      const { orderId, reference } = paymentIntent.metadata
+      const { orderId, _reference } = paymentIntent.metadata
 
       const order = await db.order.update({
         where: { id: orderId },
@@ -84,6 +82,32 @@ export async function handleStripeWebhook(event: Stripe.Event) {
         data: { status: 'CANCELLED' },
       })
 
+      break
+    }
+
+    case 'charge.refunded': {
+      const charge = event.data.object as Stripe.Charge
+      const paymentIntentId = charge.payment_intent as string
+      if (paymentIntentId) {
+        await db.order.updateMany({
+          where: { paymentRef: paymentIntentId },
+          data: { status: 'REFUNDED' },
+        })
+      }
+      console.log('[Stripe] Charge refunded:', charge.id)
+      break
+    }
+
+    case 'charge.refund.updated': {
+      const refund = event.data.object as Stripe.Refund
+      console.log('[Stripe] Refund updated:', refund.id, 'status:', refund.status)
+      break
+    }
+
+    case 'customer.subscription.created':
+    case 'customer.subscription.updated':
+    case 'customer.subscription.deleted': {
+      console.log(`[Stripe] Subscription event: ${event.type}`, event.data.object)
       break
     }
   }

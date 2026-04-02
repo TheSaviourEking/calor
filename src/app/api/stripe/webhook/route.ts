@@ -3,9 +3,7 @@ import Stripe from 'stripe'
 import { handleStripeWebhook } from '@/lib/payments/stripe'
 import { config } from '@/lib/config'
 
-const stripe = new Stripe(config.stripe.secretKey, {
-  apiVersion: '2023-10-16',
-})
+const stripe = new Stripe(config.stripe.secretKey)
 
 export async function POST(request: NextRequest) {
   const body = await request.text()
