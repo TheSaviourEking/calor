@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getSession } from '@/lib/auth/session'
+import bcrypt from 'bcryptjs'
 
 interface RouteParams {
   params: Promise<{ slug: string }>
@@ -70,8 +71,8 @@ export async function GET(request: Request, { params }: RouteParams) {
 
       // Check password if needed
       if (!registry.isPublic && registry.password) {
-        if (password !== registry.password) {
-          return NextResponse.json({ 
+        if (!password || !(await bcrypt.compare(password, registry.password))) {
+          return NextResponse.json({
             error: 'Password required',
             requiresPassword: true,
           }, { status: 401 })

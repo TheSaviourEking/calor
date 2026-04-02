@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getSession } from '@/lib/auth/session'
+import bcrypt from 'bcryptjs'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -133,7 +134,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
     if (primaryColor !== undefined) updateData.primaryColor = primaryColor
     if (coverImage !== undefined) updateData.coverImage = coverImage
     if (isPublic !== undefined) updateData.isPublic = isPublic
-    if (password !== undefined) updateData.password = password
+    if (password !== undefined) updateData.password = password ? await bcrypt.hash(password, 10) : null
     if (allowGiftMessages !== undefined) updateData.allowGiftMessages = allowGiftMessages
     if (allowPartialPurchases !== undefined) updateData.allowPartialPurchases = allowPartialPurchases
     if (allowThankYouNotes !== undefined) updateData.allowThankYouNotes = allowThankYouNotes
