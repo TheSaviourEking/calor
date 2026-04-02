@@ -1,18 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { getSession } from '@/lib/auth/session'
 
 // GET /api/wellness/profile - Get wellness profile
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const customerId = searchParams.get('customerId')
-
-    if (!customerId) {
-      return NextResponse.json(
-        { error: 'customerId is required' },
-        { status: 400 }
-      )
+    const session = await getSession()
+    if (!session?.customerId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+    const customerId = session.customerId
 
     const profile = await db.wellnessProfile.findUnique({
       where: { customerId },
@@ -55,9 +52,13 @@ export async function GET(request: NextRequest) {
 // POST /api/wellness/profile - Create/update wellness profile
 export async function POST(request: NextRequest) {
   try {
+    const session = await getSession()
+    if (!session?.customerId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const body = await request.json()
     const {
-      customerId,
       preferredTime,
       preferredIntensity,
       avgSessionDuration,
@@ -65,12 +66,7 @@ export async function POST(request: NextRequest) {
       shareWithPartner,
     } = body
 
-    if (!customerId) {
-      return NextResponse.json(
-        { error: 'customerId is required' },
-        { status: 400 }
-      )
-    }
+    const customerId = session.customerId
 
     const profile = await db.wellnessProfile.upsert({
       where: { customerId },
