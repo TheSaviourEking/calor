@@ -13,7 +13,8 @@ COPY . .
 RUN bunx prisma generate
 ARG DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholder"
 ENV DATABASE_URL=$DATABASE_URL
-RUN bun run build
+ENV STANDALONE=true
+RUN bun run build:vps
 
 FROM base AS runner
 WORKDIR /app
