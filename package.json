@@ -4,8 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "concurrently --kill-others-on-fail -c \"blue,green,magenta\" \"next dev -p 3000\" \"cd mini-services/support-chat && bun run dev\" \"cd mini-services/live-stream && bun run dev\" 2>&1 | tee dev.log",
-    "build": "next build && cp -r .next/static .next/standalone/.next/ && cp -r public .next/standalone/",
-    "start": "NODE_ENV=production bun .next/standalone/server.js 2>&1 | tee server.log",
+    "build": "next build",
+    "build:vps": "STANDALONE=true next build && cp -r .next/static .next/standalone/.next/ && cp -r public .next/standalone/",
+    "start": "next start",
+    "start:vps": "NODE_ENV=production bun .next/standalone/server.js",
     "lint": "eslint .",
     "db:push": "prisma db push",
     "db:generate": "prisma generate",
