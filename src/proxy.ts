@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const PROTECTED_ROUTES = ["/account", "/admin", "/host", "/checkout"];
+// Only sub-pages like "/account/orders", "/account/settings" etc. are protected.
+const PROTECTED_ROUTES = ["/account/", "/admin", "/host", "/checkout"];
 
 export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
@@ -58,12 +59,12 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
-  // Auth redirect for protected routes
+  // Auth redirect for protected routes — send to /account (login form), not age-gate
   const isProtectedRoute = PROTECTED_ROUTES.some((route) => pathname.startsWith(route));
   if (isProtectedRoute) {
     const sessionCookie = request.cookies.get("calor_session");
     if (!sessionCookie?.value) {
-      const loginUrl = new URL("/age-gate", request.url);
+      const loginUrl = new URL("/account", request.url);
       loginUrl.searchParams.set("redirect", pathname);
       return NextResponse.redirect(loginUrl);
     }

@@ -25,22 +25,23 @@ export default function AccountLayout({
   // Show sidebar for authenticated users on protected pages
   const _showSidebar = !isLoading && isAuthenticated && !isLoginPage
 
-  // Loading state while hydrating
+  // Login page - render immediately, no auth state needed
+  // Must be checked BEFORE isLoading to avoid spinner blocking the login form
+  if (isLoginPage) {
+    return (
+      <ClientWrapper>
+        {children}
+      </ClientWrapper>
+    )
+  }
+
+  // Loading state while hydrating (only for protected pages)
   if (isLoading) {
     return (
       <ClientWrapper>
         <div className="min-h-screen bg-cream flex items-center justify-center">
           <Loader2 className="w-8 h-8 animate-spin text-terracotta" />
         </div>
-      </ClientWrapper>
-    )
-  }
-
-  // Login page - just children with ClientWrapper
-  if (isLoginPage) {
-    return (
-      <ClientWrapper>
-        {children}
       </ClientWrapper>
     )
   }
