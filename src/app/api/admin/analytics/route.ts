@@ -146,19 +146,34 @@ export async function GET(request: NextRequest) {
       ? ((totalOrders / pageViews) * 100).toFixed(2)
       : '0'
 
-    // Get sales by day using raw query
-    const salesByDay = await db.$queryRaw<Array<{ date: string; total: bigint; count: bigint }>>`
-      SELECT 
-        date(createdAt) as date,
-        SUM(totalCents) as total,
-        COUNT(*) as count
-      FROM "Order"
-      WHERE createdAt >= datetime('now', '-30 days')
-        AND status != 'CANCELLED'
-        AND status != 'REFUNDED'
-      GROUP BY date(createdAt)
-      ORDER BY date DESC
-    `
+    // Get sales by day — PostgreSQL-compatible raw query
+    // Uses standard SQL DATE() and interval syntax supported by PostgreSQL (Neon) and SQLite via Prisma
+    const isPostgres = process.env.DATABASE_URL?.startsWith('postgresql') || process.env.DATABASE_URL?.startsWith('postgres')
+    const salesByDay = isPostgres
+      ? await db.$queryRaw<Array<{ date: string; total: bigint; count: bigint }>>`
+          SELECT 
+            DATE("createdAt")::text as date,
+            SUM("totalCents") as total,
+            COUNT(*) as count
+          FROM "Order"
+          WHERE "createdAt" >= NOW() - INTERVAL '30 days'
+            AND status != 'CANCELLED'
+            AND status != 'REFUNDED'
+          GROUP BY DATE("createdAt")
+          ORDER BY date DESC
+        `
+      : await db.$queryRaw<Array<{ date: string; total: bigint; count: bigint }>>`
+          SELECT 
+            date(createdAt) as date,
+            SUM(totalCents) as total,
+            COUNT(*) as count
+          FROM "Order"
+          WHERE createdAt >= datetime('now', '-30 days')
+            AND status != 'CANCELLED'
+            AND status != 'REFUNDED'
+          GROUP BY date(createdAt)
+          ORDER BY date DESC
+        `
 
     return NextResponse.json({
       period,

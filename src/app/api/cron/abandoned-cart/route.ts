@@ -5,9 +5,9 @@ import { sendAbandonedCartEmail } from '@/lib/email'
 // This endpoint should be called by a cron service (e.g., Vercel Cron, GitHub Actions, etc.)
 // It sends recovery emails for abandoned carts older than 1 hour and less than 72 hours old
 
-export async function GET(request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    // Verify cron secret (optional but recommended for production)
+    // Verify cron secret
     const authHeader = request.headers.get('authorization')
     if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

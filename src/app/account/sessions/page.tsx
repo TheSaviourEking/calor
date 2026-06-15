@@ -1,5 +1,6 @@
 import { db } from '@/lib/db'
 import { getSession } from '@/lib/auth/session'
+import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { Smartphone, MapPin, Clock, Shield } from 'lucide-react'
 import RevokeSessionButton from './RevokeSessionButton'
@@ -10,6 +11,10 @@ export default async function SessionsPage() {
   if (!session) {
     redirect('/account')
   }
+
+  // Get the current session token from cookie to identify the active session
+  const cookieStore = await cookies()
+  const currentToken = cookieStore.get('calor_session')?.value || ''
 
   const sessions = await db.session.findMany({
     where: { customerId: session.customerId },
@@ -85,7 +90,8 @@ export default async function SessionsPage() {
                       Expired
                     </span>
                   )}
-                  {s.token !== session.customerId && (
+                  {/* Only show Revoke on sessions that are NOT the current active session */}
+                  {s.token !== currentToken && (
                     <div className="mt-2">
                       <RevokeSessionButton sessionId={s.id} />
                     </div>

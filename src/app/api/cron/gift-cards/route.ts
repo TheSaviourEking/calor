@@ -7,15 +7,10 @@ import { sendGiftCardEmail } from '@/lib/email'
 // Authorization: X-Cron-Key header
 export async function POST(request: NextRequest) {
   try {
-    // Verify cron authorization
-    const cronKey = request.headers.get('x-cron-key')
-    // Simple authentication
-    const expectedKey = process.env.CRON_SECRET
-    if (!expectedKey || cronKey !== expectedKey) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+    // Verify cron secret
+    const authHeader = request.headers.get('authorization')
+    if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const now = new Date()

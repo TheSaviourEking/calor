@@ -25,8 +25,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.redirect(new URL('/account?error=invalid_state', request.url))
     }
 
-    // Verify Apple ID token
-    const applePublicKey = await getApplePublicKey()
+    // Verify Apple ID token — pass idToken so we can match by kid
+    const applePublicKey = await getApplePublicKey(idToken)
     const { payload } = await jwtVerify(idToken, applePublicKey, {
       issuer: 'https://appleid.apple.com',
       audience: process.env.APPLE_CLIENT_ID || '',
@@ -138,9 +138,9 @@ export async function GET(request: NextRequest) {
     authUrl.searchParams.set('state', state)
 
     // Store state in cookie for CSRF validation on callback
+    // Note: clientSecret is server-side only — never expose it to the client
     const response = NextResponse.json({
       url: authUrl.toString(),
-      clientSecret
     })
     response.cookies.set('oauth_state', state, {
       httpOnly: true,
@@ -158,10 +158,24 @@ export async function GET(request: NextRequest) {
 }
 
 // Helper to get Apple's public key for token verification
-async function getApplePublicKey() {
+// Matches the correct key by `kid` from the JWT header to handle key rotation
+async function getApplePublicKey(idToken?: string) {
   const response = await fetch('https://appleid.apple.com/auth/keys')
   const data = await response.json()
-  const key = data.keys[0] // Use the first key
+
+  let key = data.keys[0] // fallback to first key
+
+  // If we have an idToken, match by kid header for robustness against key rotation
+  if (idToken) {
+    try {
+      const headerB64 = idToken.split('.')[0]
+      const header = JSON.parse(Buffer.from(headerB64, 'base64').toString('utf8'))
+      const matched = data.keys.find((k: { kid: string }) => k.kid === header.kid)
+      if (matched) key = matched
+    } catch {
+      // Fallback to first key if header parsing fails
+    }
+  }
 
   return await importX509(
     `-----BEGIN CERTIFICATE-----\n${key.x5c[0]}\n-----END CERTIFICATE-----`,

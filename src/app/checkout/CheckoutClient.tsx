@@ -596,14 +596,11 @@ export default function CheckoutClient({
                         <input
                           type="range"
                           min="0"
-                          max={Math.min(
-                            availablePoints,
-                            (subtotal +
-                              shipping +
-                              wrappingCost -
-                              promoDiscount) *
-                            100,
-                          )}
+                      max={Math.min(
+                        availablePoints,
+                        // subtotal is already in cents; 1 point = 1 cent, so no multiplication needed
+                        subtotal + shipping + wrappingCost - promoDiscount,
+                      )}
                           value={pointsToUse}
                           onChange={(e) =>
                             setPointsToUse(parseInt(e.target.value))
