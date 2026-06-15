@@ -52,14 +52,20 @@ export default function AccountClient() {
         }
     }
 
-    const handleGoogleLogin = () => {
+    const handleGoogleLogin = async () => {
         setOauthLoading('google')
-        window.location.href = '/api/auth/google'
+        const res = await fetch('/api/auth/oauth/google', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) })
+        const data = await res.json()
+        if (data.url) window.location.href = data.url
+        else setOauthLoading(null)
     }
 
-    const handleAppleLogin = () => {
+    const handleAppleLogin = async () => {
         setOauthLoading('apple')
-        window.location.href = '/api/auth/apple'
+        const res = await fetch('/api/auth/oauth/apple', { method: 'GET' })
+        const data = await res.json()
+        if (data.url) window.location.href = data.url
+        else setOauthLoading(null)
     }
 
     return (

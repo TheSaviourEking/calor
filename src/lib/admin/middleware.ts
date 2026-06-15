@@ -26,7 +26,10 @@ export async function adminApiHandler(
 ) {
   const auth = await requireAdmin()
   if (!auth.authorized) {
-    return NextResponse.json({ error: auth.error }, { status: 401 })
+    // 401 = not authenticated, 403 = authenticated but not permitted
+    const session = await getSession()
+    const status = session ? 403 : 401
+    return NextResponse.json({ error: auth.error }, { status })
   }
   return handler(auth.customerId!)
 }

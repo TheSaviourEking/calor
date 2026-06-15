@@ -5,16 +5,18 @@ import AdminDashboard from './AdminClient'
 export default async function AdminPage() {
   const session = await getSession()
 
-  console.log(session, "SESSIon")
-
   // In production, check for admin flag in user record
   // For now, allow access for demo purposes
   // if (!session) redirect('/account')
 
-  const [products, orders, customers] = await Promise.all([
+  const [products, orders, customers, revenueData] = await Promise.all([
     db.product.count({ where: { published: true } }),
     db.order.count(),
     db.customer.count(),
+    db.order.aggregate({
+      where: { status: { notIn: ['CANCELLED', 'REFUNDED'] } },
+      _sum: { totalCents: true },
+    }),
   ])
 
   const recentOrders = await db.order.findMany({
@@ -41,7 +43,7 @@ export default async function AdminPage() {
     totalProducts: products,
     totalOrders: orders,
     totalCustomers: customers,
-    revenue: 0, // Would calculate from orders
+    revenue: revenueData._sum.totalCents || 0,
   }
 
   return (

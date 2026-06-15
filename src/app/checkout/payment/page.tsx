@@ -254,7 +254,11 @@ export default function PaymentPage() {
           const response = await fetch("/api/payment/create-intent", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ orderId: order.id }),
+            body: JSON.stringify({
+              orderId: order.id,
+              // Pass guestEmail so guests can own their payment intent
+              guestEmail: checkoutData?.email || null,
+            }),
           });
           const data = await response.json();
           if (!response.ok)

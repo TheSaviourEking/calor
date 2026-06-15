@@ -101,7 +101,8 @@ export async function POST(request: NextRequest) {
     if (!address) {
       address = await db.address.create({
         data: {
-          customerId: customerId!,
+          // customerId is null for guest orders — only set if authenticated
+          ...(customerId ? { customerId } : {}),
           line1: shippingAddress.line1,
           line2: shippingAddress.line2 || null,
           city: shippingAddress.city,

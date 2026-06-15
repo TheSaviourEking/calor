@@ -7,9 +7,9 @@ import { sendBackInStockAlert } from '@/lib/email'
 
 export async function POST(request: NextRequest) {
   try {
-    // Verify cron secret (optional but recommended for production)
-    const cronSecret = request.headers.get('x-cron-secret')
-    if (process.env.CRON_SECRET && cronSecret !== process.env.CRON_SECRET) {
+    // Verify cron secret
+    const authHeader = request.headers.get('authorization')
+    if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

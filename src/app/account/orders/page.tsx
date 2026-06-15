@@ -30,7 +30,7 @@ export default async function OrdersPage() {
   }
 
   const statusStyles: Record<string, string> = {
-    PENDING: 'bg-sand text-mid-gray',
+    PENDING: 'bg-sand text-warm-gray',
     PAYMENT_RECEIVED: 'bg-terracotta/10 text-terracotta',
     PROCESSING: 'bg-cream text-charcoal',
     SHIPPED: 'bg-gold/20 text-gold',
