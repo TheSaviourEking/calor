@@ -9,7 +9,7 @@ const db = new PrismaClient()
 const httpServer = createServer()
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.SOCKET_IO_ORIGINS?.split(',') || ['http://localhost:3000', 'https://calorco.com'],
+    origin: process.env.SOCKET_IO_ORIGINS?.split(',') || ['http://localhost:3000', 'https://calorco.com', "https://calor-rose.vercel.app"],
     methods: ['GET', 'POST'],
     credentials: true,
   },
