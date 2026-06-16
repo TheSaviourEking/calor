@@ -1,4 +1,7 @@
 import { Suspense } from 'react'
+
+export const dynamic = 'force-dynamic'
+
 import Hero from '@/components/home/Hero'
 import Marquee from '@/components/home/Marquee'
 import CategoryGrid from '@/components/home/CategoryGrid'
