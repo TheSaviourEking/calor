@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import ZAI from 'z-ai-web-dev-sdk'
 
 interface QuizAnswer {
   questionId: string
@@ -24,8 +23,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
     }
 
-    // Get all products for AI to consider
-    const products = await db.product.findMany({ /* take: handled */
+    // Get all products for scoring
+    const products = await db.product.findMany({
       where: { published: true },
       include: {
         variants: true,
@@ -37,8 +36,8 @@ export async function POST(request: NextRequest) {
     // Build user profile from answers
     const userProfile = buildUserProfile(answers)
 
-    // Get AI recommendations using LLM
-    const recommendations = await getAIRecommendations(userProfile, products)
+    // Score products based on quiz answers
+    const recommendations = scoreProducts(userProfile, products)
 
     // Save quiz result
     const quizResult = await db.quizResult.create({
@@ -91,15 +90,15 @@ function buildUserProfile(answers: QuizAnswer[]): Record<string, string | string
     profile[answer.questionId] = answer.answer
   }
 
-  // Extract key preferences
   const experienceAnswer = answers.find(a => {
     const ans = a.answer
-    return Array.isArray(ans) ? ans.includes('beginner') || ans.includes('intermediate') || ans.includes('advanced') : 
-           typeof ans === 'string' && (ans === 'beginner' || ans === 'intermediate' || ans === 'advanced' || ans === 'expert')
+    return Array.isArray(ans)
+      ? ans.includes('beginner') || ans.includes('intermediate') || ans.includes('advanced')
+      : typeof ans === 'string' && ['beginner', 'intermediate', 'advanced', 'expert'].includes(ans)
   })
-  
+
   const goalsAnswer = answers.find(a => Array.isArray(a.answer))
-  
+
   return {
     experience: (typeof experienceAnswer?.answer === 'string' ? experienceAnswer.answer : 'intermediate') as string,
     goals: (Array.isArray(goalsAnswer?.answer) ? goalsAnswer.answer : ['pleasure']) as string[],
@@ -107,71 +106,56 @@ function buildUserProfile(answers: QuizAnswer[]): Record<string, string | string
   }
 }
 
-async function getAIRecommendations(
+/**
+ * Score products based on user profile answers.
+ * Uses tag matching and category affinity — no external AI dependency.
+ */
+function scoreProducts(
   profile: Record<string, string | string[]>,
   products: Product[]
-): Promise<{ productId: string; score: number; reasons: string[] }[]> {
-  try {
-    const zai = await ZAI.create()
+): { productId: string; score: number; reasons: string[] }[] {
+  const experience = profile.experience as string
+  const goals = Array.isArray(profile.goals) ? profile.goals as string[] : ['pleasure']
 
-    const systemPrompt = `You are a premium intimate wellness product expert for CALŌR. Your task is to analyze customer preferences and recommend the most suitable products.
+  const scored = products.map(product => {
+    let score = 60
+    const reasons: string[] = []
 
-Guidelines:
-- Consider experience level, goals, and preferences
-- Prioritize body-safe, high-quality products
-- Be inclusive and respectful
-- Focus on customer comfort and satisfaction
-- Return exactly 6 product recommendations in JSON format
+    // Tag matching
+    let tags: string[] = []
+    try {
+      tags = JSON.parse(product.tags || '[]')
+    } catch { tags = [] }
 
-Response format must be valid JSON array:
-[{"productId": "id", "score": 85, "reasons": ["reason1", "reason2"]}]`
-
-    const productsInfo = products.map(p => ({
-      id: p.id,
-      name: p.name,
-      description: p.shortDescription,
-      category: p.categoryId,
-      tags: p.tags
-    }))
-
-    const completion = await zai.chat.completions.create({
-      messages: [
-        { role: 'assistant', content: systemPrompt },
-        {
-          role: 'user',
-          content: `Customer Profile:
-${JSON.stringify(profile, null, 2)}
-
-Available Products:
-${JSON.stringify(productsInfo, null, 2)}
-
-Recommend the top 6 products that best match this customer's profile. Consider their experience level, goals, and preferences. Return as JSON array.`
-        }
-      ],
-      thinking: { type: 'disabled' }
-    })
-
-    const response = completion.choices[0]?.message?.content || ''
-    
-    // Parse JSON from response
-    const jsonMatch = response.match(/\[[\s\S]*\]/)
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0])
+    // Experience level matching
+    if (experience === 'beginner' && tags.some(t => ['beginner', 'gentle', 'starter', 'intimate'].includes(t))) {
+      score += 15
+      reasons.push('Great for beginners')
+    }
+    if (experience === 'advanced' && tags.some(t => ['advanced', 'powerful', 'intense'].includes(t))) {
+      score += 15
+      reasons.push('Matches your experience level')
     }
 
-    // Fallback: simple scoring based on tags
-    return products.slice(0, 6).map(p => ({
-      productId: p.id,
-      score: 70,
-      reasons: ['Popular choice', 'High quality', 'Body-safe materials']
-    }))
-  } catch (error) {
-    console.error('AI recommendation error:', error)
-    // Fallback recommendations
-    return products.slice(0, 6).map(p => ({
-      productId: p.id,
-      score: 70,
-      reasons: ['Popular choice', 'High quality', 'Body-safe materials']
-    }))
-  }
+    // Goals matching
+    if (goals.some(g => tags.includes(g))) {
+      score += 10
+      reasons.push('Aligns with your goals')
+    }
+
+    // Quality signals
+    if (tags.some(t => ['premium', 'body-safe', 'rechargeable', 'waterproof'].includes(t))) {
+      score += 5
+      reasons.push('High quality materials')
+    }
+
+    if (reasons.length === 0) {
+      reasons.push('Popular choice', 'High quality', 'Body-safe materials')
+    }
+
+    return { productId: product.id, score, reasons }
+  })
+
+  // Sort by score descending
+  return scored.sort((a, b) => b.score - a.score).slice(0, 6)
 }
