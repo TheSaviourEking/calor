@@ -11,7 +11,10 @@ import {
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/stores/auth'
 
-const isDev = process.env.NODE_ENV !== 'production'
+// TODO [BEFORE PROD]: Change this back to `process.env.NODE_ENV !== 'production'`
+// to hide dev-only admin pages (email-test, wellness-test, changelog) in production.
+// See PROD_CHECKLIST.md → P1 → "Hide dev-only admin pages in production"
+const isDev = true // temporarily always visible during active development
 
 const adminNavItems = [
     { href: '/admin', label: 'Dashboard', icon: Package },
