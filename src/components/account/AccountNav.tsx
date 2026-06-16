@@ -28,6 +28,7 @@ import { useAuthStore } from '@/stores/auth'
 const accountLinks = [
   { label: 'Wellness Dashboard', href: '/account/wellness', icon: Flame, highlight: true },
   { label: 'Smart Toys', href: '/account/toys', icon: Gamepad2, highlight: true },
+  { label: 'Digital Library', href: '/account/digital', icon: Package },
   { label: 'Gift Registry', href: '/registry', icon: Gift },
   { label: 'Orders', href: '/account/orders', icon: Package },
   { label: 'Wishlist', href: '/account/wishlist', icon: Heart },
