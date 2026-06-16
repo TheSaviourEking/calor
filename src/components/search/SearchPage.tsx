@@ -202,7 +202,7 @@ export default function SearchPage({ initialQuery = '', onProductClick }: Search
   const allFilters = { query, ...activeFilters }
 
   return (
-    <div className="min-h-screen bg-cream">
+    <div className="min-h-screen pt-20 bg-cream">
       {/* Search Header */}
       <div className="bg-warm-white border-b border-sand">
         <div className="max-w-7xl mx-auto px-4 py-6">
