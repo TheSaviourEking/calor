@@ -66,6 +66,8 @@ export async function createCryptoCharge(orderId: string): Promise<{ chargeId: s
 
 export function verifyCoinbaseWebhook(signature: string, body: string): boolean {
   if (!signature) return false
+  // Coinbase is optional — if not configured, reject all webhook calls
+  if (!config.coinbase.webhookSecret) return false
 
   const expected = crypto
     .createHmac('sha256', config.coinbase.webhookSecret)

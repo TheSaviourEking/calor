@@ -3,6 +3,7 @@ import { db } from '@/lib/db'
 import { getSession } from '@/lib/auth'
 import { sendOrderConfirmation } from '@/lib/email'
 import { orderCreateSchema } from '@/lib/validations/orders'
+import type { Prisma } from '@prisma/client'
 
 export async function POST(request: NextRequest) {
   try {
@@ -99,18 +100,21 @@ export async function POST(request: NextRequest) {
     }
 
     if (!address) {
+      // Build two explicitly-typed objects so Prisma's union type resolves correctly.
+      // AddressUncheckedCreateInput requires customerId as string (not undefined).
+      const baseAddress = {
+        line1: shippingAddress.line1,
+        line2: shippingAddress.line2 || null,
+        city: shippingAddress.city,
+        state: shippingAddress.state || null,
+        postcode: shippingAddress.postcode,
+        country: shippingAddress.country,
+        isDefault: false,
+      }
       address = await db.address.create({
-        data: {
-          // customerId is null for guest orders — only set if authenticated
-          ...(customerId ? { customerId } : {}),
-          line1: shippingAddress.line1,
-          line2: shippingAddress.line2 || null,
-          city: shippingAddress.city,
-          state: shippingAddress.state || null,
-          postcode: shippingAddress.postcode,
-          country: shippingAddress.country,
-          isDefault: false,
-        },
+        data: customerId
+          ? ({ ...baseAddress, customerId } satisfies Prisma.AddressUncheckedCreateInput)
+          : (baseAddress as Prisma.AddressUncheckedCreateInput),
       })
     }
 
