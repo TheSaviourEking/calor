@@ -3,6 +3,8 @@ import PublicRegistryClient from './PublicRegistryClient'
 import { db } from '@/lib/db'
 import { serialise } from '@/lib/serialise'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata = {
   title: 'Gift Registry | CALŌR',
   description: 'View and purchase gifts from this registry.',

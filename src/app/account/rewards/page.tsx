@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation'
 import RewardsClient from './RewardsClient'
 import { getSession } from '@/lib/auth'
 import { db } from '@/lib/db'
+
+export const dynamic = 'force-dynamic'
 import { serialise } from '@/lib/serialise'
 
 export const metadata: Metadata = {

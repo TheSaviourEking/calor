@@ -3,6 +3,8 @@ import { requireAdmin } from '@/lib/admin/middleware'
 import AdminCustomersClient from './AdminCustomersClient'
 import { serialise } from '@/lib/serialise'
 
+export const dynamic = 'force-dynamic'
+
 async function getCustomersWithStats() {
   const customers = await db.customer.findMany({
     include: {

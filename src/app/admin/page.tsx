@@ -2,6 +2,8 @@ import { db } from '@/lib/db'
 import { getSession } from '@/lib/auth/session'
 import AdminDashboard from './AdminClient'
 
+export const dynamic = 'force-dynamic'
+
 export default async function AdminPage() {
   const session = await getSession()
 

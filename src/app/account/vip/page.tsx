@@ -4,6 +4,8 @@ import { getSession } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { serialise } from '@/lib/serialise'
 
+export const dynamic = 'force-dynamic'
+
 export default async function VIPPage() {
   const session = await getSession()
 

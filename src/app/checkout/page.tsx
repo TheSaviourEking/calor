@@ -3,6 +3,8 @@ import CheckoutClient from './CheckoutClient'
 import { getSession } from '@/lib/auth'
 import { serialise } from '@/lib/serialise'
 
+export const dynamic = 'force-dynamic'
+
 async function getGiftWrappingOptions() {
   return db.giftWrappingOption.findMany({
     where: { isActive: true },

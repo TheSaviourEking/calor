@@ -4,6 +4,8 @@ import ClientWrapper from '@/components/layout/ClientWrapper'
 import AdminTicketDetailClient from './AdminTicketDetailClient'
 import { serialise } from '@/lib/serialise'
 
+export const dynamic = 'force-dynamic'
+
 async function getTicketWithDetails(id: string) {
   const ticket = await db.supportTicket.findUnique({
     where: { id },

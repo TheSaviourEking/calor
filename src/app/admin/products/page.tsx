@@ -2,6 +2,8 @@ import { db } from '@/lib/db'
 import AdminProductsClient from './AdminProductsClient'
 import { serialise } from '@/lib/serialise'
 
+export const dynamic = 'force-dynamic'
+
 async function getProductsWithVariants() {
   const products = await db.product.findMany({
     include: {

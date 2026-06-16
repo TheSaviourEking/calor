@@ -4,6 +4,8 @@ import ManageRegistryClient from './ManageRegistryClient'
 import { db } from '@/lib/db'
 import { serialise } from '@/lib/serialise'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata = {
   title: 'Manage Registry | CALŌR',
   description: 'Manage your gift registry.',

@@ -4,6 +4,8 @@ import { notFound } from 'next/navigation'
 import SharedWishlistClient from './SharedWishlistClient'
 import { serialise } from '@/lib/serialise'
 
+export const dynamic = 'force-dynamic'
+
 interface Props {
   params: Promise<{ code: string }>
 }

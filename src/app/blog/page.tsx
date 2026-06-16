@@ -3,7 +3,7 @@ import ClientWrapper from '@/components/layout/ClientWrapper'
 import BlogPageClient from './BlogPageClient'
 import { serialise } from '@/lib/serialise'
 
-export const revalidate = 300 // Revalidate every 5 minutes
+export const dynamic = 'force-dynamic'
 
 async function getBlogData() {
   const [posts, categories, featuredPost] = await Promise.all([
