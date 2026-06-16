@@ -149,7 +149,7 @@ export default function ManageRegistryClient({ initialRegistry = null }: ManageR
 
   const copyShareLink = () => {
     if (!registry) return
-    const url = `${window.location.origin}/registry/${registry.slug}`
+    const url = `${typeof window !== 'undefined' ? window.location.origin : ''}/registry/${registry.slug}`
     navigator.clipboard.writeText(url)
     setCopied(true)
     toast.success('Share link copied!')
