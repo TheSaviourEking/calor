@@ -13,7 +13,7 @@ const viewerSessions = new Map<string, { streamId: string; customerId?: string; 
 const httpServer = createServer()
 const io = new Server(httpServer, {
   cors: {
-    origin: ['http://localhost:3000', 'https://calorco.com'],
+    origin: ['http://localhost:3000', 'https://calorco.com', "https://calor-rose.vercel.app"],
     methods: ['GET', 'POST'],
     credentials: true,
   },
