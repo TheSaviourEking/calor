@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation'
 import {
     Package, ShoppingBag, Users, MessageSquare,
     BarChart3, Mail, Menu, X, Target, Code, LogOut, User,
-    Beaker, Activity
+    Beaker, Activity, Star, RotateCcw, FileText, Tag, Calendar
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/stores/auth'
@@ -18,14 +18,25 @@ const isDev = true // temporarily always visible during active development
 
 const adminNavItems = [
     { href: '/admin', label: 'Dashboard', icon: Package },
+    // Catalogue
     { href: '/admin/products', label: 'Products', icon: Package },
+    // Operations
     { href: '/admin/orders', label: 'Orders', icon: ShoppingBag },
+    { href: '/admin/returns', label: 'Returns', icon: RotateCcw },
+    // Content
+    { href: '/admin/blog', label: 'Blog', icon: FileText },
+    { href: '/admin/promotions', label: 'Promotions', icon: Tag },
+    // People
     { href: '/admin/customers', label: 'Customers', icon: Users },
     { href: '/admin/segments', label: 'Segments', icon: Target },
+    { href: '/admin/reviews', label: 'Reviews', icon: Star },
+    { href: '/admin/consultations', label: 'Consultations', icon: Calendar },
+    // Communications
     { href: '/admin/support', label: 'Support Tickets', icon: MessageSquare },
-    { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
     { href: '/admin/campaigns', label: 'Email Campaigns', icon: Mail },
-    // Dev-only pages — hidden in production
+    // Insights
+    { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
+    // Dev-only pages — hidden in production (see TODO above)
     ...(isDev ? [
         { href: '/admin/changelog', label: 'Dev Changelog', icon: Code },
         { href: '/admin/email-test', label: 'Email Test', icon: Beaker },
