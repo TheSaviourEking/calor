@@ -62,6 +62,19 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Enforce email verification — must verify before accessing account
+    // OAuth users (Google/Apple) are auto-verified
+    if (!customer.emailVerified && customer.authProvider === 'email') {
+      return NextResponse.json(
+        {
+          error: 'Please verify your email address before logging in.',
+          code: 'EMAIL_NOT_VERIFIED',
+          email: customer.email,
+        },
+        { status: 401 }
+      )
+    }
+
     // Create session
     await createSession(customer.id, customer.email)
 

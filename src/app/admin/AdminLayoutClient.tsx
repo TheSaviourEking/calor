@@ -11,6 +11,8 @@ import {
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/stores/auth'
 
+const isDev = process.env.NODE_ENV !== 'production'
+
 const adminNavItems = [
     { href: '/admin', label: 'Dashboard', icon: Package },
     { href: '/admin/products', label: 'Products', icon: Package },
@@ -20,9 +22,12 @@ const adminNavItems = [
     { href: '/admin/support', label: 'Support Tickets', icon: MessageSquare },
     { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
     { href: '/admin/campaigns', label: 'Email Campaigns', icon: Mail },
-    { href: '/admin/changelog', label: 'Dev Changelog', icon: Code },
-    { href: '/admin/email-test', label: 'Email Test', icon: Beaker },
-    { href: '/admin/wellness-test', label: 'Wellness Test', icon: Activity },
+    // Dev-only pages — hidden in production
+    ...(isDev ? [
+        { href: '/admin/changelog', label: 'Dev Changelog', icon: Code },
+        { href: '/admin/email-test', label: 'Email Test', icon: Beaker },
+        { href: '/admin/wellness-test', label: 'Wellness Test', icon: Activity },
+    ] : []),
 ]
 
 export default function AdminLayoutClient({

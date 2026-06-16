@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import { getSession } from '@/lib/auth/session'
 import AdminDashboard from './AdminClient'
@@ -7,9 +8,8 @@ export const dynamic = 'force-dynamic'
 export default async function AdminPage() {
   const session = await getSession()
 
-  // In production, check for admin flag in user record
-  // For now, allow access for demo purposes
-  // if (!session) redirect('/account')
+  // Defence-in-depth: layout.tsx also checks, but pages should not rely solely on layout
+  if (!session) redirect('/account')
 
   const [products, orders, customers, revenueData] = await Promise.all([
     db.product.count({ where: { published: true } }),
