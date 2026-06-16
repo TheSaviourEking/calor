@@ -6,7 +6,8 @@ import { usePathname } from 'next/navigation'
 import {
     Package, ShoppingBag, Users, MessageSquare,
     BarChart3, Mail, Menu, X, Target, Code, LogOut, User,
-    Beaker, Activity, Star, RotateCcw, FileText, Tag, Calendar
+    Beaker, Activity, Star, RotateCcw, FileText, Tag, Calendar,
+    Gift, Crown, Shield
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/stores/auth'
@@ -20,9 +21,12 @@ const adminNavItems = [
     { href: '/admin', label: 'Dashboard', icon: Package },
     // Catalogue
     { href: '/admin/products', label: 'Products', icon: Package },
+    { href: '/admin/categories', label: 'Categories', icon: Tag },
+    { href: '/admin/bundles', label: 'Bundles', icon: Package },
     // Operations
     { href: '/admin/orders', label: 'Orders', icon: ShoppingBag },
     { href: '/admin/returns', label: 'Returns', icon: RotateCcw },
+    { href: '/admin/subscriptions', label: 'Subscriptions', icon: Calendar },
     // Content
     { href: '/admin/blog', label: 'Blog', icon: FileText },
     { href: '/admin/promotions', label: 'Promotions', icon: Tag },
@@ -31,11 +35,14 @@ const adminNavItems = [
     { href: '/admin/segments', label: 'Segments', icon: Target },
     { href: '/admin/reviews', label: 'Reviews', icon: Star },
     { href: '/admin/consultations', label: 'Consultations', icon: Calendar },
+    { href: '/admin/gift-cards', label: 'Gift Cards', icon: Gift },
+    { href: '/admin/vip', label: 'VIP Tiers', icon: Crown },
     // Communications
     { href: '/admin/support', label: 'Support Tickets', icon: MessageSquare },
     { href: '/admin/campaigns', label: 'Email Campaigns', icon: Mail },
     // Insights
     { href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
+    { href: '/admin/audit-logs', label: 'Audit Logs', icon: Shield },
     // Dev-only pages — hidden in production (see TODO above)
     ...(isDev ? [
         { href: '/admin/changelog', label: 'Dev Changelog', icon: Code },
