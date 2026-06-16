@@ -3,6 +3,8 @@ import ClientWrapper from '@/components/layout/ClientWrapper'
 import SizeGuideClient from './SizeGuideClient'
 import { serialise } from '@/lib/serialise'
 
+export const dynamic = 'force-dynamic'
+
 async function getSizeGuides() {
   const guides = await db.sizeGuide.findMany({
     where: { isActive: true },

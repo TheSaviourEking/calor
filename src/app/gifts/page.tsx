@@ -4,6 +4,8 @@ import ProductCard from '@/components/product/ProductCard'
 import { Gift } from 'lucide-react'
 import { serialise } from '@/lib/serialise'
 
+export const dynamic = 'force-dynamic'
+
 async function getGiftProducts() {
   // Get products that are bundles/kits + specific gift slugs
   const giftSlugs = ['honeymoon-kit', 'self-care-night-set', 'date-night-duo']

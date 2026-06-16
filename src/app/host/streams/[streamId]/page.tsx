@@ -4,6 +4,8 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Play, Settings, Users, DollarSign } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+
 export default async function StreamDetailsPage({ params }: { params: Promise<{ streamId: string }> }) {
     const session = await getSession()
     if (!session?.customerId) {

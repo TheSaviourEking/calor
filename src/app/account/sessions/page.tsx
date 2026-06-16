@@ -3,6 +3,8 @@ import { getSession } from '@/lib/auth/session'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { Smartphone, MapPin, Clock, Shield } from 'lucide-react'
+
+export const dynamic = 'force-dynamic'
 import RevokeSessionButton from './RevokeSessionButton'
 
 export default async function SessionsPage() {

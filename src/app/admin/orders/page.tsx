@@ -2,6 +2,8 @@ import { db } from '@/lib/db'
 import AdminOrdersClient from './AdminOrdersClient'
 import { serialise } from '@/lib/serialise'
 
+export const dynamic = 'force-dynamic'
+
 async function getOrdersWithDetails() {
   const orders = await db.order.findMany({
     include: {

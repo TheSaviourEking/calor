@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation'
 import ClientWrapper from '@/components/layout/ClientWrapper'
 import ReturnsClient from './ReturnsClient'
 import { getSession } from '@/lib/auth'
+
+export const dynamic = 'force-dynamic'
 import { db } from '@/lib/db'
 import { serialise } from '@/lib/serialise'
 

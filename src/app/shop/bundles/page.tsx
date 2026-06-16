@@ -3,6 +3,8 @@ import ClientWrapper from '@/components/layout/ClientWrapper'
 import BundlesClient from './BundlesClient'
 import { serialise } from '@/lib/serialise'
 
+export const dynamic = 'force-dynamic'
+
 async function getBundles() {
   const bundles = await db.productBundle.findMany({
     where: { isActive: true },

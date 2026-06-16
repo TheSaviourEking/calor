@@ -4,6 +4,8 @@ import { getSession } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { serialise } from '@/lib/serialise'
 
+export const dynamic = 'force-dynamic'
+
 function calculateTier(totalEarned: number): string {
   if (totalEarned >= 2500) return 'platinum'
   if (totalEarned >= 1000) return 'gold'

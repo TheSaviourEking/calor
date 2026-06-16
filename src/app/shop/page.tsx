@@ -3,6 +3,8 @@ import ClientWrapper from '@/components/layout/ClientWrapper'
 import ShopClient from './ShopClient'
 import { serialise } from '@/lib/serialise'
 
+export const dynamic = 'force-dynamic'
+
 export const revalidate = 3600 // Revalidate every hour
 
 async function getProducts() {

@@ -3,6 +3,8 @@ import ClientWrapper from '@/components/layout/ClientWrapper'
 import { Package, CheckCircle } from 'lucide-react'
 import Link from 'next/link'
 
+export const dynamic = 'force-dynamic'
+
 interface PageProps {
   searchParams: Promise<{ ref?: string; order_id?: string }>
 }

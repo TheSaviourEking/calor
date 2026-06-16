@@ -3,6 +3,8 @@ import WellnessClient from "./WellnessClient";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { serialise } from "@/lib/serialise";
+
+export const dynamic = 'force-dynamic'
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
