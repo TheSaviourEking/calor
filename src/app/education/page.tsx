@@ -4,6 +4,8 @@ import ProductCard from '@/components/product/ProductCard'
 import { BookOpen, PlayCircle, Heart } from 'lucide-react'
 import { serialise } from '@/lib/serialise'
 
+export const dynamic = 'force-dynamic'
+
 async function getEducationProducts() {
   return db.product.findMany({
     where: {

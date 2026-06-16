@@ -4,6 +4,8 @@ import ProductCard from '@/components/product/ProductCard'
 import { Headphones, Video, BookOpen, Download } from 'lucide-react'
 import { serialise } from '@/lib/serialise'
 
+export const dynamic = 'force-dynamic'
+
 async function getDigitalProducts() {
   return db.product.findMany({
     where: {
