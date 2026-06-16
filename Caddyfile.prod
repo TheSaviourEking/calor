@@ -1,0 +1,47 @@
+# CALŌR — Production Caddyfile for Hetzner VPS (PM2 setup)
+# Services run directly via PM2 on the host — using localhost, not Docker container names.
+# Caddy handles SSL automatically via Let's Encrypt.
+#
+# Replace chat.yourdomain.com and stream.yourdomain.com with your actual subdomains.
+#
+# DNS Records in Cloudflare (GREY CLOUD — no proxy, WebSocket needs direct connection):
+#   A  chat.yourdomain.com    → YOUR_VPS_IP
+#   A  stream.yourdomain.com  → YOUR_VPS_IP
+#
+# Deploy to VPS:
+#   cp Caddyfile.prod /etc/caddy/Caddyfile
+#   systemctl reload caddy
+
+chat.yourdomain.com {
+    reverse_proxy localhost:3031 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+        # WebSocket support
+        header_up Connection {http.request.header.Connection}
+        header_up Upgrade {http.request.header.Upgrade}
+    }
+
+    log {
+        output stderr
+        level INFO
+    }
+}
+
+stream.yourdomain.com {
+    reverse_proxy localhost:3032 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+        # WebSocket support
+        header_up Connection {http.request.header.Connection}
+        header_up Upgrade {http.request.header.Upgrade}
+    }
+
+    log {
+        output stderr
+        level INFO
+    }
+}

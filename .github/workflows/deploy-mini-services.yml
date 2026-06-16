@@ -1,0 +1,142 @@
+name: Deploy Mini-Services to Hetzner
+
+# Triggers on push to main when mini-services or prisma schema changes
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'mini-services/**'
+      - 'prisma/schema.prisma'
+      - 'ecosystem.config.js'
+      - 'Caddyfile.prod'
+
+jobs:
+  detect-changes:
+    name: Detect Changed Services
+    runs-on: ubuntu-latest
+    outputs:
+      support-chat: ${{ steps.filter.outputs.support-chat }}
+      live-stream: ${{ steps.filter.outputs.live-stream }}
+      schema-changed: ${{ steps.filter.outputs.schema }}
+      caddy-changed: ${{ steps.filter.outputs.caddy }}
+      ecosystem-changed: ${{ steps.filter.outputs.ecosystem }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Detect changes
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            support-chat:
+              - 'mini-services/support-chat/**'
+            live-stream:
+              - 'mini-services/live-stream/**'
+            schema:
+              - 'prisma/schema.prisma'
+            caddy:
+              - 'Caddyfile.prod'
+            ecosystem:
+              - 'ecosystem.config.js'
+
+  deploy-support-chat:
+    name: Deploy Support Chat
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: |
+      needs.detect-changes.outputs.support-chat == 'true' ||
+      needs.detect-changes.outputs.schema-changed == 'true' ||
+      needs.detect-changes.outputs.ecosystem-changed == 'true'
+    steps:
+      - name: Deploy support-chat via PM2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HETZNER_HOST }}
+          username: ${{ secrets.HETZNER_USER }}
+          key: ${{ secrets.HETZNER_SSH_KEY }}
+          script: |
+            set -e
+            export PATH="$HOME/.bun/bin:$PATH"
+            cd /opt/calor
+
+            echo "==> Pulling latest code..."
+            git pull origin main
+
+            echo "==> Installing dependencies for support-chat..."
+            cd mini-services/support-chat
+            bun install --frozen-lockfile
+
+            echo "==> Regenerating Prisma client..."
+            bunx prisma generate --schema=../../prisma/schema.prisma
+
+            echo "==> Restarting support-chat with PM2..."
+            pm2 restart support-chat --update-env || pm2 start ../../ecosystem.config.js --only support-chat
+            pm2 save
+
+            echo "==> support-chat status:"
+            pm2 show support-chat
+
+  deploy-live-stream:
+    name: Deploy Live Stream
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: |
+      needs.detect-changes.outputs.live-stream == 'true' ||
+      needs.detect-changes.outputs.schema-changed == 'true' ||
+      needs.detect-changes.outputs.ecosystem-changed == 'true'
+    steps:
+      - name: Deploy live-stream via PM2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HETZNER_HOST }}
+          username: ${{ secrets.HETZNER_USER }}
+          key: ${{ secrets.HETZNER_SSH_KEY }}
+          script: |
+            set -e
+            export PATH="$HOME/.bun/bin:$PATH"
+            cd /opt/calor
+
+            echo "==> Pulling latest code..."
+            git pull origin main
+
+            echo "==> Installing dependencies for live-stream..."
+            cd mini-services/live-stream
+            bun install --frozen-lockfile
+
+            echo "==> Regenerating Prisma client..."
+            bunx prisma generate --schema=../../prisma/schema.prisma
+
+            echo "==> Restarting live-stream with PM2..."
+            pm2 restart live-stream --update-env || pm2 start ../../ecosystem.config.js --only live-stream
+            pm2 save
+
+            echo "==> live-stream status:"
+            pm2 show live-stream
+
+  reload-caddy:
+    name: Reload Caddy Config
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.caddy-changed == 'true'
+    steps:
+      - name: Reload Caddy on Hetzner
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HETZNER_HOST }}
+          username: ${{ secrets.HETZNER_USER }}
+          key: ${{ secrets.HETZNER_SSH_KEY }}
+          script: |
+            set -e
+            cd /opt/calor
+            git pull origin main
+
+            echo "==> Updating Caddy config..."
+            cp Caddyfile.prod /etc/caddy/Caddyfile
+
+            echo "==> Validating Caddy config..."
+            caddy validate --config /etc/caddy/Caddyfile
+
+            echo "==> Reloading Caddy..."
+            systemctl reload caddy
+            echo "==> Caddy reloaded successfully"
