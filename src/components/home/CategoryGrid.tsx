@@ -1,7 +1,7 @@
 import { db } from '@/lib/db'
-import { 
-  Sparkles, Droplet, Shirt, BookOpen, 
-  PlayCircle, Link2, Shield, Lock 
+import {
+  Sparkles, Droplet, Shirt, BookOpen,
+  PlayCircle, Link2, Shield, Lock
 } from 'lucide-react'
 
 const categoryIcons: Record<string, React.ReactNode> = {
@@ -51,7 +51,7 @@ export default async function CategoryGrid() {
             <span className="eyebrow">Shop by Category</span>
             <span className="w-10 h-px bg-terracotta/40" />
           </div>
-          <h2 
+          <h2
             className="font-display text-charcoal"
             style={{ fontSize: 'clamp(2rem, 3.5vw, 3rem)', fontWeight: 300 }}
           >
@@ -68,16 +68,29 @@ export default async function CategoryGrid() {
               className="group relative aspect-[3/4] overflow-hidden"
             >
               {/* Background Gradient */}
-              <div 
-                className={`absolute inset-0 bg-gradient-to-br ${categoryGradients[index % categoryGradients.length]} transition-all duration-500 group-hover:scale-105`}
+              <div
+                className={`absolute inset-0 bg-gradient-to-br ${categoryGradients[index % categoryGradients.length]} transition-transform duration-500 group-hover:scale-105`}
               />
-              
+
+              {/* Grain texture overlay */}
+              <div
+                className="absolute inset-0 pointer-events-none z-[1] opacity-[0.02]"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E")`,
+                  backgroundRepeat: 'repeat',
+                  backgroundSize: '200px 200px',
+                }}
+              />
+
+              {/* Terracotta tint on hover */}
+              <div className="absolute inset-0 bg-terracotta/0 group-hover:bg-terracotta/8 transition-all duration-500 z-[2]" />
+
               {/* Icon */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div 
-                  className={`text-charcoal transition-all duration-300 ${
-                    category.slug === 'kink-fetish' 
-                      ? 'opacity-100' 
+              <div className="absolute inset-0 flex items-center justify-center z-[3]">
+                <div
+                  className={`text-charcoal transition-all duration-300 group-hover:scale-110 ${
+                    category.slug === 'kink-fetish'
+                      ? 'opacity-100'
                       : 'opacity-45 group-hover:opacity-85'
                   }`}
                 >
@@ -86,14 +99,14 @@ export default async function CategoryGrid() {
               </div>
 
               {/* Bottom Overlay */}
-              <div className="absolute bottom-0 left-0 right-0 bg-charcoal/60 px-4 py-4 transition-all duration-300 group-hover:bg-charcoal/75 group-hover:-translate-y-1">
-                <h3 
+              <div className="absolute bottom-0 left-0 right-0 bg-charcoal/60 px-4 py-4 transition-all duration-300 group-hover:bg-charcoal/75 group-hover:-translate-y-1 z-[4]">
+                <h3
                   className="font-display text-warm-white text-sm lg:text-base"
                   style={{ fontWeight: 400 }}
                 >
                   {category.name}
                 </h3>
-                <p className="font-body text-warm-gray text-xs mt-1">
+                <p className="font-body text-warm-gray text-xs mt-1 transition-opacity duration-300 opacity-70 group-hover:opacity-100">
                   {category._count.products} products
                 </p>
               </div>

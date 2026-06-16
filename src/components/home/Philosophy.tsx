@@ -25,7 +25,7 @@ const stats = [
 
 export default function Philosophy() {
   return (
-    <section id="our-story" className="py-20 lg:py-32 bg-charcoal">
+    <section id="our-story" className="py-20 lg:py-32 bg-charcoal grain-overlay">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16">
           {/* Left: Brand Statement */}
@@ -34,12 +34,12 @@ export default function Philosophy() {
               <span className="w-10 h-px bg-terracotta/40" />
               <span className="eyebrow text-terracotta">Our Philosophy</span>
             </div>
-            <h2 
+            <h2
               className="font-display text-cream mb-6"
               style={{ fontSize: 'clamp(2rem, 3.5vw, 3rem)', fontWeight: 300 }}
             >
               Less shame. More{' '}
-              <span className="italic text-terracotta">warmth</span>. Always.
+              <span className="italic text-terracotta animate-warmth-pulse">warmth</span>. Always.
             </h2>
             <p className="font-body text-warm-gray text-base leading-relaxed mb-8">
               CALŌR occupies the space between Apple and Aesop. An elevated wellness and intimacy destination. Not a shop, not a pharmacy, not a bookstore. All three, unified under one philosophy: that intimacy deserves the same design attention and dignity as anything else you bring into your life.
@@ -55,12 +55,12 @@ export default function Philosophy() {
           {/* Right: Statistics Grid */}
           <div className="grid grid-cols-2 gap-6">
             {stats.map((stat) => (
-              <div 
+              <div
                 key={stat.label}
-                className="p-6 bg-warm-white/5 border border-warm-white/10"
+                className="p-6 bg-warm-white/5 border border-warm-white/10 transition-all duration-300 hover:border-l-2 hover:border-l-terracotta hover:border-t-warm-white/10 hover:border-r-warm-white/10 hover:border-b-warm-white/10"
               >
                 <stat.icon className="w-6 h-6 text-terracotta mb-4" />
-                <p 
+                <p
                   className="font-display text-cream text-2xl lg:text-3xl mb-2"
                   style={{ fontWeight: 300 }}
                 >

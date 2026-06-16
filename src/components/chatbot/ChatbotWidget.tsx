@@ -85,10 +85,8 @@ export default function ChatbotWidget() {
     if (isOpen && sessionId) {
       fetchConversation(sessionId)
       setHasNewMessage(false)
-      // Focus input after open
-      setTimeout(() => inputRef.current?.focus(), 300)
+      setTimeout(() => inputRef.current?.focus(), 350)
     }
-     
   }, [isOpen, sessionId])
 
   useEffect(() => {
@@ -101,14 +99,12 @@ export default function ChatbotWidget() {
       if (res.ok) {
         const json = await res.json()
         if (json.messages && json.messages.length > 0) {
-          // Parse suggestedActions from JSON strings for historical messages
           const parsed = json.messages.map((m: Record<string, unknown>) => ({
             ...m,
             suggestedActions: parseSuggestedActions(m.suggestedActions),
           }))
           setMessages(parsed)
         } else {
-          // No history — show welcome
           setMessages([{
             id: 'welcome',
             senderType: 'bot',
@@ -118,8 +114,7 @@ export default function ChatbotWidget() {
           }])
         }
       }
-    } catch (error) {
-      console.error('Error fetching conversation:', error)
+    } catch {
       setMessages([{
         id: 'welcome',
         senderType: 'bot',
@@ -150,16 +145,11 @@ export default function ChatbotWidget() {
       const res = await fetch('/api/chatbot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId,
-          message: userMessage.content,
-        }),
+        body: JSON.stringify({ sessionId, message: userMessage.content }),
       })
 
       if (res.ok) {
         const json = await res.json()
-
-        // Simulate typing delay for natural feel
         await new Promise(resolve => setTimeout(resolve, 400 + Math.random() * 600))
 
         const botMessage: Message = {
@@ -174,7 +164,6 @@ export default function ChatbotWidget() {
         setIsTyping(false)
         setMessages(prev => [...prev, botMessage])
 
-        // Handle escalation
         if (json.needsEscalation) {
           setTimeout(() => {
             setMessages(prev => [...prev, {
@@ -187,13 +176,11 @@ export default function ChatbotWidget() {
           }, 1200)
         }
 
-        // Notify if widget is closed
         if (!isOpen) setHasNewMessage(true)
       } else {
         throw new Error('Failed')
       }
-    } catch (error) {
-      console.error('Error sending message:', error)
+    } catch {
       setIsTyping(false)
       setMessages(prev => [...prev, {
         id: nanoid(),
@@ -208,14 +195,10 @@ export default function ChatbotWidget() {
 
   const handleActionClick = (actionId: string) => {
     const config = ACTION_CONFIG[actionId]
-
-    // If the action has a direct link, navigate
     if (config?.href) {
       window.location.href = config.href
       return
     }
-
-    // Otherwise, send a message
     const actionMessages: Record<string, string> = {
       track_order: "I'd like to track my order",
       start_return: "I'd like to start a return",
@@ -230,9 +213,7 @@ export default function ChatbotWidget() {
       escalate_to_support: "I'd like to speak with a person",
       payment_help: "I need help with payment",
     }
-
-    const message = actionMessages[actionId] || actionId.replace(/_/g, ' ')
-    sendMessage(message)
+    sendMessage(actionMessages[actionId] || actionId.replace(/_/g, ' '))
   }
 
   const handleQuickAction = (actionId: string) => {
@@ -245,40 +226,29 @@ export default function ChatbotWidget() {
     sendMessage(actionMessages[actionId] || actionId)
   }
 
-  const formatTime = (date: string) => {
-    return new Date(date).toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-    })
-  }
+  const formatTime = (date: string) =>
+    new Date(date).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
 
-  // Simple inline markdown renderer: **bold**, [link](url)
+  // Simple inline markdown renderer
   const renderMarkdown = (text: string) => {
     if (!text) return null
     const parts: (string | React.ReactElement)[] = []
-    // Match **bold**, [text](url)
     const regex = /\*\*(.+?)\*\*|\[(.+?)\]\((.+?)\)/g
     let lastIndex = 0
     let match: RegExpExecArray | null
     let keyIdx = 0
     while ((match = regex.exec(text)) !== null) {
-      if (match.index > lastIndex) {
-        parts.push(text.slice(lastIndex, match.index))
-      }
+      if (match.index > lastIndex) parts.push(text.slice(lastIndex, match.index))
       if (match[1]) {
-        // Bold
         parts.push(<strong key={`b${keyIdx++}`} className="font-semibold">{match[1]}</strong>)
       } else if (match[2] && match[3]) {
-        // Link
         parts.push(
-          <a key={`l${keyIdx++}`} href={match[3]} className="underline text-terracotta hover:text-terracotta/80 transition-colors" target={match[3].startsWith('http') ? '_blank' : undefined} rel={match[3].startsWith('http') ? 'noopener noreferrer' : undefined}>{match[2]}</a>
+          <a key={`l${keyIdx++}`} href={match[3]} className="underline text-terracotta hover:text-terracotta-light transition-colors" target={match[3].startsWith('http') ? '_blank' : undefined} rel={match[3].startsWith('http') ? 'noopener noreferrer' : undefined}>{match[2]}</a>
         )
       }
       lastIndex = match.index + match[0].length
     }
-    if (lastIndex < text.length) {
-      parts.push(text.slice(lastIndex))
-    }
+    if (lastIndex < text.length) parts.push(text.slice(lastIndex))
     return parts
   }
 
@@ -289,23 +259,42 @@ export default function ChatbotWidget() {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-terracotta text-cream flex items-center justify-center shadow-lg hover:bg-terracotta/90 transition-all z-50 group hover:scale-105 active:scale-95"
+        className="fixed bottom-6 right-6 w-14 h-14 bg-terracotta text-cream flex items-center justify-center shadow-lg hover:bg-terracotta-light transition-all duration-300 z-50 group hover:scale-105 active:scale-95"
         aria-label="Open chat"
+        style={{ transitionTimingFunction: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)' }}
       >
-        <MessageCircle className="w-6 h-6 group-hover:scale-110 transition-transform" />
+        <MessageCircle className="w-6 h-6 group-hover:scale-110 transition-transform duration-300" />
         {hasNewMessage && (
-          <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full animate-pulse" />
+          <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-terracotta-light border-2 border-warm-white animate-pulse" />
         )}
       </button>
     )
   }
 
   return (
-    <div className="fixed bottom-6 right-6 w-[400px] max-w-[calc(100vw-48px)] bg-warm-white border border-sand shadow-xl z-50 flex flex-col max-h-[80vh] animate-in fade-in slide-in-from-bottom-4 duration-300">
+    <div
+      className="fixed bottom-6 right-6 w-[400px] max-w-[calc(100vw-48px)] bg-warm-white border border-sand shadow-xl z-50 flex flex-col max-h-[80vh]"
+      style={{
+        animation: 'chatOpen 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94) both',
+      }}
+    >
+      <style jsx>{`
+        @keyframes chatOpen {
+          from {
+            opacity: 0;
+            transform: translateY(16px) scale(0.97);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+      `}</style>
+
       {/* Header */}
-      <div className="p-4 border-b border-sand flex items-center justify-between bg-gradient-to-r from-cream to-warm-white">
+      <div className="p-4 border-b border-sand flex items-center justify-between bg-cream">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-terracotta/10 flex items-center justify-center">
+          <div className="w-9 h-9 bg-terracotta/10 flex items-center justify-center flex-shrink-0">
             <Sparkles className="w-4 h-4 text-terracotta" />
           </div>
           <div>
@@ -313,7 +302,8 @@ export default function ChatbotWidget() {
               CALŌR Concierge
             </h3>
             <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 bg-green-500 rounded-full" />
+              {/* Brand-aligned indicator — terracotta instead of generic green */}
+              <span className="w-1.5 h-1.5 bg-terracotta animate-pulse" />
               <span className="text-[10px] font-body text-warm-gray uppercase tracking-widest">Online</span>
             </div>
           </div>
@@ -321,6 +311,7 @@ export default function ChatbotWidget() {
         <button
           onClick={() => setIsOpen(false)}
           className="w-8 h-8 flex items-center justify-center text-warm-gray hover:text-charcoal transition-colors"
+          aria-label="Close chat"
         >
           <X className="w-5 h-5" />
         </button>
@@ -331,14 +322,16 @@ export default function ChatbotWidget() {
         {messages.map((message) => (
           <div
             key={message.id}
-            className={`flex ${message.senderType === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-200`}
+            className={`flex ${message.senderType === 'user' ? 'justify-end' : 'justify-start'} animate-slide-in-up`}
+            style={{ animationDuration: '0.3s' }}
           >
             <div className={`max-w-[85%] ${message.senderType === 'user' ? 'order-2' : ''}`}>
               <div
-                className={`p-3.5 font-body text-sm leading-relaxed ${message.senderType === 'user'
-                  ? 'bg-charcoal text-cream rounded-tl-lg rounded-bl-lg rounded-tr-sm'
-                  : 'bg-sand/60 text-charcoal rounded-tr-lg rounded-br-lg rounded-tl-sm border border-sand/40'
-                  }`}
+                className={`p-3.5 font-body text-sm leading-relaxed ${
+                  message.senderType === 'user'
+                    ? 'bg-charcoal text-cream'
+                    : 'bg-cream text-charcoal border border-sand'
+                }`}
               >
                 {message.content.split('\n').map((line, i) => (
                   <p key={i} className={i > 0 ? 'mt-1.5' : ''}>
@@ -360,11 +353,11 @@ export default function ChatbotWidget() {
                       <button
                         key={i}
                         onClick={() => handleActionClick(actionId)}
-                        className="inline-flex items-center gap-1.5 text-xs font-body px-3 py-1.5 border border-terracotta/30 text-terracotta bg-terracotta/5 hover:bg-terracotta hover:text-cream transition-all duration-200 group"
+                        className="inline-flex items-center gap-1.5 text-xs font-body px-3 py-1.5 border border-sand text-warm-gray hover:border-terracotta hover:text-terracotta hover:bg-terracotta/5 transition-all duration-200 group"
                       >
                         <Icon className="w-3 h-3" />
                         {config?.label || actionId.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                        {config?.href && <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />}
+                        {config?.href && <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />}
                       </button>
                     )
                   })}
@@ -376,11 +369,11 @@ export default function ChatbotWidget() {
 
         {/* Typing indicator */}
         {isTyping && (
-          <div className="flex justify-start animate-in fade-in duration-200">
-            <div className="bg-sand/60 border border-sand/40 rounded-tr-lg rounded-br-lg rounded-tl-sm p-3.5 flex items-center gap-1.5">
-              <span className="w-2 h-2 bg-warm-gray/50 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-              <span className="w-2 h-2 bg-warm-gray/50 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-              <span className="w-2 h-2 bg-warm-gray/50 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+          <div className="flex justify-start animate-slide-in-up" style={{ animationDuration: '0.2s' }}>
+            <div className="bg-cream border border-sand p-3.5 flex items-center gap-1.5">
+              <span className="w-2 h-2 bg-warm-gray/50 animate-bounce" style={{ animationDelay: '0ms', animationDuration: '0.8s' }} />
+              <span className="w-2 h-2 bg-warm-gray/50 animate-bounce" style={{ animationDelay: '150ms', animationDuration: '0.8s' }} />
+              <span className="w-2 h-2 bg-warm-gray/50 animate-bounce" style={{ animationDelay: '300ms', animationDuration: '0.8s' }} />
             </div>
           </div>
         )}
@@ -394,7 +387,7 @@ export default function ChatbotWidget() {
                 <button
                   key={action.id}
                   onClick={() => handleQuickAction(action.id)}
-                  className="flex items-center gap-2 p-3 bg-cream/80 border border-sand hover:border-terracotta/40 hover:bg-terracotta/5 transition-all text-left group"
+                  className="flex items-center gap-2 p-3 bg-cream border border-sand hover:border-terracotta hover:bg-terracotta/5 transition-all duration-200 text-left group"
                 >
                   <div className="w-7 h-7 bg-sand/50 flex items-center justify-center flex-shrink-0 group-hover:bg-terracotta/10 transition-colors">
                     <action.icon className="w-3.5 h-3.5 text-warm-gray group-hover:text-terracotta transition-colors" />
@@ -412,10 +405,7 @@ export default function ChatbotWidget() {
       {/* Input */}
       <div className="p-3 border-t border-sand bg-cream/50">
         <form
-          onSubmit={(e) => {
-            e.preventDefault()
-            sendMessage()
-          }}
+          onSubmit={(e) => { e.preventDefault(); sendMessage() }}
           className="flex gap-2"
         >
           <input
@@ -424,19 +414,20 @@ export default function ChatbotWidget() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask me anything..."
-            className="flex-1 px-4 py-2.5 bg-warm-white border border-sand font-body text-sm text-charcoal placeholder:text-warm-gray/60 focus:outline-none focus:border-terracotta/50 transition-colors"
+            className="flex-1 px-4 py-2.5 bg-warm-white border border-sand font-body text-sm text-charcoal placeholder:text-warm-gray/60 focus:outline-none focus:border-terracotta/50 transition-colors duration-300"
             disabled={loading}
           />
           <button
             type="submit"
             disabled={!input.trim() || loading}
-            className="w-10 h-10 bg-terracotta text-cream flex items-center justify-center hover:bg-terracotta/90 disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95"
+            className="w-10 h-10 bg-terracotta text-cream flex items-center justify-center hover:bg-terracotta-light disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 active:scale-95"
           >
             <Send className="w-4 h-4" />
           </button>
         </form>
         <p className="text-[9px] font-body text-warm-gray/50 mt-1.5 text-center">
-          Powered by CALŌR AI · <Link href="/legal/privacy" className="hover:text-terracotta transition-colors">Privacy</Link>
+          Powered by CALŌR AI ·{' '}
+          <Link href="/legal/privacy" className="hover:text-terracotta transition-colors">Privacy</Link>
         </p>
       </div>
     </div>

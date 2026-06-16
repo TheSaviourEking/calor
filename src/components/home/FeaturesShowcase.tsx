@@ -82,15 +82,21 @@ export default function FeaturesShowcase() {
 
         {/* Feature Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
-          {highlights.map((feature) => {
+          {highlights.map((feature, index) => {
             const Icon = feature.icon
+            const indexLabel = String(index + 1).padStart(2, '0')
             return (
               <Link
                 key={feature.title}
                 href={feature.link}
-                className="group block bg-warm-white p-8 border border-sand hover:border-terracotta transition-all duration-300 hover:-translate-y-1"
+                className="group relative block bg-warm-white p-8 border border-sand hover:border-terracotta transition-all duration-300 hover:-translate-y-1 overflow-hidden"
               >
-                <Icon className="w-8 h-8 text-terracotta/60 mb-6 group-hover:text-terracotta transition-colors" />
+                {/* Editorial index number */}
+                <span className="absolute top-4 right-4 font-body text-xs text-charcoal/8 select-none">
+                  {indexLabel}
+                </span>
+
+                <Icon className="w-8 h-8 text-terracotta/60 mb-6 group-hover:text-terracotta group-hover:scale-110 transition-all duration-300" />
                 <h3
                   className="font-display text-charcoal text-lg mb-2"
                   style={{ fontWeight: 400 }}
@@ -100,6 +106,9 @@ export default function FeaturesShowcase() {
                 <p className="font-body text-warm-gray text-sm leading-relaxed">
                   {feature.description}
                 </p>
+
+                {/* Bottom accent bar */}
+                <div className="absolute bottom-0 left-0 h-0.5 bg-terracotta w-0 group-hover:w-full transition-all duration-500" />
               </Link>
             )
           })}

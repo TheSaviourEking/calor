@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, memo } from 'react'
-import { Heart, Scale, Video, X } from 'lucide-react'
+import { Heart, Scale, Video, X, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useCartStore, useWishlistStore, useLocaleStore } from '@/stores'
 import { useComparison } from '@/components/comparison/ComparisonContext'
@@ -48,8 +48,8 @@ interface ProductCardProps {
 }
 
 const ProductCard = memo(function ProductCard({ product }: ProductCardProps) {
-  const [_quantity, _setQuantity] = useState(1)
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false)
+  const [wishlistPopping, setWishlistPopping] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
 
   const { addItem } = useCartStore()
@@ -61,6 +61,7 @@ const ProductCard = memo(function ProductCard({ product }: ProductCardProps) {
   const isInWishlistState = isInWishlist(product.id)
   const inComparison = isInComparison(product.id)
   const price = product.variants[0]?.price || 0
+  const hasSecondImage = product.images.length >= 2
 
   const handleAddToBag = () => {
     setIsAdding(true)
@@ -80,6 +81,9 @@ const ProductCard = memo(function ProductCard({ product }: ProductCardProps) {
 
   const handleWishlistToggle = () => {
     toggleItem(product.id)
+    // Pop animation
+    setWishlistPopping(true)
+    setTimeout(() => setWishlistPopping(false), 400)
     toast.success(isInWishlistState ? 'Removed from wishlist' : 'Added to wishlist')
   }
 
@@ -108,22 +112,37 @@ const ProductCard = memo(function ProductCard({ product }: ProductCardProps) {
     'editors-pick': 'bg-gold text-charcoal',
   }
 
+  const showSocialProof = product.purchaseCount > 20 || product.viewCount > 100
+  const socialProofLabel = product.purchaseCount > 20 ? 'Most Popular' : 'Trending'
+
   return (
     <div className="group relative text-left">
-      {/* Media Area Component */}
+      {/* Media Area */}
       <div className="relative aspect-square bg-cream mb-4 overflow-hidden">
-        {/* Main Product Link Wrapping the Image */}
+        {/* Primary Image — fades out on hover if secondary exists */}
         <Link
           href={`/product/${product.slug}`}
           className="absolute inset-0 z-10"
           aria-label={`View ${product.name}`}
         >
           {product.images?.[0] ? (
-            <img
-              src={product.images[0].url}
-              alt={product.images[0].altText || product.name}
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-            />
+            <>
+              <img
+                src={product.images[0].url}
+                alt={product.images[0].altText || product.name}
+                className={`w-full h-full object-cover transition-all duration-700 group-hover:scale-105 ${
+                  hasSecondImage ? 'group-hover:opacity-0' : ''
+                }`}
+              />
+              {/* Secondary image cross-fade */}
+              {hasSecondImage && (
+                <img
+                  src={product.images[1].url}
+                  alt={product.images[1].altText || product.name}
+                  className="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-700 group-hover:opacity-100"
+                />
+              )}
+            </>
           ) : (
             <div className="flex h-full items-center justify-center bg-gradient-to-br from-cream to-sand">
               <span className="font-display text-charcoal/10 text-6xl" style={{ fontWeight: 300 }}>
@@ -132,8 +151,6 @@ const ProductCard = memo(function ProductCard({ product }: ProductCardProps) {
             </div>
           )}
         </Link>
-
-        {/* Overlays (Interactive elements need higher z-index than the Link) */}
 
         {/* Badges Stack (Top Left) */}
         <div className="absolute top-3 left-3 flex flex-col gap-2 z-20 pointer-events-none">
@@ -163,7 +180,7 @@ const ProductCard = memo(function ProductCard({ product }: ProductCardProps) {
                 e.stopPropagation()
                 setIsVideoModalOpen(true)
               }}
-              className="w-8 h-8 flex items-center justify-center bg-charcoal/80 backdrop-blur-sm text-cream transition-transform duration-300 hover:scale-110 hover:bg-terracotta"
+              className="w-8 h-8 flex items-center justify-center bg-charcoal/80 backdrop-blur-sm text-cream transition-all duration-300 hover:scale-110 hover:bg-terracotta"
               title="Watch Video"
             >
               <Video className="w-4 h-4" />
@@ -179,7 +196,14 @@ const ProductCard = memo(function ProductCard({ product }: ProductCardProps) {
             aria-label={isInWishlistState ? 'Remove from wishlist' : 'Add to wishlist'}
           >
             <Heart
-              className={`w-4 h-4 transition-all duration-300 ${isInWishlistState ? 'fill-terracotta text-terracotta' : 'text-charcoal'}`}
+              className={`w-4 h-4 transition-all duration-300 ${
+                isInWishlistState ? 'fill-terracotta text-terracotta' : 'text-charcoal'
+              } ${wishlistPopping ? 'scale-125' : 'scale-100'}`}
+              style={{
+                transition: wishlistPopping
+                  ? 'transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1)'
+                  : 'transform 0.2s ease, color 0.3s ease, fill 0.3s ease',
+              }}
             />
           </button>
           <button
@@ -202,9 +226,16 @@ const ProductCard = memo(function ProductCard({ product }: ProductCardProps) {
             handleAddToBag()
           }}
           disabled={isAdding}
-          className="absolute bottom-3 left-3 right-3 bg-charcoal text-warm-white py-3 font-body text-xs uppercase tracking-wider opacity-0 translate-y-4 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0 hover:bg-terracotta disabled:opacity-50 z-20"
+          className="absolute bottom-3 left-3 right-3 bg-charcoal text-warm-white py-3 font-body text-xs uppercase tracking-wider opacity-0 translate-y-4 transition-all duration-300 group-hover:opacity-100 group-hover:translate-y-0 hover:bg-terracotta disabled:opacity-50 z-20 flex items-center justify-center gap-2"
         >
-          {isAdding ? 'Adding...' : 'Add to Bag'}
+          {isAdding ? (
+            <>
+              <Loader2 className="w-3 h-3 animate-spin" />
+              <span>Adding...</span>
+            </>
+          ) : (
+            'Add to Bag'
+          )}
         </button>
       </div>
 
@@ -229,9 +260,10 @@ const ProductCard = memo(function ProductCard({ product }: ProductCardProps) {
                 </p>
               )}
             </div>
-            {(product.purchaseCount > 20 || product.viewCount > 100) && (
-              <span className="text-[0.6rem] font-body text-terracotta uppercase tracking-widest font-medium">
-                {product.purchaseCount > 20 ? 'Most Popular' : 'Trending'}
+            {showSocialProof && (
+              <span className="flex items-center gap-1 text-[0.6rem] font-body text-terracotta uppercase tracking-widest font-medium">
+                <span className="w-1.5 h-1.5 bg-terracotta rounded-full animate-pulse" />
+                {socialProofLabel}
               </span>
             )}
           </div>

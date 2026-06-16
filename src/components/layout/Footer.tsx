@@ -38,14 +38,47 @@ const companyLinks = [
   { label: 'Changelog', href: '/changelog' },
 ]
 
+const socialLinks = [
+  {
+    label: 'Instagram',
+    href: 'https://instagram.com',
+    icon: <Instagram className="w-[18px] h-[18px]" />,
+  },
+  {
+    label: 'TikTok',
+    href: 'https://tiktok.com',
+    icon: (
+      <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <path d="M9 12a4 4 0 1 0 4 4V4c.5 2.5 2.5 4.5 5 5" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ),
+  },
+  {
+    label: 'Pinterest',
+    href: 'https://pinterest.com',
+    icon: (
+      <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <circle cx="12" cy="12" r="10" />
+        <path d="M8 12c0-2.2 1.8-4 4-4s4 1.8 4 4-1.8 4-4 4" strokeLinecap="round" />
+        <path d="M12 16v4" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
+    label: 'Twitter/X',
+    href: 'https://twitter.com',
+    icon: <Twitter className="w-[18px] h-[18px]" />,
+  },
+]
+
 export default function Footer() {
   return (
     <footer className="mt-auto" style={{ background: '#1A1410' }}>
       <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16">
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 lg:gap-6">
-          {/* Column 1: Brand */}
-          <div className="col-span-2 md:col-span-1">
-            <h2 
+          {/* Column 1: Brand — full width on mobile */}
+          <div className="col-span-2 md:col-span-1 pb-8 md:pb-0 border-b border-charcoal/40 md:border-none">
+            <h2
               className="font-display text-cream text-xl tracking-[0.3em] mb-4"
               style={{ fontWeight: 300 }}
             >
@@ -55,55 +88,24 @@ export default function Footer() {
               An elevated destination for intimacy, wellness, and pleasure. Curated with care. Delivered discreetly.
             </p>
             {/* Country Selector */}
-            <button 
-              className="flex items-center gap-2 font-body text-warm-gray text-sm hover:text-terracotta transition-colors mb-4"
-            >
+            <button className="flex items-center gap-2 font-body text-warm-gray text-sm hover:text-terracotta transition-colors mb-4">
               <Globe className="w-4 h-4" />
               <span>United States (USD)</span>
             </button>
-            <div className="flex gap-4">
-              <a 
-                href="https://instagram.com" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-warm-gray hover:text-terracotta transition-colors duration-300"
-                aria-label="Instagram"
-              >
-                <Instagram className="w-[18px] h-[18px]" />
-              </a>
-              <a 
-                href="https://tiktok.com" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-warm-gray hover:text-terracotta transition-colors duration-300"
-                aria-label="TikTok"
-              >
-                <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path d="M9 12a4 4 0 1 0 4 4V4c.5 2.5 2.5 4.5 5 5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </a>
-              <a 
-                href="https://pinterest.com" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-warm-gray hover:text-terracotta transition-colors duration-300"
-                aria-label="Pinterest"
-              >
-                <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <circle cx="12" cy="12" r="10"/>
-                  <path d="M8 12c0-2.2 1.8-4 4-4s4 1.8 4 4-1.8 4-4 4" strokeLinecap="round"/>
-                  <path d="M12 16v4" strokeLinecap="round"/>
-                </svg>
-              </a>
-              <a 
-                href="https://twitter.com" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-warm-gray hover:text-terracotta transition-colors duration-300"
-                aria-label="Twitter/X"
-              >
-                <Twitter className="w-[18px] h-[18px]" />
-              </a>
+            {/* Social Icons — min 44px tap targets */}
+            <div className="flex gap-2">
+              {socialLinks.map((s) => (
+                <a
+                  key={s.label}
+                  href={s.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="min-w-[44px] min-h-[44px] flex items-center justify-center text-warm-gray hover:text-terracotta transition-colors duration-300"
+                  aria-label={s.label}
+                >
+                  {s.icon}
+                </a>
+              ))}
             </div>
           </div>
 
@@ -115,7 +117,7 @@ export default function Footer() {
             <ul className="space-y-3">
               {shopLinks.map((link) => (
                 <li key={link.label}>
-                  <a 
+                  <a
                     href={link.href}
                     className="font-body text-warm-gray text-sm hover:text-terracotta transition-colors duration-300"
                   >
@@ -134,7 +136,7 @@ export default function Footer() {
             <ul className="space-y-3">
               {featureLinks.map((link) => (
                 <li key={link.label}>
-                  <a 
+                  <a
                     href={link.href}
                     className="font-body text-warm-gray text-sm hover:text-terracotta transition-colors duration-300"
                   >
@@ -153,7 +155,7 @@ export default function Footer() {
             <ul className="space-y-3">
               {helpLinks.map((link) => (
                 <li key={link.label}>
-                  <a 
+                  <a
                     href={link.href}
                     className="font-body text-warm-gray text-sm hover:text-terracotta transition-colors duration-300"
                   >
@@ -172,7 +174,7 @@ export default function Footer() {
             <ul className="space-y-3">
               {companyLinks.map((link) => (
                 <li key={link.label}>
-                  <a 
+                  <a
                     href={link.href}
                     className="font-body text-warm-gray text-sm hover:text-terracotta transition-colors duration-300"
                   >
@@ -189,26 +191,26 @@ export default function Footer() {
           <p className="font-body text-warm-gray text-xs">
             © {new Date().getFullYear()} CALŌR. All rights reserved.
           </p>
-          <div className="flex gap-6">
-            <a 
+          <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
+            <a
               href="/legal/privacy"
               className="font-body text-warm-gray text-xs hover:text-terracotta transition-colors duration-300"
             >
               Privacy Policy
             </a>
-            <a 
+            <a
               href="/legal/terms"
               className="font-body text-warm-gray text-xs hover:text-terracotta transition-colors duration-300"
             >
               Terms of Service
             </a>
-            <a 
+            <a
               href="/legal/cookies"
               className="font-body text-warm-gray text-xs hover:text-terracotta transition-colors duration-300"
             >
               Cookie Policy
             </a>
-            <a 
+            <a
               href="/legal/returns"
               className="font-body text-warm-gray text-xs hover:text-terracotta transition-colors duration-300"
             >
