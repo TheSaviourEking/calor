@@ -1,0 +1,71 @@
+version: '3.8'
+
+# Production Docker Compose for CALŌR mini-services on Hetzner VPS
+# Handles support-chat (port 3031) and live-stream (port 3032)
+# Both services use Caddy as a reverse proxy for SSL termination.
+#
+# Usage on VPS:
+#   docker compose -f docker-compose.prod.yml up -d
+#   docker compose -f docker-compose.prod.yml up -d --build support-chat  (rebuild one service)
+#   docker compose -f docker-compose.prod.yml logs -f                     (follow logs)
+
+services:
+  support-chat:
+    build:
+      context: .
+      dockerfile: mini-services/support-chat/Dockerfile
+    container_name: calor-support-chat
+    restart: always
+    ports:
+      - "3031:3031"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=${DATABASE_URL}
+      - SOCKET_IO_ORIGINS=${SOCKET_IO_ORIGINS}
+      - PORT=3031
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3031/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  live-stream:
+    build:
+      context: .
+      dockerfile: mini-services/live-stream/Dockerfile
+    container_name: calor-live-stream
+    restart: always
+    ports:
+      - "3032:3032"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=${DATABASE_URL}
+      - SOCKET_IO_ORIGINS=${SOCKET_IO_ORIGINS}
+      - PORT=3032
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3032/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: calor-caddy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile.prod:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - support-chat
+      - live-stream
+
+volumes:
+  caddy_data:
+  caddy_config:
