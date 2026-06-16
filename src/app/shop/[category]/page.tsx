@@ -4,6 +4,8 @@ import CategoryClient from "./CategoryClient";
 import Link from "next/link";
 import { serialise } from "@/lib/serialise";
 
+export const dynamic = 'force-dynamic'
+
 interface PageProps {
   params: Promise<{ category: string }>;
 }

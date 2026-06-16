@@ -4,6 +4,8 @@ import { getSession } from '@/lib/auth/session'
 import { db } from '@/lib/db'
 import { serialise } from '@/lib/serialise'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata = {
   title: 'Support | CALŌR',
   description: 'Get help with your orders, products, and account',

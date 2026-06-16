@@ -2,6 +2,8 @@ import { db } from '@/lib/db'
 import AdminSupportClient from './AdminSupportClient'
 import { serialise } from '@/lib/serialise'
 
+export const dynamic = 'force-dynamic'
+
 async function getTicketsWithStats() {
   const [tickets, stats, categories, admins] = await Promise.all([
     db.supportTicket.findMany({
