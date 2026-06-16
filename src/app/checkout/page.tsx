@@ -1,3 +1,5 @@
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
 import { db } from '@/lib/db'
 import CheckoutClient from './CheckoutClient'
 import { getSession } from '@/lib/auth'
@@ -20,6 +22,14 @@ async function getGiftWrappingOptions() {
 }
 
 export default async function CheckoutPage() {
+  // Age gate enforcement — both authenticated and guest users must be age-verified
+  // This is a server-side check so it cannot be bypassed by direct URL navigation
+  const cookieStore = await cookies()
+  const ageVerified = cookieStore.get('calor_age_verified')?.value
+  if (!ageVerified) {
+    redirect('/age-gate?returnTo=/checkout')
+  }
+
   const session = await getSession()
   let initialAvailablePoints = 0
 
