@@ -4,20 +4,38 @@ import { useEffect, useRef } from "react";
 import { ChevronDown } from "lucide-react";
 import Link from "next/link";
 
-export default function Hero() {
-  const decorRef = useRef<HTMLSpanElement>(null);
+// Ring configuration: 7 rings radiating from the heat source
+// Each has a slightly displaced center (cx/cy offsets from origin) for organic feel
+const ORIGIN = { x: 310, y: 470 }; // off-center: 38.75% x, 52.2% y of 800x900 viewport
 
-  // Parallax for decorative "C"
+const rings = [
+  { r: 45,  cxOff: 0,  cyOff: 0,  strokeOpacity: 0.30, strokeWidth: 0.8, fill: "rgba(196,120,90,0.06)", parallaxRate: -0.35 },
+  { r: 90,  cxOff: 2,  cyOff: -2, strokeOpacity: 0.22, strokeWidth: 0.7, fill: "none",                   parallaxRate: -0.25 },
+  { r: 150, cxOff: 3,  cyOff: -4, strokeOpacity: 0.17, strokeWidth: 0.6, fill: "none",                   parallaxRate: -0.30 },
+  { r: 220, cxOff: 2,  cyOff: -3, strokeOpacity: 0.12, strokeWidth: 0.5, fill: "none",                   parallaxRate: -0.25 },
+  { r: 310, cxOff: 4,  cyOff: -5, strokeOpacity: 0.08, strokeWidth: 0.4, fill: "none",                   parallaxRate: -0.18 },
+  { r: 420, cxOff: 5,  cyOff: -6, strokeOpacity: 0.05, strokeWidth: 0.3, fill: "none",                   parallaxRate: -0.12 },
+  { r: 550, cxOff: 3,  cyOff: -4, strokeOpacity: 0.03, strokeWidth: 0.2, fill: "none",                   parallaxRate: -0.08 },
+]
+
+export default function Hero() {
+  // Individual refs for each ring — differential parallax
+  const ringRefs = useRef<(SVGCircleElement | null)[]>([])
+
   useEffect(() => {
     const handleScroll = () => {
-      if (decorRef.current) {
-        const y = window.scrollY * 0.3;
-        decorRef.current.style.transform = `translateY(${y}px)`;
-      }
-    };
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+      const scrollY = window.scrollY
+      ringRefs.current.forEach((el, i) => {
+        if (el) {
+          const rate = rings[i].parallaxRate
+          el.style.transform = `translateY(${scrollY * rate}px)`
+          el.style.transformOrigin = `${ORIGIN.x + rings[i].cxOff}px ${ORIGIN.y + rings[i].cyOff}px`
+        }
+      })
+    }
+    window.addEventListener("scroll", handleScroll, { passive: true })
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
 
   return (
     <section className="relative min-h-screen flex flex-col lg:flex-row">
@@ -40,8 +58,8 @@ export default function Hero() {
             className="inline-block animate-word-in"
             style={{ animationDelay: "80ms" }}
           >
-            Where
-          </span> {" "}
+            Where{" "}
+          </span>
           <span
             className="italic text-terracotta inline-block animate-word-in animate-warmth-pulse"
             style={{ animationDelay: "180ms" }}
@@ -87,44 +105,107 @@ export default function Hero() {
         </div>
       </div>
 
-      {/* Right Visual Panel */}
-      <div className="hidden lg:flex flex-1 relative overflow-hidden grain-overlay" style={{
-        background: "linear-gradient(135deg, #F7F2EC, #E8DDD0, #F0E0D6, #F7F2EC, #E8DDD0)"
-      }}>
-        {/* Animated gradient background */}
-        <div
-          className="absolute inset-0 animate-gradient-shift"
-          style={{
-            background:
-              "linear-gradient(135deg, #F7F2EC 0%, #E8DDD0 30%, #F0E0D6 60%, #F7F2EC 80%, #E8DDD0 100%)",
-          }}
-        />
+      {/* Right Visual Panel — Heat Ring Composition */}
+      <div
+        className="hidden lg:flex flex-1 relative overflow-hidden grain-overlay"
+        style={{
+          // Radial gradient radiates from the same origin as the rings
+          background:
+            "radial-gradient(circle at 38.75% 52.2%, #F0E0D6 0%, #F7F2EC 42%, #E8DDD0 100%)",
+        }}
+      >
+        {/* SVG Heat Rings */}
+        <svg
+          viewBox="0 0 800 900"
+          className="absolute inset-0 w-full h-full"
+          overflow="visible"
+          aria-hidden="true"
+          style={{ pointerEvents: "none" }}
+        >
+          <defs>
+            {/* CSS keyframe for ring breathing — applied via style attribute */}
+            <style>{`
+              .ring-breathe-1 {
+                transform-origin: ${ORIGIN.x}px ${ORIGIN.y}px;
+                animation: ringBreathe 4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+              }
+              .ring-breathe-2 {
+                transform-origin: ${ORIGIN.x + 2}px ${ORIGIN.y - 2}px;
+                animation: ringBreathe 4s cubic-bezier(0.45, 0, 0.55, 1) -1.5s infinite;
+              }
+              @keyframes ringBreathe {
+                0%, 100% { transform: scale(1.0); opacity: 1; }
+                50%       { transform: scale(1.04); opacity: 0.8; }
+              }
+            `}</style>
+          </defs>
 
-        {/* Decorative oversized initial letter — parallax */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span
-            ref={decorRef}
-            className="font-display font-light select-none will-change-transform"
+          {/* Rings — outermost (6) to innermost (0), so inner ones render on top */}
+          {[...rings].reverse().map((ring, reversedIdx) => {
+            const originalIdx = rings.length - 1 - reversedIdx
+            const cx = ORIGIN.x + ring.cxOff
+            const cy = ORIGIN.y + ring.cyOff
+            // Breathing only on rings 0 and 1 (the two innermost)
+            const breatheClass =
+              originalIdx === 0
+                ? "ring-breathe-1"
+                : originalIdx === 1
+                ? "ring-breathe-2"
+                : ""
+
+            return (
+              <circle
+                key={originalIdx}
+                ref={(el) => { ringRefs.current[originalIdx] = el }}
+                cx={cx}
+                cy={cy}
+                r={ring.r}
+                fill={ring.fill}
+                stroke="rgb(196, 120, 90)"
+                strokeWidth={ring.strokeWidth}
+                strokeOpacity={ring.strokeOpacity}
+                className={breatheClass}
+                style={{ willChange: "transform" }}
+              />
+            )
+          })}
+
+          {/* Heat source — two-layer center dot */}
+          {/* Outer glow */}
+          <circle
+            cx={ORIGIN.x}
+            cy={ORIGIN.y}
+            r={8}
+            fill="rgba(196, 120, 90, 0.18)"
             style={{
-              fontSize: "14rem",
-              color: "rgba(196, 120, 90, 0.12)",
-              lineHeight: 1,
-              transition: "transform 0.1s linear",
+              transformOrigin: `${ORIGIN.x}px ${ORIGIN.y}px`,
+              animation: "ringBreathe 4s cubic-bezier(0.45, 0, 0.55, 1) -0.8s infinite",
             }}
-          >
-            C
-          </span>
-        </div>
+          />
+          {/* Inner core */}
+          <circle
+            cx={ORIGIN.x}
+            cy={ORIGIN.y}
+            r={4}
+            fill="rgba(196, 120, 90, 0.55)"
+          />
+          {/* Bright center */}
+          <circle
+            cx={ORIGIN.x}
+            cy={ORIGIN.y}
+            r={1.5}
+            fill="rgba(196, 120, 90, 0.9)"
+          />
+        </svg>
 
-        {/* Rotating badge */}
-        <div className="absolute bottom-12 right-12">
+        {/* Rotating badge — sits above rings */}
+        <div className="absolute bottom-12 right-12 z-20">
           <RotatingBadge />
         </div>
       </div>
 
       {/* Scroll Indicator */}
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
-        {/* "Scroll" label rotated */}
         <span
           className="eyebrow text-charcoal/30 mb-2"
           style={{
@@ -160,7 +241,7 @@ function RotatingBadge() {
           cy="50"
           r="48"
           fill="none"
-          stroke="rgba(196, 120, 90, 0.2)"
+          stroke="rgba(196, 120, 90, 0.25)"
         />
         <text
           fill="#C4785A"
@@ -172,9 +253,8 @@ function RotatingBadge() {
           </textPath>
         </text>
       </svg>
-      {/* Center dot */}
       <div className="absolute inset-0 flex items-center justify-center">
-        <div className="w-2 h-2 bg-terracotta opacity-30" />
+        <div className="w-2 h-2 bg-terracotta opacity-40" />
       </div>
     </div>
   );
