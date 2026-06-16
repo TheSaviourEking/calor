@@ -1,6 +1,6 @@
 name: Deploy Mini-Services to Hetzner
 
-# Triggers on push to main when mini-services or prisma schema changes
+# Triggers on push to main when mini-services, prisma schema, or infra files change
 on:
   push:
     branches:
@@ -10,6 +10,11 @@ on:
       - 'prisma/schema.prisma'
       - 'ecosystem.config.js'
       - 'Caddyfile.prod'
+
+# Required GitHub Secrets (SSH access only — env vars live in /opt/calor/.env on the VPS):
+#   HETZNER_HOST     — VPS IP address
+#   HETZNER_USER     — SSH user (typically root)
+#   HETZNER_SSH_KEY  — private SSH key content
 
 jobs:
   detect-changes:
@@ -57,13 +62,13 @@ jobs:
           key: ${{ secrets.HETZNER_SSH_KEY }}
           script: |
             set -e
-            export PATH="$HOME/.bun/bin:$PATH"
+            export PATH="$HOME/.bun/bin:$HOME/.local/share/pnpm:$PATH"
             cd /opt/calor
 
             echo "==> Pulling latest code..."
             git pull origin main
 
-            echo "==> Installing dependencies for support-chat..."
+            echo "==> Installing dependencies..."
             cd mini-services/support-chat
             bun install --frozen-lockfile
 
@@ -71,10 +76,11 @@ jobs:
             bunx prisma generate --schema=../../prisma/schema.prisma
 
             echo "==> Restarting support-chat with PM2..."
-            pm2 restart support-chat --update-env || pm2 start ../../ecosystem.config.js --only support-chat
+            cd /opt/calor
+            pm2 restart support-chat --update-env 2>/dev/null || pm2 start ecosystem.config.js --only support-chat
             pm2 save
 
-            echo "==> support-chat status:"
+            echo "==> Done. Status:"
             pm2 show support-chat
 
   deploy-live-stream:
@@ -94,13 +100,13 @@ jobs:
           key: ${{ secrets.HETZNER_SSH_KEY }}
           script: |
             set -e
-            export PATH="$HOME/.bun/bin:$PATH"
+            export PATH="$HOME/.bun/bin:$HOME/.local/share/pnpm:$PATH"
             cd /opt/calor
 
             echo "==> Pulling latest code..."
             git pull origin main
 
-            echo "==> Installing dependencies for live-stream..."
+            echo "==> Installing dependencies..."
             cd mini-services/live-stream
             bun install --frozen-lockfile
 
@@ -108,10 +114,11 @@ jobs:
             bunx prisma generate --schema=../../prisma/schema.prisma
 
             echo "==> Restarting live-stream with PM2..."
-            pm2 restart live-stream --update-env || pm2 start ../../ecosystem.config.js --only live-stream
+            cd /opt/calor
+            pm2 restart live-stream --update-env 2>/dev/null || pm2 start ecosystem.config.js --only live-stream
             pm2 save
 
-            echo "==> live-stream status:"
+            echo "==> Done. Status:"
             pm2 show live-stream
 
   reload-caddy:
@@ -134,9 +141,9 @@ jobs:
             echo "==> Updating Caddy config..."
             cp Caddyfile.prod /etc/caddy/Caddyfile
 
-            echo "==> Validating Caddy config..."
+            echo "==> Validating config..."
             caddy validate --config /etc/caddy/Caddyfile
 
             echo "==> Reloading Caddy..."
             systemctl reload caddy
-            echo "==> Caddy reloaded successfully"
+            echo "==> Caddy reloaded"

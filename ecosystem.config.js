@@ -1,13 +1,23 @@
 // PM2 Ecosystem Config — CALŌR Mini-Services
 // Used on Hetzner VPS to manage support-chat and live-stream processes.
 //
+// Environment variables are loaded from /opt/calor/.env on the VPS.
+// Create this file once on the server — it is never committed to git.
+//
+// /opt/calor/.env contents:
+//   DATABASE_URL=postgresql://...@xxx.neon.tech/calor?sslmode=require
+//   SOCKET_IO_ORIGINS=https://yourdomain.com
+//   NODE_ENV=production
+//
 // First-time setup:
 //   pm2 start ecosystem.config.js
 //   pm2 save
-//   pm2 startup  (follow the printed command to enable auto-start on reboot)
+//   pm2 startup  (follow the printed command)
 //
 // Subsequent deploys (handled by GitHub Actions):
 //   pm2 startOrRestart ecosystem.config.js --update-env
+
+require('dotenv').config({ path: '/opt/calor/.env' })
 
 module.exports = {
   apps: [
@@ -21,7 +31,7 @@ module.exports = {
       watch: false,
       max_memory_restart: '256M',
       env: {
-        NODE_ENV: 'production',
+        NODE_ENV: process.env.NODE_ENV || 'production',
         PORT: '3031',
         DATABASE_URL: process.env.DATABASE_URL,
         SOCKET_IO_ORIGINS: process.env.SOCKET_IO_ORIGINS,
@@ -40,7 +50,7 @@ module.exports = {
       watch: false,
       max_memory_restart: '256M',
       env: {
-        NODE_ENV: 'production',
+        NODE_ENV: process.env.NODE_ENV || 'production',
         PORT: '3032',
         DATABASE_URL: process.env.DATABASE_URL,
         SOCKET_IO_ORIGINS: process.env.SOCKET_IO_ORIGINS,
