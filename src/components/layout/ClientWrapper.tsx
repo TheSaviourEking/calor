@@ -6,6 +6,7 @@ import Footer from './Footer'
 import CartDrawer from '@/components/cart/CartDrawer'
 import { ComparisonProvider } from '@/components/comparison/ComparisonContext'
 import ChatbotWidget from '@/components/chatbot/ChatbotWidget'
+import ConfirmDialog from '@/components/ui/ConfirmDialog'
 import { useAuthStore } from '@/stores/auth'
 
 interface ClientWrapperProps {
@@ -26,6 +27,7 @@ export default function ClientWrapper({ children }: ClientWrapperProps) {
       <Footer />
       <CartDrawer />
       <ChatbotWidget />
+      <ConfirmDialog />
     </ComparisonProvider>
   )
 }

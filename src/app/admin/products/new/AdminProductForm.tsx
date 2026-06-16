@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import { Save, UploadCloud, Video, Plus, Trash2, Info, X, Lock } from 'lucide-react'
 import Link from 'next/link'
 import {
@@ -115,7 +116,7 @@ export default function AdminProductForm() {
             setShowNewCategory(false)
         } catch (error) {
             console.error(error)
-            alert('Error creating category')
+            toast.error('Error creating category')
         }
     }
 
@@ -307,7 +308,7 @@ export default function AdminProductForm() {
             }
         } catch (error) {
             console.error('Error uploading file:', error)
-            alert('Error uploading file. Please ensure Cloudflare R2 credentials are set.')
+            toast.error('Error uploading file. Please ensure Cloudflare R2 credentials are set.')
         } finally {
             setUploadingMedia(false)
             e.target.value = ''
@@ -417,7 +418,7 @@ export default function AdminProductForm() {
             router.refresh()
         } catch (error) {
             console.error(error)
-            alert('Error creating product. Please try again.')
+            toast.error('Error creating product. Please try again.')
             setLoading(false)
         }
     }

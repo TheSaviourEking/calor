@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Star, Check, X, Eye, Trash2, Loader2 } from 'lucide-react'
+import { confirm } from '@/lib/confirm'
 import Link from 'next/link'
 
 interface Review {
@@ -61,7 +62,8 @@ export default function AdminReviewsClient({ pendingReviews: initial, approvedRe
   }
 
   const handleReject = async (reviewId: string) => {
-    if (!confirm('Delete this review permanently?')) return
+    const ok = await confirm({ title: 'Delete this review?', message: 'This will permanently remove the review. This cannot be undone.', danger: true, confirmLabel: 'Delete Review' })
+    if (!ok) return
     setLoading(reviewId)
     try {
       const res = await fetch(`/api/reviews/${reviewId}`, { method: 'DELETE' })

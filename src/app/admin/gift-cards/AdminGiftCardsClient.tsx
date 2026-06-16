@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Gift, Search, Ban, Loader2 } from 'lucide-react'
+import { confirm } from '@/lib/confirm'
 
 interface Transaction { id: string; amountCents: number; type: string; createdAt: string }
 
@@ -35,7 +36,8 @@ export default function AdminGiftCardsClient({ initialGiftCards }: { initialGift
   )
 
   const handleVoid = async (id: string) => {
-    if (!confirm('Void this gift card? The remaining balance will be set to $0.')) return
+    const ok = await confirm({ title: 'Void this gift card?', message: 'The remaining balance will be set to $0. This cannot be undone.', danger: true, confirmLabel: 'Void Card' })
+    if (!ok) return
     setLoading(id)
     try {
       const res = await fetch(`/api/gift-cards`, {

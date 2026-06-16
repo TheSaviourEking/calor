@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { Package, X, Loader2 } from 'lucide-react'
 import Link from 'next/link'
+import { confirm } from '@/lib/confirm'
+import { toast } from 'sonner'
 
 interface OrderItem {
   id: string
@@ -41,7 +43,8 @@ export default function OrdersClient({ initialOrders }: { initialOrders: Order[]
   const formatDate = (d: string) => new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
 
   const handleCancel = async (orderId: string, reference: string) => {
-    if (!confirm(`Cancel order ${reference}? This cannot be undone.`)) return
+    const ok = await confirm({ title: 'Cancel this order?', message: `Order ${reference} will be cancelled. If payment was already taken, please contact support for a refund.`, danger: true, confirmLabel: 'Cancel Order', cancelLabel: 'Keep Order' })
+    if (!ok) return
     setCancelling(orderId)
     try {
       const res = await fetch(`/api/orders`, {
@@ -52,10 +55,10 @@ export default function OrdersClient({ initialOrders }: { initialOrders: Order[]
       if (res.ok) {
         setOrders((prev) => prev.map((o) => o.id === orderId ? { ...o, status: 'CANCELLED' } : o))
       } else {
-        alert('Could not cancel this order. Please contact support if you need assistance.')
+        toast.error('Could not cancel this order. Please contact support if you need assistance.')
       }
     } catch {
-      alert('Something went wrong. Please try again.')
+      toast.error('Something went wrong. Please try again.')
     }
     setCancelling(null)
   }

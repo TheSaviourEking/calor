@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { Plus, Trash2, Save, X, Loader2, Package } from 'lucide-react'
+import { confirm } from '@/lib/confirm'
+import { toast } from 'sonner'
 
 interface Product { id: string; name: string; slug: string }
 interface BundleItem { id: string; quantity: number; sortOrder: number; product: Product }
@@ -23,7 +25,7 @@ export default function AdminBundlesClient({ initialBundles, products }: { initi
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (selectedProducts.length < 2) { alert('Add at least 2 products to a bundle.'); return }
+    if (selectedProducts.length < 2) { toast.error('Add at least 2 products to a bundle.'); return }
     setLoading('new')
     try {
       const price = Math.round(parseFloat(form.priceCents) * 100)
@@ -57,7 +59,8 @@ export default function AdminBundlesClient({ initialBundles, products }: { initi
   }
 
   const deleteBundle = async (id: string) => {
-    if (!confirm('Delete this bundle?')) return
+    const ok = await confirm({ title: 'Delete this bundle?', message: 'This will remove the bundle. Individual products will not be affected.', danger: true, confirmLabel: 'Delete Bundle' })
+    if (!ok) return
     setLoading(id)
     try {
       const res = await fetch(`/api/bundles?id=${id}`, { method: 'DELETE' })

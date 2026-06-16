@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { RefreshCw, Pause, X, ChevronDown, Loader2, Search } from 'lucide-react'
+import { confirm } from '@/lib/confirm'
 
 interface Plan { id: string; name: string; priceCents: number; interval: string }
 
@@ -46,7 +47,10 @@ export default function AdminSubscriptionsClient({
   })
 
   const updateSub = async (id: string, action: 'cancel' | 'pause' | 'resume') => {
-    if (action === 'cancel' && !confirm('Cancel this subscription at period end?')) return
+    if (action === 'cancel') {
+      const ok = await confirm({ title: 'Cancel this subscription?', message: 'The subscription will remain active until the end of the current billing period.', danger: true, confirmLabel: 'Cancel Subscription', cancelLabel: 'Keep Active' })
+      if (!ok) return
+    }
     setLoading(id)
     try {
       const statusMap = { cancel: 'cancelled', pause: 'paused', resume: 'active' }
