@@ -7,6 +7,7 @@ import { Plus, Users, Calendar, Package,
   Trash2, ChevronRight, Copy, Check, ExternalLink, X
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { confirm } from '@/lib/confirm'
 
 interface RegistryItem {
   id: string
@@ -199,7 +200,8 @@ export default function ManageRegistryClient({ initialRegistry = null }: ManageR
 
   const removeItem = async (itemId: string) => {
     if (!registry) return
-    if (!confirm('Remove this item from the registry?')) return
+    const ok = await confirm({ title: 'Remove this item?', message: 'This will remove the item from the registry.', danger: true, confirmLabel: 'Remove' })
+    if (!ok) return
     try {
       const res = await fetch(`/api/registry/${registry.id}/items?itemId=${itemId}`, {
         method: 'DELETE',
@@ -639,7 +641,8 @@ export default function ManageRegistryClient({ initialRegistry = null }: ManageR
             <button
               onClick={async () => {
                 if (!registry) return
-                if (!confirm('Are you sure you want to delete this registry? This cannot be undone.')) return
+                const ok = await confirm({ title: 'Delete this registry?', message: 'This will permanently delete the registry and all its items. This cannot be undone.', danger: true, confirmLabel: 'Delete Registry' })
+                if (!ok) return
                 try {
                   const res = await fetch(`/api/registry/${registry.id}`, { method: 'DELETE' })
                   if (res.ok) {

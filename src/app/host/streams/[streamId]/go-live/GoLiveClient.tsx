@@ -9,6 +9,7 @@ import {
   ArrowLeft, Video, VideoOff, MessageCircle, X, Zap, Eye, Pin, Loader2, Copy
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { confirm } from '@/lib/confirm'
 import { LiveKitRoom, useTracks, VideoTrack, RoomAudioRenderer } from '@livekit/components-react'
 import { Track } from 'livekit-client'
 import '@livekit/components-styles'
@@ -198,7 +199,8 @@ export default function GoLiveClient() {
 
   // End stream
   const endStream = async () => {
-    if (!confirm('Are you sure you want to end the stream?')) return
+    const ok = await confirm({ title: 'End this stream?', message: 'The stream will end immediately and viewers will be disconnected.', danger: true, confirmLabel: 'End Stream' })
+    if (!ok) return
 
     setEnding(true)
     try {

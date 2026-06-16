@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Plus, Edit, Eye, EyeOff, Trash2, Save, X, Loader2 } from 'lucide-react'
+import { confirm } from '@/lib/confirm'
 
 interface BlogPost {
   id: string
@@ -81,7 +82,8 @@ export default function AdminBlogClient({ initialPosts, authors, categories }: P
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this blog post? This cannot be undone.')) return
+    const ok = await confirm({ title: 'Delete this post?', message: 'This cannot be undone.', danger: true, confirmLabel: 'Delete Post' })
+    if (!ok) return
     setActionLoading(id)
     try {
       const res = await fetch(`/api/blog?id=${id}`, { method: 'DELETE' })

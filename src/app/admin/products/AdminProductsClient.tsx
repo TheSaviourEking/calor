@@ -6,6 +6,8 @@ import {
   Plus, Search, Edit, Trash2, Eye, EyeOff, Package, 
   ChevronDown, X, Save, Loader2, AlertCircle
 } from 'lucide-react'
+import { confirm } from '@/lib/confirm'
+import { toast } from 'sonner'
 
 interface Variant {
   id: string
@@ -107,7 +109,8 @@ export default function AdminProductsClient({
   }
 
   const handleDelete = async (productId: string) => {
-    if (!confirm('Are you sure you want to delete this product? This action cannot be undone.')) return
+    const ok = await confirm({ title: 'Delete this product?', message: 'This action cannot be undone.', danger: true, confirmLabel: 'Delete' })
+    if (!ok) return
     
     setIsDeleting(productId)
     try {

@@ -8,6 +8,7 @@ import {
   Copy, Trash2, Eye, Calendar
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { confirm } from '@/lib/confirm'
 
 interface Campaign {
   id: string
@@ -67,7 +68,8 @@ export default function CampaignsClient() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this campaign?')) return
+    const ok = await confirm({ title: 'Delete this campaign?', message: 'This action cannot be undone. Any scheduled sends will be cancelled.', danger: true, confirmLabel: 'Delete Campaign' })
+    if (!ok) return
     
     setDeleting(id)
     try {

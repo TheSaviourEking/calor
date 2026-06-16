@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Plus, X, Save, Loader2, Tag, Zap, Trash2 } from 'lucide-react'
+import { confirm } from '@/lib/confirm'
 
 interface Promotion {
   id: string
@@ -84,7 +85,8 @@ export default function AdminPromotionsClient({ initialPromotions }: { initialPr
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this promotion?')) return
+    const ok = await confirm({ title: 'Delete this promotion?', message: 'Any customers with this code will no longer be able to use it.', danger: true, confirmLabel: 'Delete' })
+    if (!ok) return
     setActionLoading(id)
     try {
       await fetch(`/api/promotions?id=${id}`, { method: 'DELETE' })
