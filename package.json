@@ -3,6 +3,7 @@
   "version": "0.2.0",
   "private": true,
   "scripts": {
+    "postinstall": "prisma generate",
     "dev": "concurrently --kill-others-on-fail -c \"blue,green,magenta\" \"next dev -p 3000\" \"cd mini-services/support-chat && bun run dev\" \"cd mini-services/live-stream && bun run dev\" 2>&1 | tee dev.log",
     "dev:web": "next dev -p 3000",
     "dev:chat": "cd mini-services/support-chat && bun run dev",
