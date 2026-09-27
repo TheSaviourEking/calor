@@ -15,7 +15,7 @@ import { useAuthStore } from '@/stores/auth'
 // TODO [BEFORE PROD]: Change this back to `process.env.NODE_ENV !== 'production'`
 // to hide dev-only admin pages (email-test, wellness-test, changelog) in production.
 // See PROD_CHECKLIST.md → P1 → "Hide dev-only admin pages in production"
-const isDev = true // temporarily always visible during active development
+const isDev = process.env.NODE_ENV !== 'production' // temporarily always visible during active development
 
 const adminNavItems = [
     { href: '/admin', label: 'Dashboard', icon: Package },
