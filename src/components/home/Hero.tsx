@@ -1,128 +1,50 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
-// ─────────────────────────────────────────────────────────────
-// SVG VIEWPORT & HEAT SOURCE ORIGIN
-// ─────────────────────────────────────────────────────────────
-const W = 800;
-const H = 900;
-const OX = 310; // origin X — 38.75% of width
-const OY = 470; // origin Y — 52.2% of height
-
-// ─────────────────────────────────────────────────────────────
-// ARC PATH HELPER
-// Returns SVG path `d` attribute for a clockwise arc
-// ─────────────────────────────────────────────────────────────
-function arcPath(
-  cx: number,
-  cy: number,
-  r: number,
-  startDeg: number,
-  spanDeg: number // arc span in degrees (360 - gap)
-): string {
-  const toRad = (d: number) => (d * Math.PI) / 180;
-  const endDeg = startDeg + spanDeg;
-  const x1 = cx + r * Math.cos(toRad(startDeg));
-  const y1 = cy + r * Math.sin(toRad(startDeg));
-  const x2 = cx + r * Math.cos(toRad(endDeg));
-  const y2 = cy + r * Math.sin(toRad(endDeg));
-  const largeArc = spanDeg > 180 ? 1 : 0;
-  return `M ${x1.toFixed(3)} ${y1.toFixed(3)} A ${r} ${r} 0 ${largeArc} 1 ${x2.toFixed(3)} ${y2.toFixed(3)}`;
-}
-
-// ─────────────────────────────────────────────────────────────
-// RING CONFIGURATION
-// gapStart: angle where gap begins (degrees)
-// gapSize: size of gap (degrees)
-// arc span = 360 - gapSize
-// ─────────────────────────────────────────────────────────────
-const rings = [
-  // idx 0 — innermost, nearly complete arc
-  { r: 45,  cxOff: 0,  cyOff: 0,  opacity: 0.30, sw: 0.8, gapStart: 340, gapSize: 20,  parallax: -0.35, fill: "rgba(196,120,90,0.06)" },
-  // idx 1
-  { r: 90,  cxOff: 2,  cyOff: -2, opacity: 0.22, sw: 0.7, gapStart: 95,  gapSize: 45,  parallax: -0.25, fill: "none" },
-  // idx 2 — animated stroke travel (special case — rendered as <circle> with dasharray)
-  { r: 150, cxOff: 3,  cyOff: -4, opacity: 0.17, sw: 0.6, gapStart: 200, gapSize: 50,  parallax: -0.30, fill: "none" },
-  // idx 3
-  { r: 220, cxOff: 2,  cyOff: -3, opacity: 0.12, sw: 0.5, gapStart: 45,  gapSize: 50,  parallax: -0.25, fill: "none" },
-  // idx 4
-  { r: 310, cxOff: 4,  cyOff: -5, opacity: 0.08, sw: 0.4, gapStart: 285, gapSize: 55,  parallax: -0.18, fill: "none" },
-  // idx 5
-  { r: 420, cxOff: 5,  cyOff: -6, opacity: 0.05, sw: 0.3, gapStart: 160, gapSize: 55,  parallax: -0.12, fill: "none" },
-  // idx 6 — outermost
-  { r: 550, cxOff: 3,  cyOff: -4, opacity: 0.03, sw: 0.2, gapStart: 320, gapSize: 60,  parallax: -0.08, fill: "none" },
+const HERO_SLIDES = [
+  {
+    id: "form-and-texture",
+    src: "/images/hero/hero-1.webp",
+    alt: "Warm golden light draped over silk and skin contour",
+    tag: "01 · Form & Texture",
+    caption: "The tactile poetry of silk & skin",
+  },
+  {
+    id: "personal-ritual",
+    src: "/images/hero/hero-2.webp",
+    alt: "Woman resting in morning warmth with botanical elixir",
+    tag: "02 · Personal Ritual",
+    caption: "Unhurried mornings of quiet self-care",
+  },
+  {
+    id: "intimate-connection",
+    src: "/images/hero/hero-3.webp",
+    alt: "Two hands meeting through a translucent veil",
+    tag: "03 · Shared Connection",
+    caption: "The quiet electricity of touch",
+  },
 ];
 
-// 4 radial spokes: 45°, 135°, 225°, 315°
-const SPOKES = [45, 135, 225, 315];
-const SPOKE_INNER = 15;
-const SPOKE_OUTER = 580;
-
-function spokeCoords(angleDeg: number, r: number) {
-  const rad = (angleDeg * Math.PI) / 180;
-  return { x: OX + r * Math.cos(rad), y: OY + r * Math.sin(rad) };
-}
-
-// Ember positions: start and end of each arc gap (gap endpoints)
-function emberPositions() {
-  const embers: { x: number; y: number; opacity: number }[] = [];
-  rings.forEach((ring) => {
-    const cx = OX + ring.cxOff;
-    const cy = OY + ring.cyOff;
-    const rad = (d: number) => (d * Math.PI) / 180;
-    // Gap start point
-    const gs = { x: cx + ring.r * Math.cos(rad(ring.gapStart)), y: cy + ring.r * Math.sin(rad(ring.gapStart)) };
-    // Gap end point
-    const ge = { x: cx + ring.r * Math.cos(rad(ring.gapStart + ring.gapSize)), y: cy + ring.r * Math.sin(rad(ring.gapStart + ring.gapSize)) };
-    // Mid-arc point (180° opposite gap midpoint)
-    const midArcAngle = ring.gapStart + ring.gapSize / 2 + 180;
-    const ma = { x: cx + ring.r * Math.cos(rad(midArcAngle)), y: cy + ring.r * Math.sin(rad(midArcAngle)) };
-    embers.push({ ...gs, opacity: 0.28 });
-    embers.push({ ...ge, opacity: 0.22 });
-    if (ring.r > 100) embers.push({ ...ma, opacity: 0.14 });
-  });
-  return embers;
-}
-
-// Animated ring (idx 2): circumference for dasharray
-const RING2 = rings[2];
-const RING2_CIRC = 2 * Math.PI * RING2.r; // full circle circumference ≈ 942.5
-const RING2_ARC = RING2_CIRC * ((360 - RING2.gapSize) / 360); // arc length ≈ 811.5
-const RING2_CX = OX + RING2.cxOff;
-const RING2_CY = OY + RING2.cyOff;
-
 export default function Hero() {
-  const ringRefs = useRef<(SVGPathElement | null)[]>([]);
-  const ring2Ref = useRef<SVGCircleElement | null>(null);
-  const embers = emberPositions();
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => {
-      const scrollY = window.scrollY;
-      // Differential parallax on all arc paths
-      ringRefs.current.forEach((el, i) => {
-        if (el) {
-          el.style.transform = `translateY(${scrollY * rings[i].parallax}px)`;
-          el.style.transformOrigin = `${OX + rings[i].cxOff}px ${OY + rings[i].cyOff}px`;
-        }
-      });
-      // Animated ring parallax
-      if (ring2Ref.current) {
-        ring2Ref.current.style.transform = `translateY(${scrollY * RING2.parallax}px)`;
-        ring2Ref.current.style.transformOrigin = `${RING2_CX}px ${RING2_CY}px`;
-      }
-    };
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+    if (isPaused) return;
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % HERO_SLIDES.length);
+    }, 6500);
+    return () => clearInterval(timer);
+  }, [isPaused, currentSlide]);
 
   return (
     <section className="relative min-h-screen flex flex-col lg:flex-row">
       {/* ── LEFT CONTENT ── */}
-      <div className="flex-1 flex flex-col justify-center px-6 lg:px-16 py-16 lg:py-24 relative z-10">
+      <div className="flex-1 flex flex-col justify-center px-6 lg:px-16 py-16 lg:py-24 relative z-10 bg-warm-white">
         <span className="eyebrow mb-6 animate-word-in" style={{ animationDelay: "0ms" }}>
           Intimacy &amp; Wellness
         </span>
@@ -173,162 +95,100 @@ export default function Hero() {
         </div>
       </div>
 
-      {/* ── RIGHT VISUAL PANEL ── */}
+      {/* ── RIGHT VISUAL PANEL (Photography Carousel) ── */}
       <div
-        className="hidden lg:flex flex-1 relative overflow-hidden grain-overlay"
-        style={{
-          // Elliptical radial gradient — deeper blush at heat source, cools outward
-          background:
-            "radial-gradient(ellipse at 38.75% 52.2%, #E8C9BB 0%, #F0E0D6 18%, #F4EDE7 36%, #F7F2EC 58%, #EAE0D5 100%)",
-        }}
+        className="hidden lg:flex flex-1 relative min-h-[680px] xl:min-h-[820px] overflow-hidden bg-sand/30"
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => setIsPaused(false)}
       >
-        <svg
-          viewBox={`0 0 ${W} ${H}`}
-          className="absolute inset-0 w-full h-full"
-          overflow="visible"
-          aria-hidden="true"
-          style={{ pointerEvents: "none" }}
-        >
-          <defs>
-            <style>{`
-              @keyframes ringBreathe {
-                0%, 100% { transform: scale(1.0); opacity: 1; }
-                50%       { transform: scale(1.04); opacity: 0.75; }
-              }
-              @keyframes strokeTravel {
-                from { stroke-dashoffset: 0; }
-                to   { stroke-dashoffset: ${-RING2_ARC.toFixed(2)}; }
-              }
-              .ring-breathe-0 {
-                transform-origin: ${OX + rings[0].cxOff}px ${OY + rings[0].cyOff}px;
-                animation: ringBreathe 4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
-              }
-              .ring-breathe-1 {
-                transform-origin: ${OX + rings[1].cxOff}px ${OY + rings[1].cyOff}px;
-                animation: ringBreathe 4s cubic-bezier(0.45, 0, 0.55, 1) -1.5s infinite;
-              }
-              .ring-travel {
-                stroke-dasharray: ${RING2_ARC.toFixed(2)} ${RING2_CIRC.toFixed(2)};
-                animation: strokeTravel 8s linear infinite;
-              }
-            `}</style>
-          </defs>
-
-          {/* ── RADIAL SPOKES (4, ultra-fine) ── */}
-          {SPOKES.map((angle) => {
-            const inner = spokeCoords(angle, SPOKE_INNER);
-            const outer = spokeCoords(angle, SPOKE_OUTER);
-            return (
-              <line
-                key={angle}
-                x1={inner.x}
-                y1={inner.y}
-                x2={outer.x}
-                y2={outer.y}
-                stroke="rgb(196,120,90)"
-                strokeWidth={0.5}
-                strokeOpacity={0.03}
+        {/* Carousel Slides */}
+        {HERO_SLIDES.map((slide, idx) => {
+          const isActive = idx === currentSlide;
+          return (
+            <div
+              key={slide.id}
+              className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+                isActive ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
+              }`}
+            >
+              <Image
+                src={slide.src}
+                alt={slide.alt}
+                fill
+                priority={idx === 0}
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                className={`object-cover object-center transition-transform duration-[7000ms] ease-out ${
+                  isActive ? "scale-105" : "scale-100"
+                }`}
               />
-            );
-          })}
+            </div>
+          );
+        })}
 
-          {/* ── ARC RINGS — outermost first, innermost last ── */}
-          {[...rings].reverse().map((ring, reversedIdx) => {
-            const originalIdx = rings.length - 1 - reversedIdx;
-            const cx = OX + ring.cxOff;
-            const cy = OY + ring.cyOff;
+        {/* Ambient Overlays & Edge Fades */}
+        {/* Soft edge fade into the left column */}
+        <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-warm-white via-warm-white/40 to-transparent z-10 pointer-events-none" />
+        {/* Top ambient highlight */}
+        <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-warm-white/50 to-transparent z-10 pointer-events-none" />
+        {/* Bottom subtle shadow for badge & controls readability */}
+        <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-charcoal/50 via-charcoal/20 to-transparent z-10 pointer-events-none" />
 
-            // idx 2 is the animated ring — rendered separately below
-            if (originalIdx === 2) return null;
+        {/* Top-Right Pillar Tag */}
+        <div className="absolute top-8 right-8 z-20 backdrop-blur-md bg-warm-white/80 border border-warm-white/60 px-4 py-2 shadow-sm transition-all duration-500">
+          <p className="font-body text-[11px] tracking-[0.25em] text-charcoal uppercase font-medium">
+            {HERO_SLIDES[currentSlide].tag}
+          </p>
+        </div>
 
-            const breatheClass =
-              originalIdx === 0 ? "ring-breathe-0" :
-              originalIdx === 1 ? "ring-breathe-1" :
-              "";
+        {/* Bottom-Left Slide Controls & Caption */}
+        <div className="absolute bottom-10 left-10 z-20 flex flex-col gap-3">
+          <p className="font-display italic text-cream/90 text-sm tracking-wide drop-shadow-sm transition-opacity duration-500">
+            {HERO_SLIDES[currentSlide].caption}
+          </p>
+          <div className="flex items-center gap-3">
+            {HERO_SLIDES.map((slide, idx) => {
+              const isActive = idx === currentSlide;
+              return (
+                <button
+                  key={slide.id}
+                  onClick={() => setCurrentSlide(idx)}
+                  className="group flex flex-col gap-1.5 text-left focus:outline-none"
+                  aria-label={`Switch to slide ${idx + 1}`}
+                >
+                  <div className="h-1 w-14 bg-cream/30 overflow-hidden rounded-full backdrop-blur-sm transition-all group-hover:bg-cream/50">
+                    <div
+                      className={`h-full bg-terracotta transition-all ${
+                        isActive ? "w-full" : "w-0"
+                      }`}
+                      style={{
+                        transitionDuration: isActive && !isPaused ? "6500ms" : "300ms",
+                        transitionTimingFunction: isActive && !isPaused ? "linear" : "ease",
+                      }}
+                    />
+                  </div>
+                  <span
+                    className={`text-[10px] font-body tracking-wider transition-colors ${
+                      isActive
+                        ? "text-cream font-medium"
+                        : "text-cream/60 group-hover:text-cream"
+                    }`}
+                  >
+                    0{idx + 1}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
-            return (
-              <path
-                key={originalIdx}
-                ref={(el) => { ringRefs.current[originalIdx] = el; }}
-                d={arcPath(cx, cy, ring.r, ring.gapStart, 360 - ring.gapSize)}
-                fill={ring.fill}
-                stroke="rgb(196,120,90)"
-                strokeWidth={ring.sw}
-                strokeOpacity={ring.opacity}
-                strokeLinecap="round"
-                className={breatheClass}
-                style={{ willChange: "transform" }}
-              />
-            );
-          })}
-
-          {/* ── ANIMATED RING (idx 2, r=150) — stroke travels around arc ── */}
-          <circle
-            ref={ring2Ref}
-            cx={RING2_CX}
-            cy={RING2_CY}
-            r={RING2.r}
-            fill="none"
-            stroke="rgb(196,120,90)"
-            strokeWidth={RING2.sw}
-            strokeOpacity={RING2.opacity}
-            strokeLinecap="round"
-            className="ring-travel"
-            style={{ willChange: "transform" }}
-          />
-
-          {/* ── FLOATING EMBERS — at arc gap endpoints ── */}
-          {embers.map((e, i) => (
-            <circle
-              key={i}
-              cx={e.x}
-              cy={e.y}
-              r={1.5}
-              fill={`rgba(196,120,90,${e.opacity})`}
-            />
-          ))}
-
-          {/* ── HEAT SOURCE — three-layer center ── */}
-          {/* Outermost halo */}
-          <circle cx={OX} cy={OY} r={14} fill="rgba(196,120,90,0.06)" />
-          {/* Mid glow */}
-          <circle
-            cx={OX}
-            cy={OY}
-            r={8}
-            fill="rgba(196,120,90,0.16)"
-            style={{
-              transformOrigin: `${OX}px ${OY}px`,
-              animation: "ringBreathe 4s cubic-bezier(0.45, 0, 0.55, 1) -0.8s infinite",
-            }}
-          />
-          {/* Inner core */}
-          <circle cx={OX} cy={OY} r={3.5} fill="rgba(196,120,90,0.50)" />
-          {/* Bright center */}
-          <circle cx={OX} cy={OY} r={1.2} fill="rgba(196,120,90,0.92)" />
-
-          {/* ── ARCHITECTURAL LABEL ── */}
-          <text
-            x={32}
-            y={H - 32}
-            fill="rgb(196,120,90)"
-            fillOpacity={0.15}
-            fontSize={8}
-            letterSpacing="0.15em"
-            fontFamily="var(--font-dm-sans), sans-serif"
-          >
-            {(OX / W * 100).toFixed(2)} · {(OY / H * 100).toFixed(2)} · 0.01K
-          </text>
-        </svg>
-
-        {/* ── ROTATING BADGE ── */}
-        <div className="absolute bottom-12 right-12 z-20">
+        {/* Bottom-Right Rotating Luxury Badge */}
+        <div className="absolute bottom-10 right-10 z-20 backdrop-blur-md bg-warm-white/50 border border-warm-white/60 rounded-full p-2.5 shadow-sm transition-transform duration-300 hover:scale-105">
           <RotatingBadge />
         </div>
       </div>
 
       {/* ── SCROLL INDICATOR ── */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-20">
         <span
           className="eyebrow text-charcoal/30 mb-2"
           style={{
@@ -364,7 +224,7 @@ function RotatingBadge() {
           cy="50"
           r="48"
           fill="none"
-          stroke="rgba(196, 120, 90, 0.25)"
+          stroke="rgba(196, 120, 90, 0.35)"
           strokeWidth={0.5}
         />
         <text
@@ -378,7 +238,7 @@ function RotatingBadge() {
         </text>
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
-        <div className="w-2 h-2 bg-terracotta opacity-40" />
+        <div className="w-2 h-2 bg-terracotta opacity-60" />
       </div>
     </div>
   );
