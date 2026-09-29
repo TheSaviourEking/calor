@@ -64,8 +64,12 @@ jobs:
 
       - name: Stage Deployment Artifacts
         run: |
-          mkdir -p deploy/dist/bin
+          mkdir -p deploy/dist/bin deploy/node_modules
           cp -r dist/bin/* deploy/dist/bin/
+          # Copy Prisma engine library directly into dist/bin alongside executables
+          cp node_modules/.prisma/client/libquery_engine*.node deploy/dist/bin/
+          # Also copy the full generated prisma client folder
+          cp -r node_modules/.prisma deploy/node_modules/
           cp ecosystem.config.js deploy/
           cp Caddyfile.prod deploy/
 
