@@ -107,9 +107,8 @@ export default function Hero() {
           return (
             <div
               key={slide.id}
-              className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-                isActive ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
-              }`}
+              className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${isActive ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
+                }`}
             >
               <Image
                 src={slide.src}
@@ -117,9 +116,8 @@ export default function Hero() {
                 fill
                 priority={idx === 0}
                 sizes="(max-width: 1024px) 100vw, 50vw"
-                className={`object-cover object-center transition-transform duration-[7000ms] ease-out ${
-                  isActive ? "scale-105" : "scale-100"
-                }`}
+                className={`object-cover object-center transition-transform duration-[7000ms] ease-out ${isActive ? "scale-105" : "scale-100"
+                  }`}
               />
             </div>
           );
@@ -142,9 +140,9 @@ export default function Hero() {
 
         {/* Bottom-Left Slide Controls & Caption */}
         <div className="absolute bottom-10 left-10 z-20 flex flex-col gap-3">
-          <p className="font-display italic text-cream/90 text-sm tracking-wide drop-shadow-sm transition-opacity duration-500">
+          {/* <p className="font-display italic text-cream/90 text-sm tracking-wide drop-shadow-sm transition-opacity duration-500">
             {HERO_SLIDES[currentSlide].caption}
-          </p>
+          </p> */}
           <div className="flex items-center gap-3">
             {HERO_SLIDES.map((slide, idx) => {
               const isActive = idx === currentSlide;
@@ -157,9 +155,8 @@ export default function Hero() {
                 >
                   <div className="h-1 w-14 bg-cream/30 overflow-hidden rounded-full backdrop-blur-sm transition-all group-hover:bg-cream/50">
                     <div
-                      className={`h-full bg-terracotta transition-all ${
-                        isActive ? "w-full" : "w-0"
-                      }`}
+                      className={`h-full bg-terracotta transition-all ${isActive ? "w-full" : "w-0"
+                        }`}
                       style={{
                         transitionDuration: isActive && !isPaused ? "6500ms" : "300ms",
                         transitionTimingFunction: isActive && !isPaused ? "linear" : "ease",
@@ -167,11 +164,10 @@ export default function Hero() {
                     />
                   </div>
                   <span
-                    className={`text-[10px] font-body tracking-wider transition-colors ${
-                      isActive
+                    className={`text-[10px] font-body tracking-wider transition-colors ${isActive
                         ? "text-cream font-medium"
                         : "text-cream/60 group-hover:text-cream"
-                    }`}
+                      }`}
                   >
                     0{idx + 1}
                   </span>
