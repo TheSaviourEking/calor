@@ -112,9 +112,9 @@ jobs:
       - name: Push Pre-Built Artifacts to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.VPS_HOST || secrets.HETZNER_HOST }}
-          username: ${{ secrets.VPS_USER || secrets.HETZNER_USER }}
-          key: ${{ secrets.VPS_SSH_KEY || secrets.HETZNER_SSH_KEY }}
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
           source: "deploy/*"
           target: "${{ steps.env.outputs.dir }}"
           strip_components: 1
@@ -122,9 +122,9 @@ jobs:
       - name: Restart PM2 & Reload Caddy
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.VPS_HOST || secrets.HETZNER_HOST }}
-          username: ${{ secrets.VPS_USER || secrets.HETZNER_USER }}
-          key: ${{ secrets.VPS_SSH_KEY || secrets.HETZNER_SSH_KEY }}
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             set -e
             cd ${{ steps.env.outputs.dir }}
