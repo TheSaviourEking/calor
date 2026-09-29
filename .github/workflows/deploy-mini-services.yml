@@ -1,149 +1,147 @@
-name: Deploy Mini-Services to Hetzner
+name: Lint, Build & Deploy Mini-Services
 
-# Triggers on push to main when mini-services, prisma schema, or infra files change
+# Compiles standalone Linux x64 binaries on GitHub Actions, then transfers
+# pre-built artifacts to the VPS.
+# - Pushes to 'main' deploy to Production (/opt/calor/prod)
+# - Pushes to 'staging' deploy to Staging (/opt/calor/staging)
 on:
   push:
     branches:
       - main
+      - staging
     paths:
       - 'mini-services/**'
       - 'prisma/schema.prisma'
       - 'ecosystem.config.js'
       - 'Caddyfile.prod'
-
-# Required GitHub Secrets (SSH access only — env vars live in /opt/calor/.env on the VPS):
-#   HETZNER_HOST     — VPS IP address
-#   HETZNER_USER     — SSH user (typically root)
-#   HETZNER_SSH_KEY  — private SSH key content
+      - '.github/workflows/deploy-mini-services.yml'
+  pull_request:
+    branches:
+      - main
+      - staging
+    paths:
+      - 'mini-services/**'
+      - 'prisma/schema.prisma'
+      - 'ecosystem.config.js'
+      - 'Caddyfile.prod'
+      - '.github/workflows/deploy-mini-services.yml'
+  workflow_dispatch:
+    inputs:
+      target_env:
+        description: 'Target Deployment Environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
 
 jobs:
-  detect-changes:
-    name: Detect Changed Services
+  lint-and-build:
+    name: Lint & Compile Standalone Binaries
     runs-on: ubuntu-latest
-    outputs:
-      support-chat: ${{ steps.filter.outputs.support-chat }}
-      live-stream: ${{ steps.filter.outputs.live-stream }}
-      schema-changed: ${{ steps.filter.outputs.schema }}
-      caddy-changed: ${{ steps.filter.outputs.caddy }}
-      ecosystem-changed: ${{ steps.filter.outputs.ecosystem }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-      - name: Detect changes
-        id: filter
-        uses: dorny/paths-filter@v3
+      - name: Setup Bun Runtime
+        uses: oven-sh/setup-bun@v2
         with:
-          filters: |
-            support-chat:
-              - 'mini-services/support-chat/**'
-            live-stream:
-              - 'mini-services/live-stream/**'
-            schema:
-              - 'prisma/schema.prisma'
-            caddy:
-              - 'Caddyfile.prod'
-            ecosystem:
-              - 'ecosystem.config.js'
+          bun-version: latest
 
-  deploy-support-chat:
-    name: Deploy Support Chat
+      - name: Install Dependencies & Generate Prisma Client
+        run: |
+          bun install --frozen-lockfile || bun install
+          bunx prisma generate
+
+      - name: Lint Mini-Services
+        run: |
+          bun run lint:services
+
+      - name: Compile Standalone Binaries (Linux x64)
+        run: |
+          bun run build:services
+
+      - name: Stage Deployment Artifacts
+        run: |
+          mkdir -p deploy/dist/bin
+          cp -r dist/bin/* deploy/dist/bin/
+          cp ecosystem.config.js deploy/
+          cp Caddyfile.prod deploy/
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: mini-services-dist
+          path: deploy/
+          retention-days: 1
+
+  deploy-to-vps:
+    name: Push Build to VPS & Restart PM2
     runs-on: ubuntu-latest
-    needs: detect-changes
-    if: |
-      needs.detect-changes.outputs.support-chat == 'true' ||
-      needs.detect-changes.outputs.schema-changed == 'true' ||
-      needs.detect-changes.outputs.ecosystem-changed == 'true'
+    needs: lint-and-build
+    if: github.event_name != 'pull_request'
     steps:
-      - name: Deploy support-chat via PM2
+      - name: Determine Target Environment
+        id: env
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TARGET="${{ inputs.target_env }}"
+          elif [ "${{ github.ref_name }}" = "main" ]; then
+            TARGET="production"
+          else
+            TARGET="staging"
+          fi
+
+          if [ "$TARGET" = "production" ]; then
+            echo "dir=/opt/calor/prod" >> $GITHUB_OUTPUT
+            echo "filter=prod" >> $GITHUB_OUTPUT
+            echo "env_name=Production" >> $GITHUB_OUTPUT
+          else
+            echo "dir=/opt/calor/staging" >> $GITHUB_OUTPUT
+            echo "filter=staging" >> $GITHUB_OUTPUT
+            echo "env_name=Staging" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: mini-services-dist
+          path: deploy/
+
+      - name: Push Pre-Built Artifacts to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST || secrets.HETZNER_HOST }}
+          username: ${{ secrets.VPS_USER || secrets.HETZNER_USER }}
+          key: ${{ secrets.VPS_SSH_KEY || secrets.HETZNER_SSH_KEY }}
+          source: "deploy/*"
+          target: "${{ steps.env.outputs.dir }}"
+          strip_components: 1
+
+      - name: Restart PM2 & Reload Caddy
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.HETZNER_HOST }}
-          username: ${{ secrets.HETZNER_USER }}
-          key: ${{ secrets.HETZNER_SSH_KEY }}
+          host: ${{ secrets.VPS_HOST || secrets.HETZNER_HOST }}
+          username: ${{ secrets.VPS_USER || secrets.HETZNER_USER }}
+          key: ${{ secrets.VPS_SSH_KEY || secrets.HETZNER_SSH_KEY }}
           script: |
             set -e
-            export PATH="$HOME/.bun/bin:$HOME/.local/share/pnpm:$PATH"
-            cd /opt/calor
+            cd ${{ steps.env.outputs.dir }}
 
-            echo "==> Pulling latest code..."
-            git pull origin main
+            echo "==> Ensuring binary execution permissions..."
+            chmod +x dist/bin/*
+            mkdir -p /var/log/calor
 
-            echo "==> Installing dependencies..."
-            cd mini-services/support-chat
-            bun install --frozen-lockfile
+            echo "==> Checking Caddy configuration..."
+            if [ -f Caddyfile.prod ]; then
+              cp Caddyfile.prod /etc/caddy/Caddyfile
+              caddy validate --config /etc/caddy/Caddyfile 2>/dev/null && systemctl reload caddy 2>/dev/null || true
+            fi
 
-            echo "==> Regenerating Prisma client..."
-            bunx prisma generate --schema=../../prisma/schema.prisma
-
-            echo "==> Restarting support-chat with PM2..."
-            cd /opt/calor
-            pm2 restart support-chat --update-env 2>/dev/null || pm2 start ecosystem.config.js --only support-chat
+            echo "==> Reloading PM2 processes for ${{ steps.env.outputs.env_name }}..."
+            pm2 restart ecosystem.config.js --only "${{ steps.env.outputs.filter }}-*" --update-env 2>/dev/null || pm2 start ecosystem.config.js --only "${{ steps.env.outputs.filter }}-*"
             pm2 save
 
-            echo "==> Done. Status:"
-            pm2 show support-chat
-
-  deploy-live-stream:
-    name: Deploy Live Stream
-    runs-on: ubuntu-latest
-    needs: detect-changes
-    if: |
-      needs.detect-changes.outputs.live-stream == 'true' ||
-      needs.detect-changes.outputs.schema-changed == 'true' ||
-      needs.detect-changes.outputs.ecosystem-changed == 'true'
-    steps:
-      - name: Deploy live-stream via PM2
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.HETZNER_HOST }}
-          username: ${{ secrets.HETZNER_USER }}
-          key: ${{ secrets.HETZNER_SSH_KEY }}
-          script: |
-            set -e
-            export PATH="$HOME/.bun/bin:$HOME/.local/share/pnpm:$PATH"
-            cd /opt/calor
-
-            echo "==> Pulling latest code..."
-            git pull origin main
-
-            echo "==> Installing dependencies..."
-            cd mini-services/live-stream
-            bun install --frozen-lockfile
-
-            echo "==> Regenerating Prisma client..."
-            bunx prisma generate --schema=../../prisma/schema.prisma
-
-            echo "==> Restarting live-stream with PM2..."
-            cd /opt/calor
-            pm2 restart live-stream --update-env 2>/dev/null || pm2 start ecosystem.config.js --only live-stream
-            pm2 save
-
-            echo "==> Done. Status:"
-            pm2 show live-stream
-
-  reload-caddy:
-    name: Reload Caddy Config
-    runs-on: ubuntu-latest
-    needs: detect-changes
-    if: needs.detect-changes.outputs.caddy-changed == 'true'
-    steps:
-      - name: Reload Caddy on Hetzner
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.HETZNER_HOST }}
-          username: ${{ secrets.HETZNER_USER }}
-          key: ${{ secrets.HETZNER_SSH_KEY }}
-          script: |
-            set -e
-            cd /opt/calor
-            git pull origin main
-
-            echo "==> Updating Caddy config..."
-            cp Caddyfile.prod /etc/caddy/Caddyfile
-
-            echo "==> Validating config..."
-            caddy validate --config /etc/caddy/Caddyfile
-
-            echo "==> Reloading Caddy..."
-            systemctl reload caddy
-            echo "==> Caddy reloaded"
+            echo "==> Deployment Complete! Process status:"
+            pm2 list

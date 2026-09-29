@@ -1,19 +1,21 @@
-# CALŌR — Production Caddyfile for Hetzner VPS (PM2 setup)
-# Services run directly via PM2 on the host — using localhost, not Docker container names.
-# Caddy handles SSL automatically via Let's Encrypt.
+# CALŌR — Caddyfile for Staging & Clustered Production Mini-Services
+# Services run directly via PM2 on the host. Caddy handles SSL automatically.
 #
-# Replace chat.yourdomain.com and stream.yourdomain.com with your actual subdomains.
+# Replace yourdomain.com with your actual domain (e.g., calorco.com).
 #
-# DNS Records in Cloudflare (GREY CLOUD — no proxy, WebSocket needs direct connection):
-#   A  chat.yourdomain.com    → YOUR_VPS_IP
-#   A  stream.yourdomain.com  → YOUR_VPS_IP
-#
-# Deploy to VPS:
-#   cp Caddyfile.prod /etc/caddy/Caddyfile
-#   systemctl reload caddy
+# DNS Records (GREY CLOUD / Unproxied in Cloudflare for WebSockets):
+#   A  chat.yourdomain.com          → YOUR_VPS_IP
+#   A  stream.yourdomain.com        → YOUR_VPS_IP
+#   A  chat-staging.yourdomain.com  → YOUR_VPS_IP
+#   A  stream-staging.yourdomain.com→ YOUR_VPS_IP
+
+# ==========================================
+# PRODUCTION SERVICES (CLUSTERED & LOAD BALANCED)
+# ==========================================
 
 chat.yourdomain.com {
-    reverse_proxy localhost:3031 {
+    reverse_proxy localhost:3031 localhost:3033 {
+        lb_policy client_ip_hash
         header_up Host {host}
         header_up X-Real-IP {remote_host}
         header_up X-Forwarded-For {remote_host}
@@ -30,7 +32,46 @@ chat.yourdomain.com {
 }
 
 stream.yourdomain.com {
-    reverse_proxy localhost:3032 {
+    reverse_proxy localhost:3032 localhost:3034 {
+        lb_policy client_ip_hash
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+        # WebSocket support
+        header_up Connection {http.request.header.Connection}
+        header_up Upgrade {http.request.header.Upgrade}
+    }
+
+    log {
+        output stderr
+        level INFO
+    }
+}
+
+# ==========================================
+# STAGING SERVICES (ISOLATED STAGING ENVIRONMENT)
+# ==========================================
+
+chat-staging.yourdomain.com {
+    reverse_proxy localhost:3041 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+        # WebSocket support
+        header_up Connection {http.request.header.Connection}
+        header_up Upgrade {http.request.header.Upgrade}
+    }
+
+    log {
+        output stderr
+        level INFO
+    }
+}
+
+stream-staging.yourdomain.com {
+    reverse_proxy localhost:3042 {
         header_up Host {host}
         header_up X-Real-IP {remote_host}
         header_up X-Forwarded-For {remote_host}
