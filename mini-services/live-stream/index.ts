@@ -13,7 +13,7 @@ const streamViewers = new Map<string, Set<string>>() // streamId -> Set of socke
 const viewerSessions = new Map<string, { streamId: string; customerId?: string; guestId?: string }>()
 
 function parseAllowedOrigins(raw?: string): string[] {
-  if (!raw) return ['http://localhost:3000', 'https://calorco.com', 'https://calor-rose.vercel.app']
+  if (!raw) return ['http://localhost:3000', 'https://calo.one', 'https://www.calo.one', 'https://staging.calo.one', 'https://calor-rose.vercel.app']
   return raw
     .split(',')
     .map((s) => s.trim().replace(/\/+$/, ''))

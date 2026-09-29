@@ -9,7 +9,7 @@ const PORT = Number(process.env.PORT) || 3031
 const db = new PrismaClient()
 
 function parseAllowedOrigins(raw?: string): string[] {
-  if (!raw) return ['http://localhost:3000', 'https://calorco.com', 'https://calor-rose.vercel.app']
+  if (!raw) return ['http://localhost:3000', 'https://calo.one', 'https://www.calo.one', 'https://staging.calo.one', 'https://calor-rose.vercel.app']
   return raw
     .split(',')
     .map((s) => s.trim().replace(/\/+$/, ''))
