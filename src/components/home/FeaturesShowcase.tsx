@@ -75,7 +75,7 @@ export default function FeaturesShowcase() {
             More than a store
           </h2>
           <p className="font-body text-warm-gray text-lg max-w-2xl mx-auto">
-            CALŌR is a complete wellness platform. Discover features designed to
+            calo. is a complete wellness platform. Discover features designed to
             enhance every aspect of your intimate life.
           </p>
         </div>

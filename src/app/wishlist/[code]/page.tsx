@@ -19,12 +19,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   })
 
   if (!wishlist) {
-    return { title: 'Wishlist Not Found | CALŌR' }
+    return { title: 'Wishlist Not Found | calo.' }
   }
 
   return {
-    title: `${wishlist.title || 'Wishlist'} by ${wishlist.customer.firstName} | CALŌR`,
-    description: `View ${wishlist.customer.firstName}'s curated wishlist on CALŌR`,
+    title: `${wishlist.title || 'Wishlist'} by ${wishlist.customer.firstName} | calo.`,
+    description: `View ${wishlist.customer.firstName}'s curated wishlist on calo.`,
   }
 }
 

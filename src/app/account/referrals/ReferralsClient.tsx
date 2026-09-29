@@ -38,12 +38,12 @@ export default function ReferralsClient({ initialReferralCode }: { initialReferr
   const shareReferral = async () => {
     if (!referralCode) return
     const shareUrl = `${window.location.origin}?ref=${referralCode.code}`
-    const shareText = `Use my referral code ${referralCode.code} at CALŌR for $10 off your first order!`
+    const shareText = `Use my referral code ${referralCode.code} at calo. for $10 off your first order!`
 
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'CALŌR Referral',
+          title: 'calo. Referral',
           text: shareText,
           url: shareUrl,
         })
@@ -81,7 +81,7 @@ export default function ReferralsClient({ initialReferralCode }: { initialReferr
           Referral Program
         </h1>
         <p className="font-body text-warm-gray text-lg max-w-2xl mx-auto mt-4">
-          Share CALŌR with friends and you both get $10 off your next order.
+          Share calo. with friends and you both get $10 off your next order.
         </p>
       </div>
 

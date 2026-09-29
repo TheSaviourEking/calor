@@ -545,7 +545,7 @@ const changelogData: ChangelogEntry[] = [
       'Loyalty points system',
       'Wishlist functionality',
       'Age verification gate',
-      'Responsive design with CALŌR brand'
+      'Responsive design with calo. brand'
     ],
     improvements: [],
     fixes: [],

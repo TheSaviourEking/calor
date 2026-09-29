@@ -7,7 +7,7 @@ import { serialise } from '@/lib/serialise'
 export const dynamic = 'force-dynamic'
 
 export const metadata = {
-  title: 'Wishlist | CALŌR',
+  title: 'Wishlist | calo.',
   description: 'Your saved items and shared wishlists',
 }
 

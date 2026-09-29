@@ -42,7 +42,7 @@ export default function Philosophy() {
               <span className="italic text-terracotta animate-warmth-pulse">warmth</span>. Always.
             </h2>
             <p className="font-body text-warm-gray text-base leading-relaxed mb-8">
-              CALŌR occupies the space between Apple and Aesop. An elevated wellness and intimacy destination. Not a shop, not a pharmacy, not a bookstore. All three, unified under one philosophy: that intimacy deserves the same design attention and dignity as anything else you bring into your life.
+              calo. occupies the space between Apple and Aesop. An elevated wellness and intimacy destination. Not a shop, not a pharmacy, not a bookstore. All three, unified under one philosophy: that intimacy deserves the same design attention and dignity as anything else you bring into your life.
             </p>
             <a
               href="/our-story"

@@ -66,7 +66,7 @@ export default function CartDrawer() {
         {/* Discreet Shipping Notice */}
         <div className="px-6 py-3 bg-cream/50 border-b border-sand">
           <p className="font-body text-warm-gray text-xs text-center tracking-wide">
-            Ships in plain packaging. Bank statement reads CALŌR CO.
+            Ships in plain packaging. Bank statement reads CALO CO.
           </p>
         </div>
 

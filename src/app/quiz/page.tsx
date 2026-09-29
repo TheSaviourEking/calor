@@ -3,7 +3,7 @@ import ClientWrapper from '@/components/layout/ClientWrapper'
 import QuizClient from './QuizClient'
 
 export const metadata: Metadata = {
-  title: 'Find Your Perfect Match | CALŌR',
+  title: 'Find Your Perfect Match | calo.',
   description: 'Take our personalized quiz to discover products tailored to your unique preferences and wellness goals.'
 }
 

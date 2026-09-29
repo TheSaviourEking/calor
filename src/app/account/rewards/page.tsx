@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic'
 import { serialise } from '@/lib/serialise'
 
 export const metadata: Metadata = {
-  title: 'Rewards Store | CALŌR',
+  title: 'Rewards Store | calo.',
   description: 'Redeem your loyalty points for exclusive rewards',
 }
 

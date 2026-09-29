@@ -2,7 +2,7 @@ import { Metadata } from 'next'
 import CoupleClient from './CoupleClient'
 
 export const metadata: Metadata = {
-  title: 'Couples Account | CALŌR',
+  title: 'Couples Account | calo.',
   description: 'Link accounts with your partner for shared experiences and wishlists.'
 }
 

@@ -1073,7 +1073,7 @@ export default function ProductDetailClient({
                 }
               >
                 <p className="font-body text-warm-gray text-sm leading-relaxed">
-                  Your bank statement will show &quot;CALŌR CO.&quot; only.
+                  Your bank statement will show &quot;CALO CO.&quot; only.
                   Nothing explicit. Ever. We never store your card details.
                 </p>
               </AccordionItem>

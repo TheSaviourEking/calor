@@ -724,9 +724,9 @@ async function generateIntentResponse(
 
     case 'greeting': {
       const greetings = [
-        'Hey there! 🌟 I\'m your CALŌR concierge. I can help you find products, track orders, or answer any questions. What can I do for you?',
-        'Hello! ✨ Welcome to CALŌR. Whether you\'re browsing, tracking, or need advice — I\'m here to help!',
-        'Hi! 👋 I\'m the CALŌR assistant. I know everything about our products. Ask me anything!',
+        'Hey there! 🌟 I\'m your calo. concierge. I can help you find products, track orders, or answer any questions. What can I do for you?',
+        'Hello! ✨ Welcome to calo. Whether you\'re browsing, tracking, or need advice — I\'m here to help!',
+        'Hi! 👋 I\'m the calo. assistant. I know everything about our products. Ask me anything!',
       ]
       content = greetings[Math.floor(Math.random() * greetings.length)]
       suggestedActions = ['browse_products', 'track_order', 'get_recommendations']
@@ -737,7 +737,7 @@ async function generateIntentResponse(
       const thankResponses = [
         'You\'re welcome! 😊 Happy to help. Don\'t hesitate to reach out anytime!',
         'My pleasure! ✨ Come back whenever you need anything.',
-        'Glad I could help! 🌟 Enjoy your experience with CALŌR.',
+        'Glad I could help! 🌟 Enjoy your experience with calo.',
       ]
       content = thankResponses[Math.floor(Math.random() * thankResponses.length)]
       suggestedActions = ['browse_products', 'get_recommendations']

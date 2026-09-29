@@ -19,8 +19,8 @@ export async function createPaymentIntent(orderId: string) {
       orderId: order.id,
       reference: order.reference,
     },
-    statement_descriptor: 'CALOR CO',
-    description: `CALŌR order ${order.reference}`,
+    statement_descriptor: 'CALO CO',
+    description: `calo. order ${order.reference}`,
   })
 
   // Update order with payment reference

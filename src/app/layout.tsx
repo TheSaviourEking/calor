@@ -20,11 +20,11 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "CALŌR — Intimacy & Wellness, Elevated",
+  title: "calo. — Intimacy & Wellness, Elevated",
   description:
     "An elevated destination for intimacy, wellness, and pleasure. Discreet shipping. Premium products. Pay by card, bank transfer, or crypto.",
-  keywords: ["CALŌR", "intimacy", "wellness", "pleasure", "discreet shipping"],
-  authors: [{ name: "CALŌR" }],
+  keywords: ["calo.", "calo", "intimacy", "wellness", "pleasure", "discreet shipping"],
+  authors: [{ name: "calo." }],
   icons: {
     apple: "/apple-touch-icon.png",
     icon: [
@@ -44,16 +44,16 @@ export const metadata: Metadata = {
     ],
   },
   openGraph: {
-    title: "CALŌR — Warmth lives here",
+    title: "calo. — Warmth lives here",
     description:
       "Intimacy & wellness, elevated. Curated products. Total discretion.",
-    url: "https://calorco.com",
-    siteName: "CALŌR",
+    url: "https://calo.one",
+    siteName: "calo.",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "CALŌR — Warmth lives here",
+    title: "calo. — Warmth lives here",
     description:
       "Intimacy & wellness, elevated. Curated products. Total discretion.",
   },

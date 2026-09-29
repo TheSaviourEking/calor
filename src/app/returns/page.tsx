@@ -9,7 +9,7 @@ import { db } from '@/lib/db'
 import { serialise } from '@/lib/serialise'
 
 export const metadata: Metadata = {
-  title: 'Returns & Satisfaction Guarantee | CALŌR',
+  title: 'Returns & Satisfaction Guarantee | calo.',
   description: 'Request a return or exchange. Our satisfaction guarantee ensures you love every purchase.'
 }
 

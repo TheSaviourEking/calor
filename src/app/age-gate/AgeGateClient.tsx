@@ -23,14 +23,14 @@ export default function AgeGateClient() {
             <div className="text-center px-6 max-w-lg">
                 {/* Logo */}
                 <h1
-                    className="font-display text-cream mb-2"
+                    className="font-display text-cream mb-2 lowercase"
                     style={{
-                        fontSize: '3rem',
-                        fontWeight: 300,
-                        letterSpacing: '0.3em'
+                        fontSize: '3.5rem',
+                        fontWeight: 400,
+                        letterSpacing: '0.15em'
                     }}
                 >
-                    CALŌR
+                    calo<span className="text-terracotta">.</span>
                 </h1>
 
                 {/* Tagline */}

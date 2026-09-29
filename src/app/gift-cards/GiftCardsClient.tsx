@@ -382,7 +382,7 @@ export default function GiftCardsClient() {
               <AlertCircle className="w-5 h-5 text-terracotta" />
             </div>
             <h3 className="font-body text-charcoal text-sm font-medium mb-1">Discreet Billing</h3>
-            <p className="font-body text-warm-gray text-xs">Shows &quot;CALŌR CO&quot; only</p>
+            <p className="font-body text-warm-gray text-xs">Shows &quot;CALO CO&quot; only</p>
           </div>
         </div>
       </div>

@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic'
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Wellness Dashboard | CALŌR",
+  title: "Wellness Dashboard | calo.",
   description:
     "Track your wellness journey, earn rewards, and connect with your goals",
 };

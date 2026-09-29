@@ -3,7 +3,7 @@ import ClientWrapper from '@/components/layout/ClientWrapper'
 import AnalyticsClient from './AnalyticsClient'
 
 export const metadata: Metadata = {
-  title: 'Analytics Dashboard | CALŌR Admin',
+  title: 'Analytics Dashboard | calo. Admin',
   description: 'Business analytics and performance metrics'
 }
 

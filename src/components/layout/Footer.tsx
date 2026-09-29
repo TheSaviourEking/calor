@@ -79,10 +79,10 @@ export default function Footer() {
           {/* Column 1: Brand — full width on mobile */}
           <div className="col-span-2 md:col-span-1 pb-8 md:pb-0 border-b border-charcoal/40 md:border-none">
             <h2
-              className="font-display text-cream text-xl tracking-[0.3em] mb-4"
-              style={{ fontWeight: 300 }}
+              className="font-display text-cream text-2xl tracking-[0.15em] lowercase mb-4"
+              style={{ fontWeight: 400 }}
             >
-              CALŌR
+              calo<span className="text-terracotta">.</span>
             </h2>
             <p className="font-body text-warm-gray text-sm leading-relaxed mb-6">
               An elevated destination for intimacy, wellness, and pleasure. Curated with care. Delivered discreetly.
@@ -189,7 +189,7 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="mt-16 pt-8 border-t border-charcoal/50 flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="font-body text-warm-gray text-xs">
-            © {new Date().getFullYear()} CALŌR. All rights reserved.
+            © {new Date().getFullYear()} calo. All rights reserved.
           </p>
           <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
             <a

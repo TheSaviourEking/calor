@@ -66,7 +66,7 @@ export default function TermsPage() {
                 6. Intellectual Property
               </h2>
               <p className="font-body text-warm-gray text-base leading-relaxed">
-                All content on this website, including text, images, logos, and design, is the property of CALŌR and protected by copyright law.
+                All content on this website, including text, images, logos, and design, is the property of calo. and protected by copyright law.
               </p>
             </section>
 
@@ -75,7 +75,7 @@ export default function TermsPage() {
                 7. Limitation of Liability
               </h2>
               <p className="font-body text-warm-gray text-base leading-relaxed">
-                CALŌR shall not be liable for any indirect, incidental, or consequential damages arising from the use of our products or services.
+                calo. shall not be liable for any indirect, incidental, or consequential damages arising from the use of our products or services.
               </p>
             </section>
 

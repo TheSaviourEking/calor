@@ -6,7 +6,7 @@ import { serialise } from '@/lib/serialise'
 export const dynamic = 'force-dynamic'
 
 export const metadata = {
-  title: 'Gift Registry | CALŌR',
+  title: 'Gift Registry | calo.',
   description: 'View and purchase gifts from this registry.',
 }
 

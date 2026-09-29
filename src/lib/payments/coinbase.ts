@@ -31,7 +31,7 @@ export async function createCryptoCharge(orderId: string): Promise<{ chargeId: s
       'X-CC-Version': '2018-03-22',
     },
     body: JSON.stringify({
-      name: 'CALŌR Order',
+      name: 'calo. Order',
       description: `Order ${order.reference}`,
       pricing_type: 'fixed_price',
       local_price: {

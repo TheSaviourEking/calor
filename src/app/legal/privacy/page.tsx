@@ -39,7 +39,7 @@ export default function PrivacyPage() {
                 3. Discreet Billing
               </h2>
               <p className="font-body text-warm-gray text-base leading-relaxed">
-                All charges appear as CALŌR CO. on your bank statement. No product names or descriptions are ever visible in transaction records.
+                All charges appear as CALO CO. on your bank statement. No product names or descriptions are ever visible in transaction records.
               </p>
             </section>
 

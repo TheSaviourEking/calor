@@ -93,10 +93,10 @@ export default function Navigation() {
             {/* Logo */}
             <Link
               href="/"
-              className="font-display text-charcoal text-xl lg:text-2xl tracking-[0.3em] transition-all duration-300 hover:tracking-[0.35em]"
-              style={{ fontWeight: 300 }}
+              className="font-display text-charcoal text-2xl lg:text-3xl tracking-[0.15em] lowercase transition-all duration-300 hover:tracking-[0.2em]"
+              style={{ fontWeight: 400 }}
             >
-              CALŌR
+              calo<span className="text-terracotta">.</span>
             </Link>
 
             {/* Desktop Nav */}
@@ -237,10 +237,10 @@ export default function Navigation() {
           <div className="flex flex-col h-full p-6">
             <div className="flex justify-between items-center mb-12">
               <span
-                className="font-display text-cream text-xl tracking-[0.3em]"
-                style={{ fontWeight: 300 }}
+                className="font-display text-cream text-2xl tracking-[0.15em] lowercase"
+                style={{ fontWeight: 400 }}
               >
-                CALŌR
+                calo<span className="text-terracotta">.</span>
               </span>
               <button
                 onClick={() => setIsMobileMenuOpen(false)}

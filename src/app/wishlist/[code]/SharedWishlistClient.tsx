@@ -221,7 +221,7 @@ export default function SharedWishlistClient({ wishlist }: SharedWishlistProps) 
               {wishlist.products.length} items · {wishlist.viewCount} views
             </p>
             <Link href="/shop" className="font-body text-terracotta text-sm hover:underline">
-              Continue shopping on CALŌR
+              Continue shopping on calo.
             </Link>
           </div>
         </div>

@@ -2,7 +2,7 @@ import NewRegistryClient from './NewRegistryClient'
 import { Suspense } from 'react'
 
 export const metadata = {
-  title: 'Create Registry | CALŌR',
+  title: 'Create Registry | calo.',
   description: 'Create a new gift registry for your special occasion.',
 }
 

@@ -3,7 +3,7 @@ import ClientWrapper from '@/components/layout/ClientWrapper'
 import SubscriptionsClient from './SubscriptionsClient'
 
 export const metadata: Metadata = {
-  title: 'Subscription Boxes | CALŌR',
+  title: 'Subscription Boxes | calo.',
   description: 'Discover our curated subscription boxes. Premium wellness products delivered discreetly to your door every month.'
 }
 

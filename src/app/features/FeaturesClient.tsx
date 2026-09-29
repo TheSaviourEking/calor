@@ -135,7 +135,7 @@ const featureCategories = [
       {
         icon: Users,
         title: 'The Table',
-        description: 'Refer those you care about and share the Calor experience with mutual benefits.',
+        description: 'Refer those you care about and share the calo. experience with mutual benefits.',
         link: '/account/referrals',
         badge: 'Referrals'
       }
@@ -236,7 +236,7 @@ export default function FeaturesClient() {
                 <br />Built for trust.
               </h1>
               <p className="font-body text-warm-gray text-lg mb-10 leading-relaxed max-w-xl">
-                CALŌR merges advanced technology with elegant design to create a platform that respects your journey. Every feature is a deliberate step toward an elevated experience.
+                calo. merges advanced technology with elegant design to create a platform that respects your journey. Every feature is a deliberate step toward an elevated experience.
               </p>
               <div className="flex flex-wrap gap-6">
                 <Link
@@ -338,7 +338,7 @@ export default function FeaturesClient() {
               <span className="w-10 h-px bg-gold/40" />
             </div>
             <h2 className="font-display text-cream mb-8" style={{ fontSize: 'clamp(2rem, 5vw, 3rem)', fontWeight: 300, lineHeight: 1.2 }}>
-              Ready to experience <br />the Calor difference?
+              Ready to experience <br />the calo. difference?
             </h2>
             <p className="font-body text-cream/60 text-lg mb-12 max-w-xl mx-auto leading-relaxed">
               Create your account today and gain access to our full suite of personalized wellness tools and exclusive member features.

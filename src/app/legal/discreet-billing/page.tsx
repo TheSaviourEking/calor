@@ -23,7 +23,7 @@ export default function DiscreetBillingPage() {
             </p>
             <div className="bg-warm-white p-4 inline-block">
               <p className="font-display text-charcoal text-lg" style={{ fontWeight: 400 }}>
-                CALŌR CO.
+                CALO CO.
               </p>
               <p className="font-body text-warm-gray text-sm">$XXX.XX</p>
             </div>
@@ -37,7 +37,7 @@ export default function DiscreetBillingPage() {
                 Bank Statements
               </h3>
               <p className="font-body text-warm-gray text-sm leading-relaxed">
-                All charges appear as CALŌR CO. only. No product names, no category hints, nothing explicit.
+                All charges appear as CALO CO. only. No product names, no category hints, nothing explicit.
               </p>
             </div>
 
@@ -47,7 +47,7 @@ export default function DiscreetBillingPage() {
                 Shipping Packaging
               </h3>
               <p className="font-body text-warm-gray text-sm leading-relaxed">
-                Plain boxes with no logos or product names. Sender shows as CC Fulfillment, not CALŌR.
+                Plain boxes with no logos or product names. Sender shows as CC Fulfillment, not calo..
               </p>
             </div>
 
@@ -57,7 +57,7 @@ export default function DiscreetBillingPage() {
                 Email Privacy
               </h3>
               <p className="font-body text-warm-gray text-sm leading-relaxed">
-                Email subjects say Your CALŌR order only. No product names visible in previews.
+                Email subjects say Your calo. order only. No product names visible in previews.
               </p>
             </div>
 
@@ -83,7 +83,7 @@ export default function DiscreetBillingPage() {
                 What if I share a bank account?
               </h3>
               <p className="font-body text-warm-gray text-base leading-relaxed">
-                The charge will show only as CALŌR CO. There is nothing to indicate what was purchased.
+                The charge will show only as CALO CO. There is nothing to indicate what was purchased.
               </p>
             </div>
 

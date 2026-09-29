@@ -36,7 +36,7 @@ export default function PaymentTrust() {
             Pay your way
           </h2>
           <p className="font-body text-warm-gray text-base max-w-lg mx-auto">
-            Your bank statement shows &quot;CALŌR CO.&quot; only. Nothing explicit. Ever.
+            Your bank statement shows &quot;CALO CO.&quot; only. Nothing explicit. Ever.
           </p>
         </div>
 

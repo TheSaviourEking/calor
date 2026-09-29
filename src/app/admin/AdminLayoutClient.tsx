@@ -75,7 +75,7 @@ export default function AdminLayoutClient({
                 <div className="p-6">
                     <div className="flex items-center justify-between mb-8">
                         <Link href="/admin" className="font-display text-cream text-xl tracking-wider" style={{ fontWeight: 300 }}>
-                            CALŌR Admin
+                            calo. Admin
                         </Link>
                         <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-cream">
                             <X className="w-5 h-5" />

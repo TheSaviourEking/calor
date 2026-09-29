@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
 
     // Send anonymous gift notification email
     await resend.emails.send({
-      from: 'CALŌR CO. <gifts@calorco.com>',
+      from: 'CALO CO. <gifts@calo.one>',
       to: recipientEmail,
       subject: 'You have received a gift',
       html: `
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
             
             <div class="gift-box">
               <p style="font-size: 48px; margin: 0;">A special delivery awaits you</p>
-              <p style="font-size: 18px; margin-top: 10px;">Someone special has sent you a gift from CALŌR CO.</p>
+              <p style="font-size: 18px; margin-top: 10px;">Someone special has sent you a gift from CALO CO.</p>
             </div>
             
             ${giftMessage ? `<div class="message">"${giftMessage}"</div>` : ''}
@@ -55,8 +55,8 @@ export async function POST(request: NextRequest) {
             </div>
             
             <div class="footer">
-              <p>If you have any questions, contact gifts@calorco.com</p>
-              <p>The CALŌR team</p>
+              <p>If you have any questions, contact gifts@calo.one</p>
+              <p>The calo. team</p>
             </div>
           </div>
         </body>

@@ -271,7 +271,7 @@ export default function CoupleClient() {
           </h2>
           <p className="font-body text-warm-gray text-sm mb-6">
             Enter your partner's email address to send a couples account invitation. 
-            They must have a CALŌR account to accept.
+            They must have a calo. account to accept.
           </p>
 
           <form onSubmit={handleSendInvitation} className="space-y-4">

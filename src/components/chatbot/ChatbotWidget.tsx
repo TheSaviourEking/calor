@@ -108,7 +108,7 @@ export default function ChatbotWidget() {
           setMessages([{
             id: 'welcome',
             senderType: 'bot',
-            content: "Welcome to CALŌR ✨\n\nI'm your personal shopping concierge. I can help you discover the perfect product, track orders, handle returns, or answer any questions.\n\nWhat can I help you with?",
+            content: "Welcome to calo. ✨\n\nI'm your personal shopping concierge. I can help you discover the perfect product, track orders, handle returns, or answer any questions.\n\nWhat can I help you with?",
             createdAt: new Date().toISOString(),
             suggestedActions: ['browse_products', 'track_order', 'get_recommendations'],
           }])
@@ -118,7 +118,7 @@ export default function ChatbotWidget() {
       setMessages([{
         id: 'welcome',
         senderType: 'bot',
-        content: "Welcome to CALŌR ✨\n\nI'm your personal shopping concierge. How can I help you today?",
+        content: "Welcome to calo. ✨\n\nI'm your personal shopping concierge. How can I help you today?",
         createdAt: new Date().toISOString(),
         suggestedActions: ['browse_products', 'track_order', 'get_recommendations'],
       }])
@@ -299,7 +299,7 @@ export default function ChatbotWidget() {
           </div>
           <div>
             <h3 className="font-display text-charcoal text-base" style={{ fontWeight: 400 }}>
-              CALŌR Concierge
+              calo. Concierge
             </h3>
             <div className="flex items-center gap-1.5">
               {/* Brand-aligned indicator — terracotta instead of generic green */}
@@ -426,7 +426,7 @@ export default function ChatbotWidget() {
           </button>
         </form>
         <p className="text-[9px] font-body text-warm-gray/50 mt-1.5 text-center">
-          Powered by CALŌR AI ·{' '}
+          Powered by calo. AI ·{' '}
           <Link href="/legal/privacy" className="hover:text-terracotta transition-colors">Privacy</Link>
         </p>
       </div>

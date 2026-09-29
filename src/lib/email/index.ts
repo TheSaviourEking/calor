@@ -107,8 +107,8 @@ export async function sendOrderConfirmation(data: OrderEmailData): Promise<{ suc
 
   return sendEmail(
     customerEmail,
-    'CALŌR CO. <orders@calorco.com>',
-    'Your CALŌR order is confirmed',
+    'calo. <orders@calo.one>',
+    'Your calo. order is confirmed',
     `
       <!DOCTYPE html>
       <html>
@@ -158,7 +158,7 @@ export async function sendOrderConfirmation(data: OrderEmailData): Promise<{ suc
           
           <div class="footer">
             <p>If you have any questions, reply to this email.</p>
-            <p>The CALŌR team</p>
+            <p>The calo. team</p>
           </div>
         </div>
       </body>
@@ -175,8 +175,8 @@ export async function sendOrderConfirmation(data: OrderEmailData): Promise<{ suc
 export async function sendWelcomeEmail(email: string, firstName: string): Promise<{ success: boolean; error?: string }> {
   return sendEmail(
     email,
-    'CALŌR CO. <hello@calorco.com>',
-    'Welcome to CALŌR',
+    'calo. <hello@calo.one>',
+    'Welcome to calo.',
     `
       <!DOCTYPE html>
       <html>
@@ -193,7 +193,7 @@ export async function sendWelcomeEmail(email: string, firstName: string): Promis
       <body>
         <div class="container">
           <h1>Welcome, ${firstName}</h1>
-          <p>Thank you for creating a CALŌR account. You now have access to:</p>
+          <p>Thank you for creating a calo. account. You now have access to:</p>
           
           <div class="feature">
             <strong>Order History</strong><br>
@@ -210,13 +210,13 @@ export async function sendWelcomeEmail(email: string, firstName: string): Promis
             <span style="color: #6B5D56; font-size: 14px;">Faster checkout with saved addresses and payment methods.</span>
           </div>
           
-          <p style="margin-top: 30px;">We take your privacy seriously. Your bank statement will always show "CALŌR CO." only.</p>
+          <p style="margin-top: 30px;">We take your privacy seriously. Your bank statement will always show "CALO CO." only.</p>
           
           <a href="${config.app.baseUrl}/account" class="button">Visit Your Account</a>
           
           <div class="footer">
             <p>Warmth lives here.</p>
-            <p>The CALŌR team</p>
+            <p>The calo. team</p>
           </div>
         </div>
       </body>
@@ -240,7 +240,7 @@ export async function sendPasswordResetEmail(data: {
 
   return sendEmail(
     email,
-    'CALŌR CO. <security@calorco.com>',
+    'calo. <security@calo.one>',
     'Reset your password',
     `
       <!DOCTYPE html>
@@ -273,7 +273,7 @@ export async function sendPasswordResetEmail(data: {
           
           <div class="footer">
             <p>For your security, we'll never ask for your password via email.</p>
-            <p>The CALŌR team</p>
+            <p>The calo. team</p>
           </div>
         </div>
       </body>
@@ -297,7 +297,7 @@ export async function sendVerificationEmail(data: {
 
   return sendEmail(
     email,
-    'CALŌR CO. <hello@calorco.com>',
+    'calo. <hello@calo.one>',
     'Verify your email address',
     `
       <!DOCTYPE html>
@@ -316,7 +316,7 @@ export async function sendVerificationEmail(data: {
       <body>
         <div class="container">
           <h1>Hi ${customerName},</h1>
-          <p>Thanks for creating a CALŌR account. Please verify your email address to get started:</p>
+          <p>Thanks for creating a calo. account. Please verify your email address to get started:</p>
           
           <a href="${verifyUrl}" class="button">Verify Email</a>
           
@@ -343,7 +343,7 @@ export async function sendVerificationEmail(data: {
           <div class="footer">
             <p>This link will expire in 24 hours.</p>
             <p>If you didn't create an account, you can safely ignore this email.</p>
-            <p>Warmth lives here.<br>The CALŌR team</p>
+            <p>Warmth lives here.<br>The calo. team</p>
           </div>
         </div>
       </body>
@@ -368,7 +368,7 @@ export async function sendShippingNotification(data: {
 
   return sendEmail(
     customerEmail,
-    'CALŌR CO. <orders@calorco.com>',
+    'calo. <orders@calo.one>',
     'Your order is on its way',
     `
       <!DOCTYPE html>
@@ -405,7 +405,7 @@ export async function sendShippingNotification(data: {
           
           <div class="footer">
             <p>Track your order at ${config.app.baseUrl}/track-order</p>
-            <p>The CALŌR team</p>
+            <p>The calo. team</p>
           </div>
         </div>
       </body>
@@ -431,7 +431,7 @@ export async function sendGiftCardEmail(data: {
 
   return sendEmail(
     recipientEmail,
-    'CALŌR CO. <gifts@calorco.com>',
+    'calo. <gifts@calo.one>',
     `You've received a gift card from ${senderName}`,
     `
       <!DOCTYPE html>
@@ -454,7 +454,7 @@ export async function sendGiftCardEmail(data: {
         <div class="container">
           <h1>You've received a gift</h1>
           <p>Hi ${recipientName},</p>
-          <p>${senderName} has sent you a CALŌR gift card.</p>
+          <p>${senderName} has sent you a calo. gift card.</p>
           
           <div class="gift-box">
             <p class="value">Gift Card Value: $${(value / 100).toFixed(2)}</p>
@@ -477,13 +477,13 @@ export async function sendGiftCardEmail(data: {
           
           <div class="discreet">
             <strong>Discreet Shopping</strong><br>
-            Your order will arrive in plain, unmarked packaging. Bank statements show only "CALŌR CO."
+            Your order will arrive in plain, unmarked packaging. Bank statements show only "CALO CO."
           </div>
           
           <div class="footer">
-            <p>This gift card was purchased on calorco.com</p>
-            <p>Questions? Contact us at support@calorco.com</p>
-            <p>Warmth lives here.<br>The CALŌR team</p>
+            <p>This gift card was purchased on calo.one</p>
+            <p>Questions? Contact us at support@calo.one</p>
+            <p>Warmth lives here.<br>The calo. team</p>
           </div>
         </div>
       </body>
@@ -515,7 +515,7 @@ export async function sendAbandonedCartEmail(data: {
 
   return sendEmail(
     email,
-    'CALŌR CO. <hello@calorco.com>',
+    'calo. <hello@calo.one>',
     `You left something behind... ${discountPercent}% off inside`,
     `
       <!DOCTYPE html>
@@ -565,7 +565,7 @@ export async function sendAbandonedCartEmail(data: {
           <div class="footer">
             <p>This offer expires in 7 days. Code can only be used once.</p>
             <p>If you didn't add these items to your cart, you can safely ignore this email.</p>
-            <p>Warmth lives here.<br>The CALŌR team</p>
+            <p>Warmth lives here.<br>The calo. team</p>
           </div>
         </div>
       </body>
@@ -591,7 +591,7 @@ export async function sendPriceDropAlert(data: {
 
   return sendEmail(
     email,
-    'CALŌR CO. <alerts@calorco.com>',
+    'calo. <alerts@calo.one>',
     `Price Drop: ${productName}`,
     `
       <!DOCTYPE html>
@@ -625,7 +625,7 @@ export async function sendPriceDropAlert(data: {
           
           <div class="footer">
             <p>You received this because you set a price drop alert.</p>
-            <p>The CALŌR team</p>
+            <p>The calo. team</p>
           </div>
         </div>
       </body>
@@ -649,7 +649,7 @@ export async function sendBackInStockAlert(data: {
 
   return sendEmail(
     email,
-    'CALŌR CO. <alerts@calorco.com>',
+    'calo. <alerts@calo.one>',
     `Back in Stock: ${productName}`,
     `
       <!DOCTYPE html>
@@ -674,7 +674,7 @@ export async function sendBackInStockAlert(data: {
           
           <div class="footer">
             <p>You received this because you requested a back-in-stock alert.</p>
-            <p>The CALŌR team</p>
+            <p>The calo. team</p>
           </div>
         </div>
       </body>
@@ -700,20 +700,20 @@ export async function sendSecurityAlert(data: {
 
   const typeMessages: Record<string, { title: string; body: string }> = {
     login: {
-      title: 'New sign-in to your CALŌR account',
+      title: 'New sign-in to your calo. account',
       body: 'A new sign-in was detected on your account.',
     },
     password_change: {
       title: 'Your password was changed',
-      body: 'Your CALŌR account password was recently changed.',
+      body: 'Your calo. account password was recently changed.',
     },
     new_device: {
       title: 'New device signed in to your account',
-      body: 'A new device was used to sign in to your CALŌR account.',
+      body: 'A new device was used to sign in to your calo. account.',
     },
     account_update: {
       title: 'Your account was updated',
-      body: 'Your CALŌR account details were recently updated.',
+      body: 'Your calo. account details were recently updated.',
     },
   }
 
@@ -721,7 +721,7 @@ export async function sendSecurityAlert(data: {
 
   return sendEmail(
     email,
-    'CALŌR CO. <security@calorco.com>',
+    'calo. <security@calo.one>',
     message.title,
     `
       <!DOCTYPE html>
@@ -755,8 +755,8 @@ export async function sendSecurityAlert(data: {
           <a href="${config.app.baseUrl}/account/security" class="button">Review Account Activity</a>
           
           <div class="footer">
-            <p>If you have any questions, contact security@calorco.com</p>
-            <p>The CALŌR team</p>
+            <p>If you have any questions, contact security@calo.one</p>
+            <p>The calo. team</p>
           </div>
         </div>
       </body>

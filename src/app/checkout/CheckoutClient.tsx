@@ -811,7 +811,7 @@ export default function CheckoutClient({
                 <div className="flex items-center gap-2">
                   <CreditCard className="w-4 h-4 text-terracotta" />
                   <span className="font-body text-warm-gray text-xs">
-                    Statement shows CALŌR CO.
+                    Statement shows CALO CO.
                   </span>
                 </div>
               </div>

@@ -3,7 +3,7 @@ import ClientWrapper from '@/components/layout/ClientWrapper'
 import CampaignDetailClient from './CampaignDetailClient'
 
 export const metadata: Metadata = {
-  title: 'Campaign Details | CALŌR Admin',
+  title: 'Campaign Details | calo. Admin',
   description: 'View and edit email campaign details'
 }
 

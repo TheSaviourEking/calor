@@ -7,8 +7,8 @@ import { serialise } from '@/lib/serialise'
 export const dynamic = 'force-dynamic'
 
 export const metadata = {
-  title: 'Referrals | CALŌR',
-  description: 'Share CALŌR with friends and earn rewards',
+  title: 'Referrals | calo.',
+  description: 'Share calo. with friends and earn rewards',
 }
 
 export default async function ReferralsPage() {

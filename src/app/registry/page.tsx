@@ -3,7 +3,7 @@ import { getSession } from '@/lib/auth/session'
 import RegistryDashboard from './RegistryDashboard'
 
 export const metadata = {
-  title: 'Gift Registry | CALŌR',
+  title: 'Gift Registry | calo.',
   description: 'Create and manage your gift registries for special occasions.',
 }
 

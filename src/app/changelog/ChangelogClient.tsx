@@ -538,7 +538,7 @@ export default function ChangelogClient() {
               className="font-display text-cream mb-4"
               style={{ fontSize: 'clamp(1.5rem, 3vw, 2rem)', fontWeight: 300 }}
             >
-              Ready to experience CALŌR?
+              Ready to experience calo.?
             </h2>
             <p className="font-body text-cream/70 mb-8 max-w-lg mx-auto">
               Join thousands of customers who trust us for their wellness journey. 
