@@ -3,6 +3,7 @@ import { Cormorant_Garamond, DM_Sans } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import CookieConsent from "@/components/layout/CookieConsent";
+import { Analytics } from "@vercel/analytics/next";
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
@@ -73,15 +74,15 @@ export default function RootLayout({
             __html: JSON.stringify({
               '@context': 'https://schema.org',
               '@type': 'Organization',
-              name: 'CALOR',
-              url: 'https://calorco.com',
-              logo: 'https://calorco.com/android-chrome-512x512.png',
+              name: 'calo.',
+              url: 'https://calo.one',
+              logo: 'https://calo.one/android-chrome-512x512.png',
               description: 'An elevated destination for intimacy, wellness, and pleasure.',
               sameAs: [],
               contactPoint: {
                 '@type': 'ContactPoint',
                 contactType: 'customer service',
-                url: 'https://calorco.com/support',
+                url: 'https://calo.one/support',
               },
             }),
           }}
@@ -93,6 +94,7 @@ export default function RootLayout({
         {children}
         <Toaster position="bottom-center" />
         <CookieConsent />
+        <Analytics />
       </body>
     </html>
   );
