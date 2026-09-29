@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { loadStripe } from "@stripe/stripe-js";
@@ -342,8 +344,13 @@ export default function PaymentPage() {
     router.push(`/checkout/confirmation?order_id=${orderId}`);
   };
 
+  useEffect(() => {
+    if (items.length === 0) {
+      router.push("/shop");
+    }
+  }, [items.length, router]);
+
   if (items.length === 0) {
-    router.push("/shop");
     return null;
   }
 
