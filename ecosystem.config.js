@@ -11,6 +11,7 @@
 //   Staging: calor:staging:chat / calor:staging:stream
 
 const fs = require('fs')
+const path = require('path')
 
 function loadEnv(filePath) {
   if (!fs.existsSync(filePath)) return {}
@@ -32,8 +33,26 @@ function loadEnv(filePath) {
   return env
 }
 
+function findQueryEngine(dir) {
+  const candidates = [
+    path.join(dir, 'dist/bin'),
+    path.join(dir, 'node_modules/.prisma/client'),
+  ]
+  for (const c of candidates) {
+    if (fs.existsSync(c)) {
+      const files = fs.readdirSync(c)
+      const engine = files.find((f) => f.startsWith('libquery_engine') && f.endsWith('.node'))
+      if (engine) return path.join(c, engine)
+    }
+  }
+  return undefined
+}
+
 const prodEnv = loadEnv('/opt/calor/prod/.env')
 const stagingEnv = loadEnv('/opt/calor/staging/.env')
+
+const prodEngine = findQueryEngine('/opt/calor/prod')
+const stagingEngine = findQueryEngine('/opt/calor/staging')
 
 module.exports = {
   apps: [
@@ -56,6 +75,7 @@ module.exports = {
         SOCKET_IO_ORIGINS: prodEnv.SOCKET_IO_ORIGINS,
         REDIS_URL: prodEnv.REDIS_URL || 'redis://127.0.0.1:6379',
         REDIS_KEY_PREFIX: 'calor:prod:chat',
+        PRISMA_QUERY_ENGINE_LIBRARY: prodEngine,
       },
       error_file: '/var/log/calor/prod-support-chat-1-error.log',
       out_file: '/var/log/calor/prod-support-chat-1-out.log',
@@ -77,6 +97,7 @@ module.exports = {
         SOCKET_IO_ORIGINS: prodEnv.SOCKET_IO_ORIGINS,
         REDIS_URL: prodEnv.REDIS_URL || 'redis://127.0.0.1:6379',
         REDIS_KEY_PREFIX: 'calor:prod:chat',
+        PRISMA_QUERY_ENGINE_LIBRARY: prodEngine,
       },
       error_file: '/var/log/calor/prod-support-chat-2-error.log',
       out_file: '/var/log/calor/prod-support-chat-2-out.log',
@@ -98,6 +119,7 @@ module.exports = {
         SOCKET_IO_ORIGINS: prodEnv.SOCKET_IO_ORIGINS,
         REDIS_URL: prodEnv.REDIS_URL || 'redis://127.0.0.1:6379',
         REDIS_KEY_PREFIX: 'calor:prod:stream',
+        PRISMA_QUERY_ENGINE_LIBRARY: prodEngine,
       },
       error_file: '/var/log/calor/prod-live-stream-1-error.log',
       out_file: '/var/log/calor/prod-live-stream-1-out.log',
@@ -119,6 +141,7 @@ module.exports = {
         SOCKET_IO_ORIGINS: prodEnv.SOCKET_IO_ORIGINS,
         REDIS_URL: prodEnv.REDIS_URL || 'redis://127.0.0.1:6379',
         REDIS_KEY_PREFIX: 'calor:prod:stream',
+        PRISMA_QUERY_ENGINE_LIBRARY: prodEngine,
       },
       error_file: '/var/log/calor/prod-live-stream-2-error.log',
       out_file: '/var/log/calor/prod-live-stream-2-out.log',
@@ -144,6 +167,7 @@ module.exports = {
         SOCKET_IO_ORIGINS: stagingEnv.SOCKET_IO_ORIGINS,
         REDIS_URL: stagingEnv.REDIS_URL || 'redis://127.0.0.1:6379',
         REDIS_KEY_PREFIX: 'calor:staging:chat',
+        PRISMA_QUERY_ENGINE_LIBRARY: stagingEngine,
       },
       error_file: '/var/log/calor/staging-support-chat-error.log',
       out_file: '/var/log/calor/staging-support-chat-out.log',
@@ -165,6 +189,7 @@ module.exports = {
         SOCKET_IO_ORIGINS: stagingEnv.SOCKET_IO_ORIGINS,
         REDIS_URL: stagingEnv.REDIS_URL || 'redis://127.0.0.1:6379',
         REDIS_KEY_PREFIX: 'calor:staging:stream',
+        PRISMA_QUERY_ENGINE_LIBRARY: stagingEngine,
       },
       error_file: '/var/log/calor/staging-live-stream-error.log',
       out_file: '/var/log/calor/staging-live-stream-out.log',
