@@ -1,10 +1,12 @@
 import { createServer } from 'http'
 import { Server } from 'socket.io'
 import { PrismaClient } from '@prisma/client'
+import { createClient } from 'redis'
+import { createAdapter } from '@socket.io/redis-adapter'
 
 const db = new PrismaClient()
 
-const PORT = 3032
+const PORT = Number(process.env.PORT) || 3032
 
 // In-memory state for active streams
 const streamViewers = new Map<string, Set<string>>() // streamId -> Set of socketIds
@@ -13,11 +15,38 @@ const viewerSessions = new Map<string, { streamId: string; customerId?: string; 
 const httpServer = createServer()
 const io = new Server(httpServer, {
   cors: {
-    origin: ['http://localhost:3000', 'https://calorco.com', "https://calor-rose.vercel.app"],
+    origin: process.env.SOCKET_IO_ORIGINS?.split(',') || ['http://localhost:3000', 'https://calorco.com', 'https://calor-rose.vercel.app'],
     methods: ['GET', 'POST'],
     credentials: true,
   },
 })
+
+// Redis Adapter for multi-instance synchronization (both staging and prod)
+if (process.env.REDIS_URL) {
+  try {
+    const pubClient = createClient({ url: process.env.REDIS_URL })
+    const subClient = pubClient.duplicate()
+
+    pubClient.on('error', (err) => console.error('[Live Stream] Redis Pub Error:', err))
+    subClient.on('error', (err) => console.error('[Live Stream] Redis Sub Error:', err))
+
+    await Promise.all([pubClient.connect(), subClient.connect()])
+    const key = process.env.REDIS_KEY_PREFIX || `calor:${process.env.NODE_ENV || 'prod'}:live-stream`
+    io.adapter(createAdapter(pubClient, subClient, { key }))
+    console.warn(`[Live Stream] Redis adapter connected with key prefix: ${key}`)
+  } catch (err) {
+    console.error('[Live Stream] Failed to initialize Redis adapter:', err)
+  }
+}
+
+async function getRoomViewerCount(streamId: string): Promise<number> {
+  try {
+    const sockets = await io.in(`stream:${streamId}`).fetchSockets()
+    return sockets.length
+  } catch {
+    return streamViewers.get(streamId)?.size || 0
+  }
+}
 
 io.on('connection', (socket) => {
   console.log(`[Live Stream] Client connected: ${socket.id}`)
@@ -81,8 +110,8 @@ io.on('connection', (socket) => {
         })
       }
 
-      // Update viewer count
-      const viewerCount = streamViewers.get(streamId)?.size || 0
+      // Update viewer count (clustered across instances via Redis)
+      const viewerCount = await getRoomViewerCount(streamId)
 
       // Update peak viewers if needed
       if (viewerCount > stream.peakViewers) {
@@ -291,7 +320,7 @@ io.on('connection', (socket) => {
 
   socket.on('claim_offer', async (data) => {
     try {
-      const { streamId, offerId, customerId } = data
+      const { streamId, offerId, customerId: _customerId } = data
 
       const offer = await db.streamOffer.findUnique({
         where: { id: offerId },
@@ -435,8 +464,8 @@ async function handleLeaveStream(socket: any, streamId: string) {
   if (viewers) {
     viewers.delete(socket.id)
 
-    // Update viewer count
-    const viewerCount = viewers.size
+    // Update viewer count (clustered across instances via Redis)
+    const viewerCount = await getRoomViewerCount(streamId)
     io.to(`stream:${streamId}`).emit('viewer_count_update', {
       streamId,
       viewerCount,
