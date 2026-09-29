@@ -4,7 +4,9 @@ import { PrismaClient } from '@prisma/client'
 import { randomBytes } from 'crypto'
 import { createClient } from 'redis'
 import { createAdapter } from '@socket.io/redis-adapter'
+import { createServiceLogger } from '../logger'
 
+const log = createServiceLogger('support-chat')
 const PORT = Number(process.env.PORT) || 3031
 const db = new PrismaClient()
 
@@ -31,15 +33,15 @@ if (process.env.REDIS_URL) {
     const pubClient = createClient({ url: process.env.REDIS_URL })
     const subClient = pubClient.duplicate()
 
-    pubClient.on('error', (err) => console.error('[Support Chat] Redis Pub Error:', err))
-    subClient.on('error', (err) => console.error('[Support Chat] Redis Sub Error:', err))
+    pubClient.on('error', (err) => log.error({ err }, '[Support Chat] Redis Pub Error'))
+    subClient.on('error', (err) => log.error({ err }, '[Support Chat] Redis Sub Error'))
 
     await Promise.all([pubClient.connect(), subClient.connect()])
     const key = process.env.REDIS_KEY_PREFIX || `calor:${process.env.NODE_ENV || 'prod'}:support-chat`
     io.adapter(createAdapter(pubClient, subClient, { key }))
-    console.warn(`[Support Chat] Redis adapter connected with key prefix: ${key}`)
+    log.act('redis_adapter_connected', { keyPrefix: key })
   } catch (err) {
-    console.error('[Support Chat] Failed to initialize Redis adapter:', err)
+    log.error({ err }, '[Support Chat] Failed to initialize Redis adapter')
   }
 }
 
@@ -50,13 +52,14 @@ function generateSessionId(): string {
 const adminSockets = new Map<string, string>() // socketId -> adminId
 
 io.on('connection', (socket) => {
-  console.log('Client connected:', socket.id)
+  log.act('client_connected', { socketId: socket.id })
 
   // Admin authentication
-  socket.on('admin_auth', (data: { adminId: string }) => {
+  socket.on('admin_auth', (data: { adminId: string; token?: string }) => {
     adminSockets.set(socket.id, data.adminId)
     socket.join('admin_dashboard')
     socket.emit('admin_authenticated', { success: true })
+    log.act('admin_auth', { socketId: socket.id, adminId: data.adminId, token: data.token })
   })
 
   // Admin lists all sessions
@@ -73,8 +76,9 @@ io.on('connection', (socket) => {
         take: 50,
       })
       socket.emit('sessions_list', { sessions })
+      log.act('admin_list_sessions', { socketId: socket.id, count: sessions.length })
     } catch (error) {
-      console.error('Error listing sessions:', error)
+      log.error({ err: error, socketId: socket.id }, 'Error listing sessions')
       socket.emit('error', { message: 'Failed to list sessions' })
     }
   })
@@ -101,9 +105,10 @@ io.on('connection', (socket) => {
           })),
           customer: session.customer,
         })
+        log.act('admin_join_session', { socketId: socket.id, sessionId: data.sessionId })
       }
     } catch (error) {
-      console.error('Error joining session:', error)
+      log.error({ err: error, socketId: socket.id, sessionId: data.sessionId }, 'Error joining session')
     }
   })
 
@@ -129,8 +134,14 @@ io.on('connection', (socket) => {
         message: message.message,
         timestamp: message.createdAt,
       })
+      log.act('admin_send_message', {
+        socketId: socket.id,
+        sessionId: data.sessionId,
+        messageId: message.id,
+        message: data.message, // Auto-redacted by Pino
+      })
     } catch (error) {
-      console.error('Error sending admin message:', error)
+      log.error({ err: error, socketId: socket.id, sessionId: data.sessionId }, 'Error sending admin message')
     }
   })
 
@@ -143,8 +154,9 @@ io.on('connection', (socket) => {
       })
       io.to(data.sessionId).emit('session_ended', { sessionId: data.sessionId })
       socket.leave(data.sessionId)
+      log.act('admin_close_session', { socketId: socket.id, sessionId: data.sessionId })
     } catch (error) {
-      console.error('Error closing session:', error)
+      log.error({ err: error, socketId: socket.id, sessionId: data.sessionId }, 'Error closing session')
     }
   })
 
@@ -186,9 +198,9 @@ io.on('connection', (socket) => {
         timestamp: welcomeMessage.createdAt,
       })
 
-      console.log('Session started:', sessionId)
+      log.act('start_session', { socketId: socket.id, sessionId, customerId: data.customerId })
     } catch (error) {
-      console.error('Error starting session:', error)
+      log.error({ err: error, socketId: socket.id }, 'Error starting session')
       socket.emit('error', { message: 'Failed to start session' })
     }
   })
@@ -216,11 +228,12 @@ io.on('connection', (socket) => {
             timestamp: m.createdAt,
           })),
         })
+        log.act('rejoin_session', { socketId: socket.id, sessionId: data.sessionId })
       } else {
         socket.emit('error', { message: 'Session not found' })
       }
     } catch (error) {
-      console.error('Error rejoining session:', error)
+      log.error({ err: error, socketId: socket.id, sessionId: data.sessionId }, 'Error rejoining session')
       socket.emit('error', { message: 'Failed to rejoin session' })
     }
   })
@@ -260,6 +273,13 @@ io.on('connection', (socket) => {
         timestamp: message.createdAt,
       })
 
+      log.act('send_message', {
+        socketId: socket.id,
+        sessionId: data.sessionId,
+        messageId: message.id,
+        message: data.message, // Auto-redacted by Pino
+      })
+
       // Check if an admin is in this session room
       const room = io.sockets.adapter.rooms.get(data.sessionId)
       const adminInRoom = room ? [...room].some(sid => adminSockets.has(sid)) : false
@@ -289,10 +309,11 @@ io.on('connection', (socket) => {
             message: response.message,
             timestamp: response.createdAt,
           })
+          log.act('auto_response', { sessionId: data.sessionId, responseId: response.id })
         }, 1500)
       }
     } catch (error) {
-      console.error('Error sending message:', error)
+      log.error({ err: error, socketId: socket.id, sessionId: data.sessionId }, 'Error sending message')
       socket.emit('error', { message: 'Failed to send message' })
     }
   })
@@ -310,8 +331,9 @@ io.on('connection', (socket) => {
 
       socket.leave(data.sessionId)
       socket.emit('session_ended', { sessionId: data.sessionId })
+      log.act('end_session', { socketId: socket.id, sessionId: data.sessionId })
     } catch (error) {
-      console.error('Error ending session:', error)
+      log.error({ err: error, socketId: socket.id, sessionId: data.sessionId }, 'Error ending session')
     }
   })
 
@@ -322,10 +344,10 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
     adminSockets.delete(socket.id)
-    console.log('Client disconnected:', socket.id)
+    log.act('client_disconnected', { socketId: socket.id })
   })
 })
 
 httpServer.listen(PORT, () => {
-  console.log(`Support chat service running on port ${PORT}`)
+  log.info({ port: PORT }, `Support chat service running on port ${PORT}`)
 })

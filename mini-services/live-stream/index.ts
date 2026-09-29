@@ -3,7 +3,9 @@ import { Server } from 'socket.io'
 import { PrismaClient } from '@prisma/client'
 import { createClient } from 'redis'
 import { createAdapter } from '@socket.io/redis-adapter'
+import { createServiceLogger } from '../logger'
 
+const log = createServiceLogger('live-stream')
 const db = new PrismaClient()
 
 const PORT = Number(process.env.PORT) || 3032
@@ -35,15 +37,15 @@ if (process.env.REDIS_URL) {
     const pubClient = createClient({ url: process.env.REDIS_URL })
     const subClient = pubClient.duplicate()
 
-    pubClient.on('error', (err) => console.error('[Live Stream] Redis Pub Error:', err))
-    subClient.on('error', (err) => console.error('[Live Stream] Redis Sub Error:', err))
+    pubClient.on('error', (err) => log.error({ err }, '[Live Stream] Redis Pub Error'))
+    subClient.on('error', (err) => log.error({ err }, '[Live Stream] Redis Sub Error'))
 
     await Promise.all([pubClient.connect(), subClient.connect()])
     const key = process.env.REDIS_KEY_PREFIX || `calor:${process.env.NODE_ENV || 'prod'}:live-stream`
     io.adapter(createAdapter(pubClient, subClient, { key }))
-    console.warn(`[Live Stream] Redis adapter connected with key prefix: ${key}`)
+    log.act('redis_adapter_connected', { keyPrefix: key })
   } catch (err) {
-    console.error('[Live Stream] Failed to initialize Redis adapter:', err)
+    log.error({ err }, '[Live Stream] Failed to initialize Redis adapter')
   }
 }
 
@@ -57,7 +59,7 @@ async function getRoomViewerCount(streamId: string): Promise<number> {
 }
 
 io.on('connection', (socket) => {
-  console.log(`[Live Stream] Client connected: ${socket.id}`)
+  log.act('client_connected', { socketId: socket.id })
 
   // ============ STREAM JOIN/LEAVE ============
   socket.on('join_stream', async (data) => {
@@ -151,9 +153,9 @@ io.on('connection', (socket) => {
         viewerCount,
       })
 
-      console.log(`[Live Stream] Client ${socket.id} joined stream ${streamId}`)
+      log.act('join_stream', { socketId: socket.id, streamId, customerId, guestId, viewerCount })
     } catch (error) {
-      console.error('Error joining stream:', error)
+      log.error({ err: error, socketId: socket.id }, 'Error joining stream')
       socket.emit('error', { message: 'Failed to join stream' })
     }
   })
@@ -162,8 +164,9 @@ io.on('connection', (socket) => {
     try {
       const { streamId } = data
       await handleLeaveStream(socket, streamId)
+      log.act('leave_stream', { socketId: socket.id, streamId })
     } catch (error) {
-      console.error('Error leaving stream:', error)
+      log.error({ err: error, socketId: socket.id }, 'Error leaving stream')
     }
   })
 
@@ -235,8 +238,17 @@ io.on('connection', (socket) => {
         where: { id: streamId },
         data: { totalChatMessages: { increment: 1 } },
       })
+
+      log.act('send_message', {
+        socketId: socket.id,
+        streamId,
+        messageId: chatMessage.id,
+        message, // Auto-redacted by Pino
+        customerId,
+        guestName,
+      })
     } catch (error) {
-      console.error('Error sending message:', error)
+      log.error({ err: error, socketId: socket.id }, 'Error sending message')
       socket.emit('error', { message: 'Failed to send message' })
     }
   })
@@ -266,8 +278,9 @@ io.on('connection', (socket) => {
         reactionType,
         count: reactions[reactionType],
       })
+      log.act('add_reaction', { socketId: socket.id, streamId, messageId, reactionType })
     } catch (error) {
-      console.error('Error adding reaction:', error)
+      log.error({ err: error, socketId: socket.id }, 'Error adding reaction')
     }
   })
 
@@ -302,8 +315,9 @@ io.on('connection', (socket) => {
         streamId,
         product: streamProduct,
       })
+      log.act('feature_product', { socketId: socket.id, streamId, productId })
     } catch (error) {
-      console.error('Error featuring product:', error)
+      log.error({ err: error, socketId: socket.id }, 'Error featuring product')
     }
   })
 
@@ -321,8 +335,9 @@ io.on('connection', (socket) => {
         streamId,
         offer,
       })
+      log.act('activate_offer', { socketId: socket.id, streamId, offerId })
     } catch (error) {
-      console.error('Error activating offer:', error)
+      log.error({ err: error, socketId: socket.id }, 'Error activating offer')
     }
   })
 
@@ -367,8 +382,9 @@ io.on('connection', (socket) => {
         claimedCount: updatedOffer.claimedCount,
         remaining: offer.quantityLimit ? offer.quantityLimit - updatedOffer.claimedCount : null,
       })
+      log.act('claim_offer', { socketId: socket.id, streamId, offerId, customerId: _customerId })
     } catch (error) {
-      console.error('Error claiming offer:', error)
+      log.error({ err: error, socketId: socket.id }, 'Error claiming offer')
       socket.emit('error', { message: 'Failed to claim offer' })
     }
   })
@@ -388,8 +404,9 @@ io.on('connection', (socket) => {
           data: { totalProductsClicked: { increment: 1 } },
         }),
       ])
+      log.act('product_click', { socketId: socket.id, streamId, productId })
     } catch (error) {
-      console.error('Error tracking product click:', error)
+      log.error({ err: error, socketId: socket.id }, 'Error tracking product click')
     }
   })
 
@@ -407,8 +424,9 @@ io.on('connection', (socket) => {
           data: { totalCartAdds: { increment: 1 } },
         }),
       ])
+      log.act('cart_add', { socketId: socket.id, streamId, productId })
     } catch (error) {
-      console.error('Error tracking cart add:', error)
+      log.error({ err: error, socketId: socket.id }, 'Error tracking cart add')
     }
   })
 
@@ -432,8 +450,9 @@ io.on('connection', (socket) => {
         streamId,
         messageId,
       })
+      log.act('pin_message', { socketId: socket.id, streamId, messageId })
     } catch (error) {
-      console.error('Error pinning message:', error)
+      log.error({ err: error, socketId: socket.id }, 'Error pinning message')
     }
   })
 
@@ -450,14 +469,15 @@ io.on('connection', (socket) => {
         streamId,
         messageId,
       })
+      log.act('highlight_message', { socketId: socket.id, streamId, messageId })
     } catch (error) {
-      console.error('Error highlighting message:', error)
+      log.error({ err: error, socketId: socket.id }, 'Error highlighting message')
     }
   })
 
   // ============ DISCONNECT ============
   socket.on('disconnect', async () => {
-    console.log(`[Live Stream] Client disconnected: ${socket.id}`)
+    log.act('client_disconnected', { socketId: socket.id })
 
     const session = viewerSessions.get(socket.id)
     if (session) {
@@ -508,5 +528,5 @@ async function handleLeaveStream(socket: any, streamId: string) {
 }
 
 httpServer.listen(PORT, () => {
-  console.log(`[Live Stream] WebSocket server running on port ${PORT}`)
+  log.info({ port: PORT }, `[Live Stream] WebSocket server running on port ${PORT}`)
 })

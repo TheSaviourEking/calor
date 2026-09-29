@@ -132,11 +132,11 @@ export default function Hero() {
         <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-charcoal/50 via-charcoal/20 to-transparent z-10 pointer-events-none" />
 
         {/* Top-Right Pillar Tag */}
-        <div className="absolute top-8 right-8 z-20 backdrop-blur-md bg-warm-white/80 border border-warm-white/60 px-4 py-2 shadow-sm transition-all duration-500">
+        {/* <div className="absolute top-8 right-8 z-20 backdrop-blur-md bg-warm-white/80 border border-warm-white/60 px-4 py-2 shadow-sm transition-all duration-500">
           <p className="font-body text-[11px] tracking-[0.25em] text-charcoal uppercase font-medium">
             {HERO_SLIDES[currentSlide].tag}
           </p>
-        </div>
+        </div> */}
 
         {/* Bottom-Left Slide Controls & Caption */}
         <div className="absolute bottom-10 left-10 z-20 flex flex-col gap-3">
@@ -163,14 +163,14 @@ export default function Hero() {
                       }}
                     />
                   </div>
-                  <span
+                  {/* <span
                     className={`text-[10px] font-body tracking-wider transition-colors ${isActive
                         ? "text-cream font-medium"
                         : "text-cream/60 group-hover:text-cream"
                       }`}
                   >
                     0{idx + 1}
-                  </span>
+                  </span> */}
                 </button>
               );
             })}
