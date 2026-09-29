@@ -42,6 +42,7 @@ module.exports = {
     // ==========================================
     {
       name: 'prod-support-chat-1',
+      namespace: 'production',
       script: './dist/bin/support-chat',
       cwd: '/opt/calor/prod',
       instances: 1,
@@ -62,6 +63,7 @@ module.exports = {
     },
     {
       name: 'prod-support-chat-2',
+      namespace: 'production',
       script: './dist/bin/support-chat',
       cwd: '/opt/calor/prod',
       instances: 1,
@@ -82,6 +84,7 @@ module.exports = {
     },
     {
       name: 'prod-live-stream-1',
+      namespace: 'production',
       script: './dist/bin/live-stream',
       cwd: '/opt/calor/prod',
       instances: 1,
@@ -102,6 +105,7 @@ module.exports = {
     },
     {
       name: 'prod-live-stream-2',
+      namespace: 'production',
       script: './dist/bin/live-stream',
       cwd: '/opt/calor/prod',
       instances: 1,
@@ -126,6 +130,7 @@ module.exports = {
     // ==========================================
     {
       name: 'staging-support-chat',
+      namespace: 'staging',
       script: './dist/bin/support-chat',
       cwd: '/opt/calor/staging',
       instances: 1,
@@ -146,6 +151,7 @@ module.exports = {
     },
     {
       name: 'staging-live-stream',
+      namespace: 'staging',
       script: './dist/bin/live-stream',
       cwd: '/opt/calor/staging',
       instances: 1,

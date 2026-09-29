@@ -95,11 +95,11 @@ jobs:
 
           if [ "$TARGET" = "production" ]; then
             echo "dir=/opt/calor/prod" >> $GITHUB_OUTPUT
-            echo "filter=prod" >> $GITHUB_OUTPUT
+            echo "apps=prod-support-chat-1,prod-support-chat-2,prod-live-stream-1,prod-live-stream-2" >> $GITHUB_OUTPUT
             echo "env_name=Production" >> $GITHUB_OUTPUT
           else
             echo "dir=/opt/calor/staging" >> $GITHUB_OUTPUT
-            echo "filter=staging" >> $GITHUB_OUTPUT
+            echo "apps=staging-support-chat,staging-live-stream" >> $GITHUB_OUTPUT
             echo "env_name=Staging" >> $GITHUB_OUTPUT
           fi
 
@@ -139,8 +139,8 @@ jobs:
               caddy validate --config /etc/caddy/Caddyfile 2>/dev/null && systemctl reload caddy 2>/dev/null || true
             fi
 
-            echo "==> Reloading PM2 processes for ${{ steps.env.outputs.env_name }}..."
-            pm2 restart ecosystem.config.js --only "${{ steps.env.outputs.filter }}-*" --update-env 2>/dev/null || pm2 start ecosystem.config.js --only "${{ steps.env.outputs.filter }}-*"
+            echo "==> Starting / Reloading PM2 processes for ${{ steps.env.outputs.env_name }}..."
+            pm2 startOrRestart ecosystem.config.js --only "${{ steps.env.outputs.apps }}" --update-env
             pm2 save
 
             echo "==> Deployment Complete! Process status:"
