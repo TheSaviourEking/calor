@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Calendar, User, Video, Phone, MessageSquare, CheckCircle, XCircle, Clock, Loader2, Plus, ChevronDown } from 'lucide-react'
+import { Calendar, User, Video, Phone, MessageSquare, CheckCircle, XCircle, Loader2, Plus } from 'lucide-react'
 
 interface Availability {
   id: string

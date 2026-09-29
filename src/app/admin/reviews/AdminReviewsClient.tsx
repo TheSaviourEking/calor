@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Star, Check, X, Eye, Trash2, Loader2 } from 'lucide-react'
+import { Star, Check, Eye, Trash2, Loader2 } from 'lucide-react'
 import { confirm } from '@/lib/confirm'
 import Link from 'next/link'
 
