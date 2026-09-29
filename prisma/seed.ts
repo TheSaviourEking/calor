@@ -416,7 +416,7 @@ async function main() {
       await db.productImage.create({
         data: {
           productId: created.id,
-          url: `/images/products/${created.slug}.jpg`,
+          url: `/images/products/${created.slug}.png`,
           altText: created.name,
           sortOrder: 0,
         },
@@ -431,6 +431,17 @@ async function main() {
           cleaningGuide: product.cleaningGuide,
           usageGuide: product.usageGuide,
           estimatedDeliveryDays: product.estimatedDeliveryDays,
+        },
+      })
+
+      // Update image URL to .png if it was .jpg
+      await db.productImage.updateMany({
+        where: {
+          productId: existingProduct.id,
+          url: `/images/products/${product.slug}.jpg`,
+        },
+        data: {
+          url: `/images/products/${product.slug}.png`,
         },
       })
     }

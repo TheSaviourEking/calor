@@ -16,6 +16,14 @@ const nextConfig: NextConfig = {
       // { protocol: "https", hostname: "assets.yourdomain.com" },
     ],
   },
+  async rewrites() {
+    return [
+      {
+        source: '/images/products/:slug*.jpg',
+        destination: '/images/products/:slug*.png',
+      },
+    ];
+  },
 };
 
 export default nextConfig;
