@@ -7,7 +7,6 @@ import {
   ChevronDown, X, Save, Loader2, AlertCircle
 } from 'lucide-react'
 import { confirm } from '@/lib/confirm'
-import { toast } from 'sonner'
 
 interface Variant {
   id: string

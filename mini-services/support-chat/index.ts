@@ -2,18 +2,46 @@ import { createServer } from 'http'
 import { Server } from 'socket.io'
 import { PrismaClient } from '@prisma/client'
 import { randomBytes } from 'crypto'
+import { createClient } from 'redis'
+import { createAdapter } from '@socket.io/redis-adapter'
 
-const PORT = 3031
+const PORT = Number(process.env.PORT) || 3031
 const db = new PrismaClient()
+
+function parseAllowedOrigins(raw?: string): string[] {
+  if (!raw) return ['http://localhost:3000', 'https://calo.one', 'https://www.calo.one', 'https://staging.calo.one', 'https://calor-rose.vercel.app']
+  return raw
+    .split(',')
+    .map((s) => s.trim().replace(/\/+$/, ''))
+    .filter(Boolean)
+}
 
 const httpServer = createServer()
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.SOCKET_IO_ORIGINS?.split(',') || ['http://localhost:3000', 'https://calorco.com', "https://calor-rose.vercel.app"],
+    origin: parseAllowedOrigins(process.env.SOCKET_IO_ORIGINS),
     methods: ['GET', 'POST'],
     credentials: true,
   },
 })
+
+// Redis Adapter for multi-instance synchronization (both staging and prod)
+if (process.env.REDIS_URL) {
+  try {
+    const pubClient = createClient({ url: process.env.REDIS_URL })
+    const subClient = pubClient.duplicate()
+
+    pubClient.on('error', (err) => console.error('[Support Chat] Redis Pub Error:', err))
+    subClient.on('error', (err) => console.error('[Support Chat] Redis Sub Error:', err))
+
+    await Promise.all([pubClient.connect(), subClient.connect()])
+    const key = process.env.REDIS_KEY_PREFIX || `calor:${process.env.NODE_ENV || 'prod'}:support-chat`
+    io.adapter(createAdapter(pubClient, subClient, { key }))
+    console.warn(`[Support Chat] Redis adapter connected with key prefix: ${key}`)
+  } catch (err) {
+    console.error('[Support Chat] Failed to initialize Redis adapter:', err)
+  }
+}
 
 function generateSessionId(): string {
   return `session_${randomBytes(16).toString('hex')}`
