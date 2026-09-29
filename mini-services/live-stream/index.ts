@@ -12,10 +12,18 @@ const PORT = Number(process.env.PORT) || 3032
 const streamViewers = new Map<string, Set<string>>() // streamId -> Set of socketIds
 const viewerSessions = new Map<string, { streamId: string; customerId?: string; guestId?: string }>()
 
+function parseAllowedOrigins(raw?: string): string[] {
+  if (!raw) return ['http://localhost:3000', 'https://calorco.com', 'https://calor-rose.vercel.app']
+  return raw
+    .split(',')
+    .map((s) => s.trim().replace(/\/+$/, ''))
+    .filter(Boolean)
+}
+
 const httpServer = createServer()
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.SOCKET_IO_ORIGINS?.split(',') || ['http://localhost:3000', 'https://calorco.com', 'https://calor-rose.vercel.app'],
+    origin: parseAllowedOrigins(process.env.SOCKET_IO_ORIGINS),
     methods: ['GET', 'POST'],
     credentials: true,
   },
