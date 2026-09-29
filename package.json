@@ -22,6 +22,7 @@
     "start:services": "concurrently \"bun run start:chat\" \"bun run start:stream\"",
     "start:all:vps": "concurrently \"bun run start:vps\" \"bun run start:chat\" \"bun run start:stream\"",
     "lint": "eslint .",
+    "lint:fix": "eslint --fix . && eslint mini-services/ --fix",
     "lint:services": "eslint mini-services/",
     "db:push": "prisma db push",
     "db:generate": "prisma generate",
