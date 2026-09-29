@@ -1,19 +1,18 @@
 # CALŌR — Caddyfile for Staging & Clustered Production Mini-Services
-# Services run directly via PM2 on the host. Caddy handles SSL automatically.
-#
-# Replace yourdomain.com with your actual domain (e.g., calorco.com).
+# Domain: calo.one
+# Services run directly via PM2 on the host. Caddy handles SSL automatically via Let's Encrypt.
 #
 # DNS Records (GREY CLOUD / Unproxied in Cloudflare for WebSockets):
-#   A  chat.yourdomain.com          → YOUR_VPS_IP
-#   A  stream.yourdomain.com        → YOUR_VPS_IP
-#   A  chat-staging.yourdomain.com  → YOUR_VPS_IP
-#   A  stream-staging.yourdomain.com→ YOUR_VPS_IP
+#   A  chat.calo.one          → YOUR_VPS_IP
+#   A  stream.calo.one        → YOUR_VPS_IP
+#   A  chat-staging.calo.one  → YOUR_VPS_IP
+#   A  stream-staging.calo.one→ YOUR_VPS_IP
 
 # ==========================================
 # PRODUCTION SERVICES (CLUSTERED & LOAD BALANCED)
 # ==========================================
 
-chat.yourdomain.com {
+chat.calo.one {
     reverse_proxy localhost:3031 localhost:3033 {
         lb_policy client_ip_hash
         header_up Host {host}
@@ -31,7 +30,7 @@ chat.yourdomain.com {
     }
 }
 
-stream.yourdomain.com {
+stream.calo.one {
     reverse_proxy localhost:3032 localhost:3034 {
         lb_policy client_ip_hash
         header_up Host {host}
@@ -53,7 +52,7 @@ stream.yourdomain.com {
 # STAGING SERVICES (ISOLATED STAGING ENVIRONMENT)
 # ==========================================
 
-chat-staging.yourdomain.com {
+chat-staging.calo.one {
     reverse_proxy localhost:3041 {
         header_up Host {host}
         header_up X-Real-IP {remote_host}
@@ -70,7 +69,7 @@ chat-staging.yourdomain.com {
     }
 }
 
-stream-staging.yourdomain.com {
+stream-staging.calo.one {
     reverse_proxy localhost:3042 {
         header_up Host {host}
         header_up X-Real-IP {remote_host}
