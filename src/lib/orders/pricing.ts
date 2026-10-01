@@ -165,7 +165,7 @@ export function priceOrder(input: PriceOrderInput): PricedOrder {
     } else if (promo.type === 'free_shipping') {
       promoDiscountCents = shippingCents
     }
-    promoDiscountCents = Math.max(0, promoDiscountCents)
+    promoDiscountCents = Number.isFinite(promoDiscountCents) ? Math.max(0, promoDiscountCents) : 0
   }
 
   let remainingCents = subtotalCents + shippingCents + wrappingCents - promoDiscountCents

@@ -191,4 +191,22 @@ describe('priceOrder', () => {
     expect(priced.promoDiscountCents).toBe(0)
     expect(priced.totalCents).toBe(6200)
   })
+
+  it('treats a fixed promo with value NaN as 0 discount', () => {
+    const priced = priceOrder({ ...base, promotion: { ...promo, type: 'fixed', value: NaN } })
+    expect(priced.promoDiscountCents).toBe(0)
+    expect(priced.totalCents).toBe(6200)
+  })
+
+  it('treats a percentage promo with value NaN as 0 discount', () => {
+    const priced = priceOrder({ ...base, promotion: { ...promo, type: 'percentage', value: NaN } })
+    expect(priced.promoDiscountCents).toBe(0)
+    expect(priced.totalCents).toBe(6200)
+  })
+
+  it('keeps promo discount finite when maxDiscountCents is NaN', () => {
+    const priced = priceOrder({ ...base, promotion: { ...promo, type: 'percentage', value: 10, maxDiscountCents: NaN } })
+    expect(Number.isFinite(priced.promoDiscountCents)).toBe(true)
+    expect(Number.isFinite(priced.totalCents)).toBe(true)
+  })
 })
