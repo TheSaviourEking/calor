@@ -7,7 +7,7 @@ const { db, tx, sendOrderConfirmation } = vi.hoisted(() => {
     variant: { updateMany: vi.fn() },
     product: { update: vi.fn() },
     loyaltyAccount: { findUnique: vi.fn(), update: vi.fn() },
-    loyaltyTransaction: { create: vi.fn() },
+    loyaltyTransaction: { findMany: vi.fn(), create: vi.fn() },
     giftCardTransaction: { findMany: vi.fn(), create: vi.fn() },
     giftCard: { update: vi.fn() },
   }
@@ -56,9 +56,24 @@ describe('markOrderPaid', () => {
 
   it('does nothing on a repeated delivery', async () => {
     db.order.updateMany.mockResolvedValue({ count: 0 })
+    db.order.findUnique.mockResolvedValue({ status: 'PAYMENT_RECEIVED', reference: 'CLABC123' })
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
     expect(await markOrderPaid('ord_1')).toBe(false)
     expect(sendOrderConfirmation).not.toHaveBeenCalled()
+    expect(errorSpy).not.toHaveBeenCalled()
+    errorSpy.mockRestore()
+  })
+
+  it('logs and returns false when payment arrives for a cancelled order', async () => {
+    db.order.updateMany.mockResolvedValue({ count: 0 })
+    db.order.findUnique.mockResolvedValue({ status: 'CANCELLED', reference: 'CLABC123' })
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    expect(await markOrderPaid('ord_1')).toBe(false)
+    expect(sendOrderConfirmation).not.toHaveBeenCalled()
+    expect(errorSpy).toHaveBeenCalledTimes(1)
+    errorSpy.mockRestore()
   })
 })
 
@@ -77,7 +92,7 @@ describe('cancelOrderAndRelease', () => {
   it('restores stock, points and gift card balance exactly once', async () => {
     tx.order.updateMany.mockResolvedValue({ count: 1 })
     tx.order.findUnique.mockResolvedValue(cancelled)
-    tx.loyaltyAccount.findUnique.mockResolvedValue({ id: 'acct_1' })
+    tx.loyaltyTransaction.findMany.mockResolvedValue([{ accountId: 'acct_1', points: -300 }])
     tx.giftCardTransaction.findMany.mockResolvedValue([{ giftCardId: 'g1', amountCents: 1500 }])
 
     expect(await cancelOrderAndRelease('ord_1')).toBe(true)
@@ -92,6 +107,9 @@ describe('cancelOrderAndRelease', () => {
     expect(tx.loyaltyAccount.update).toHaveBeenCalledWith({
       where: { id: 'acct_1' },
       data: { points: { increment: 300 }, totalUsed: { decrement: 300 } },
+    })
+    expect(tx.loyaltyTransaction.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ accountId: 'acct_1', points: 300, type: 'refund', orderId: 'ord_1' }),
     })
     expect(tx.giftCard.update).toHaveBeenCalledWith({
       where: { id: 'g1' },
@@ -109,5 +127,54 @@ describe('cancelOrderAndRelease', () => {
     expect(tx.order.findUnique).not.toHaveBeenCalled()
     expect(tx.variant.updateMany).not.toHaveBeenCalled()
     expect(tx.product.update).not.toHaveBeenCalled()
+  })
+
+  it('refunds nothing when no points were actually redeemed', async () => {
+    tx.order.updateMany.mockResolvedValue({ count: 1 })
+    tx.order.findUnique.mockResolvedValue({ ...cancelled, loyaltyPointsUsed: 1000000 })
+    tx.loyaltyTransaction.findMany.mockResolvedValue([])
+    tx.giftCardTransaction.findMany.mockResolvedValue([])
+
+    expect(await cancelOrderAndRelease('ord_1')).toBe(true)
+    expect(tx.loyaltyAccount.update).not.toHaveBeenCalled()
+    expect(tx.loyaltyTransaction.create).not.toHaveBeenCalled()
+  })
+
+  it('refunds exactly the redeemed points from the transaction rows', async () => {
+    tx.order.updateMany.mockResolvedValue({ count: 1 })
+    tx.order.findUnique.mockResolvedValue({ ...cancelled, loyaltyPointsUsed: 999 })
+    tx.loyaltyTransaction.findMany.mockResolvedValue([{ accountId: 'acct_1', points: -300 }])
+    tx.giftCardTransaction.findMany.mockResolvedValue([])
+
+    await cancelOrderAndRelease('ord_1')
+    expect(tx.loyaltyAccount.update).toHaveBeenCalledWith({
+      where: { id: 'acct_1' },
+      data: { points: { increment: 300 }, totalUsed: { decrement: 300 } },
+    })
+    expect(tx.loyaltyTransaction.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ accountId: 'acct_1', points: 300, type: 'refund' }),
+    })
+  })
+
+  it('scopes the cancellation to the payment reference when given', async () => {
+    tx.order.updateMany.mockResolvedValue({ count: 0 })
+
+    expect(await cancelOrderAndRelease('ord_1', 'pi_old')).toBe(false)
+    expect(tx.order.updateMany).toHaveBeenCalledWith({
+      where: { id: 'ord_1', status: 'PENDING', paymentRef: 'pi_old' },
+      data: { status: 'CANCELLED' },
+    })
+    expect(tx.order.findUnique).not.toHaveBeenCalled()
+    expect(tx.product.update).not.toHaveBeenCalled()
+  })
+
+  it('does not scope by reference when none is given', async () => {
+    tx.order.updateMany.mockResolvedValue({ count: 0 })
+
+    await cancelOrderAndRelease('ord_1')
+    expect(tx.order.updateMany).toHaveBeenCalledWith({
+      where: { id: 'ord_1', status: 'PENDING' },
+      data: { status: 'CANCELLED' },
+    })
   })
 })

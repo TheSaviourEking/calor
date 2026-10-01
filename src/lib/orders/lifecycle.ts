@@ -34,16 +34,28 @@ export async function markOrderPaid(orderId: string): Promise<boolean> {
     where: { id: orderId, status: 'PENDING' },
     data: { status: 'PAYMENT_RECEIVED' },
   })
-  if (result.count !== 1) return false
+  if (result.count !== 1) {
+    // Already paid is a duplicate delivery; anything else means money arrived
+    // for an order that can no longer be fulfilled and needs a human.
+    const current = await db.order.findUnique({
+      where: { id: orderId },
+      select: { status: true, reference: true },
+    })
+    const status = current?.status
+    if (!current || status === 'PENDING' || status === 'CANCELLED' || status === 'REFUNDED') {
+      console.error('[orders] Payment received for an order that is not awaiting payment:', { orderId, status })
+    }
+    return false
+  }
 
   await sendOrderConfirmationFor(orderId)
   return true
 }
 
-export async function cancelOrderAndRelease(orderId: string): Promise<boolean> {
+export async function cancelOrderAndRelease(orderId: string, paymentRef?: string): Promise<boolean> {
   return db.$transaction(async (tx) => {
     const result = await tx.order.updateMany({
-      where: { id: orderId, status: 'PENDING' },
+      where: paymentRef ? { id: orderId, status: 'PENDING', paymentRef } : { id: orderId, status: 'PENDING' },
       data: { status: 'CANCELLED' },
     })
     if (result.count !== 1) return false
@@ -73,27 +85,25 @@ export async function cancelOrderAndRelease(orderId: string): Promise<boolean> {
       })
     }
 
-    // Return loyalty points
-    if (order.customerId && order.loyaltyPointsUsed > 0) {
-      const account = await tx.loyaltyAccount.findUnique({ where: { customerId: order.customerId } })
-      if (account) {
-        await tx.loyaltyAccount.update({
-          where: { id: account.id },
-          data: {
-            points: { increment: order.loyaltyPointsUsed },
-            totalUsed: { decrement: order.loyaltyPointsUsed },
-          },
-        })
-        await tx.loyaltyTransaction.create({
-          data: {
-            accountId: account.id,
-            points: order.loyaltyPointsUsed,
-            type: 'refund',
-            description: `Order ${order.reference} cancelled`,
-            orderId,
-          },
-        })
-      }
+    // Return only the points that were actually deducted (negative rows)
+    const pointRedemptions = await tx.loyaltyTransaction.findMany({
+      where: { orderId, type: 'redemption' },
+    })
+    for (const row of pointRedemptions) {
+      const points = -row.points
+      await tx.loyaltyAccount.update({
+        where: { id: row.accountId },
+        data: { points: { increment: points }, totalUsed: { decrement: points } },
+      })
+      await tx.loyaltyTransaction.create({
+        data: {
+          accountId: row.accountId,
+          points,
+          type: 'refund',
+          description: `Order ${order.reference} cancelled`,
+          orderId,
+        },
+      })
     }
 
     // Return gift card balance

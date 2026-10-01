@@ -22,6 +22,7 @@ export async function createCryptoCharge(orderId: string): Promise<{ chargeId: s
   })
 
   if (!order) throw new Error('Order not found')
+  if (order.status !== 'PENDING') throw new Error('Order is not awaiting payment')
 
   const response = await fetch('https://api.commerce.coinbase.com/charges', {
     method: 'POST',
@@ -95,7 +96,10 @@ export async function handleCryptoWebhook(event: { type: string; data: { id?: st
 
     case 'charge:failed':
     case 'charge:canceled': {
-      if (orderId) await cancelOrderAndRelease(orderId)
+      const chargeId = event.data?.id
+      if (orderId && typeof chargeId === 'string' && chargeId) {
+        await cancelOrderAndRelease(orderId, chargeId)
+      }
       console.warn('[Coinbase] Charge closed without payment:', event.data?.id)
       break
     }

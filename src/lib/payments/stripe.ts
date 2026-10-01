@@ -8,6 +8,7 @@ export async function createPaymentIntent(orderId: string) {
   const order = await db.order.findUnique({ where: { id: orderId } })
 
   if (!order) throw new Error('Order not found')
+  if (order.status !== 'PENDING') throw new Error('Order is not awaiting payment')
 
   // Reuse the open intent when the buyer reloads or comes back to card payment
   if (order.paymentProvider === 'stripe' && order.paymentRef) {
@@ -68,7 +69,7 @@ export async function handleStripeWebhook(event: Stripe.Event) {
     case 'payment_intent.canceled': {
       const paymentIntent = event.data.object as Stripe.PaymentIntent
       const { orderId } = paymentIntent.metadata
-      if (orderId) await cancelOrderAndRelease(orderId)
+      if (orderId) await cancelOrderAndRelease(orderId, paymentIntent.id)
       break
     }
 
