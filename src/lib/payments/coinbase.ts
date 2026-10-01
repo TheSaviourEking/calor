@@ -1,6 +1,6 @@
 import crypto from 'crypto'
 import { db } from '@/lib/db'
-import { sendOrderConfirmation } from '@/lib/email/index'
+import { markOrderPaid, cancelOrderAndRelease } from '@/lib/orders/lifecycle'
 import { config } from '@/lib/config'
 
 interface CoinbaseChargeResponse {
@@ -84,63 +84,23 @@ export function verifyCoinbaseWebhook(signature: string, body: string): boolean 
   return crypto.timingSafeEqual(sigBuffer, expBuffer)
 }
 
-export async function handleCryptoWebhook(event: { type: string; data: { id?: string; metadata: { orderId: string } } }) {
+export async function handleCryptoWebhook(event: { type: string; data: { id?: string; metadata?: { orderId?: string } } }) {
+  const orderId = event.data?.metadata?.orderId
+
   switch (event.type) {
     case 'charge:confirmed': {
-      const { orderId } = event.data.metadata
-
-      const order = await db.order.update({
-        where: { id: orderId },
-        data: { status: 'PAYMENT_RECEIVED' },
-        include: {
-          customer: true,
-          items: { include: { product: true } },
-        },
-      })
-
-      if (order.customer) {
-        await sendOrderConfirmation({
-          customerEmail: order.customer.email,
-          customerName: order.customer.firstName,
-          orderReference: order.reference,
-          total: order.totalCents,
-          currency: order.currency,
-          items: order.items.map((item) => ({
-            name: item.name,
-            quantity: item.quantity,
-            price: item.priceCents,
-          })),
-        })
-      }
+      if (orderId) await markOrderPaid(orderId)
       break
     }
 
-    case 'charge:failed': {
-      const chargeData = event.data
-      if (chargeData?.metadata?.orderId) {
-        await db.order.update({
-          where: { id: chargeData.metadata.orderId },
-          data: { status: 'CANCELLED' },
-        })
-      }
-      console.log('[Coinbase] Charge failed:', chargeData?.id)
+    case 'charge:failed':
+    case 'charge:canceled': {
+      if (orderId) await cancelOrderAndRelease(orderId)
+      console.warn('[Coinbase] Charge closed without payment:', event.data?.id)
       break
     }
 
     case 'charge:pending': {
-      console.log('[Coinbase] Charge pending:', event.data?.id)
-      break
-    }
-
-    case 'charge:canceled': {
-      const chargeData = event.data
-      if (chargeData?.metadata?.orderId) {
-        await db.order.update({
-          where: { id: chargeData.metadata.orderId },
-          data: { status: 'CANCELLED' },
-        })
-      }
-      console.log('[Coinbase] Charge canceled:', chargeData?.id)
       break
     }
   }
