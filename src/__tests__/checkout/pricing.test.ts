@@ -155,4 +155,40 @@ describe('priceOrder', () => {
     expect(priced.giftCardDiscountCents).toBe(5000)
     expect(priced.totalCents).toBe(0)
   })
+
+  it('rejects invalid quantities: 0, negative, fraction, or NaN', () => {
+    expect(codeOf(() => priceOrder({ ...base, items: [{ productId: 'p1', variantId: 'v1', quantity: 0 }] }))).toBe('INVALID_QUANTITY')
+    expect(codeOf(() => priceOrder({ ...base, items: [{ productId: 'p1', variantId: 'v1', quantity: -3 }] }))).toBe('INVALID_QUANTITY')
+    expect(codeOf(() => priceOrder({ ...base, items: [{ productId: 'p1', variantId: 'v1', quantity: 1.5 }] }))).toBe('INVALID_QUANTITY')
+    expect(codeOf(() => priceOrder({ ...base, items: [{ productId: 'p1', variantId: 'v1', quantity: NaN }] }))).toBe('INVALID_QUANTITY')
+  })
+
+  it('treats NaN loyaltyPointsRequested as 0', () => {
+    const priced = priceOrder({ ...base, loyaltyPointsRequested: NaN, loyaltyPointsAvailable: 300 })
+    expect(priced.pointsUsed).toBe(0)
+    expect(priced.totalCents).toBe(6200)
+  })
+
+  it('treats NaN or negative loyaltyPointsAvailable as 0', () => {
+    expect(priceOrder({ ...base, loyaltyPointsRequested: 100, loyaltyPointsAvailable: NaN }).pointsUsed).toBe(0)
+    expect(priceOrder({ ...base, loyaltyPointsRequested: 100, loyaltyPointsAvailable: -5 }).pointsUsed).toBe(0)
+  })
+
+  it('treats NaN or negative giftCardRequestedCents as 0 and does not throw', () => {
+    const card = { id: 'g1', balanceCents: 2000, expiresAt: null, isExpired: false }
+    expect(priceOrder({ ...base, giftCard: card, giftCardRequestedCents: NaN }).giftCardDiscountCents).toBe(0)
+    expect(priceOrder({ ...base, giftCard: card, giftCardRequestedCents: -100 }).giftCardDiscountCents).toBe(0)
+  })
+
+  it('treats NaN wrappingCents as 0', () => {
+    const priced = priceOrder({ ...base, wrappingCents: NaN })
+    expect(priced.wrappingCents).toBe(0)
+    expect(priced.totalCents).toBe(6200)
+  })
+
+  it('treats negative fixed promo value as 0 discount', () => {
+    const priced = priceOrder({ ...base, promotion: { ...promo, type: 'fixed', value: -500 } })
+    expect(priced.promoDiscountCents).toBe(0)
+    expect(priced.totalCents).toBe(6200)
+  })
 })

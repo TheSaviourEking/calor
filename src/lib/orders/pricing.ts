@@ -11,6 +11,7 @@ export type OrderPricingErrorCode =
   | 'OUT_OF_STOCK'
   | 'PROMO_INVALID'
   | 'GIFT_CARD_INVALID'
+  | 'INVALID_QUANTITY'
 
 export class OrderPricingError extends Error {
   constructor(public readonly code: OrderPricingErrorCode, message: string) {
@@ -86,6 +87,10 @@ export interface PricedOrder {
   loyaltyPointsEarned: number
 }
 
+function nonNegativeInt(value: number | undefined): number {
+  return typeof value === 'number' && Number.isFinite(value) && value > 0 ? Math.floor(value) : 0
+}
+
 export function priceOrder(input: PriceOrderInput): PricedOrder {
   const now = input.now ?? new Date()
   // Tracks quantity wanted per stock bucket so duplicate lines are summed
@@ -93,6 +98,10 @@ export function priceOrder(input: PriceOrderInput): PricedOrder {
   let subtotalCents = 0
 
   const lines = input.items.map((item): PricedLine => {
+    if (!Number.isInteger(item.quantity) || item.quantity < 1) {
+      throw new OrderPricingError('INVALID_QUANTITY', 'Invalid quantity')
+    }
+
     const product = input.products.find((p) => p.id === item.productId)
     if (!product) {
       throw new OrderPricingError('PRODUCT_NOT_FOUND', 'Some products not found')
@@ -134,7 +143,7 @@ export function priceOrder(input: PriceOrderInput): PricedOrder {
   })
 
   const shippingCents = subtotalCents >= FREE_SHIPPING_THRESHOLD_CENTS ? 0 : FLAT_SHIPPING_CENTS
-  const wrappingCents = Math.max(0, input.wrappingCents ?? 0)
+  const wrappingCents = nonNegativeInt(input.wrappingCents)
 
   let promoDiscountCents = 0
   const promo = input.promotion
@@ -156,6 +165,7 @@ export function priceOrder(input: PriceOrderInput): PricedOrder {
     } else if (promo.type === 'free_shipping') {
       promoDiscountCents = shippingCents
     }
+    promoDiscountCents = Math.max(0, promoDiscountCents)
   }
 
   let remainingCents = subtotalCents + shippingCents + wrappingCents - promoDiscountCents
@@ -164,15 +174,15 @@ export function priceOrder(input: PriceOrderInput): PricedOrder {
   const pointsUsed = Math.max(
     0,
     Math.min(
-      Math.floor(input.loyaltyPointsRequested ?? 0),
-      input.loyaltyPointsAvailable ?? 0,
+      nonNegativeInt(input.loyaltyPointsRequested),
+      nonNegativeInt(input.loyaltyPointsAvailable),
       remainingCents
     )
   )
   remainingCents -= pointsUsed
 
   let giftCardDiscountCents = 0
-  const giftCardRequestedCents = input.giftCardRequestedCents ?? 0
+  const giftCardRequestedCents = nonNegativeInt(input.giftCardRequestedCents)
   if (giftCardRequestedCents > 0) {
     const card = input.giftCard
     const expired = !card || card.isExpired || (card.expiresAt !== null && card.expiresAt < now)
