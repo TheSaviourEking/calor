@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { randomBytes } from 'crypto'
 import { db } from '@/lib/db'
 import { getSession } from '@/lib/auth'
-import { sendOrderConfirmation } from '@/lib/email'
 import { orderCreateSchema } from '@/lib/validations/orders'
-import type { Prisma } from '@prisma/client'
+import { priceOrder, OrderPricingError } from '@/lib/orders/pricing'
+import { markOrderPaid } from '@/lib/orders/lifecycle'
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const parsed = orderCreateSchema.safeParse(body)
+    const parsed = orderCreateSchema.safeParse(await request.json())
 
     if (!parsed.success) {
       return NextResponse.json(
@@ -17,316 +17,230 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const {
-      items,
-      shippingAddress,
-      paymentMethod,
-      isGuest,
-      guestEmail,
-      isGift,
-      giftMessage,
-      giftWrappingId,
-      isAnonymousGift,
-      recipientEmail,
-      loyaltyPointsUsed,
-      promoCodeId,
-      giftCardId,
-      giftCardAppliedCents,
-    } = parsed.data
+    const data = parsed.data
 
-    // Get customer from session if not guest
-    let customerId: string | null = null
-    let email = guestEmail
-    let customerName = 'Guest'
-
-    if (!isGuest) {
-      const session = await getSession()
-      if (session?.customerId) {
-        customerId = session.customerId
-        const customer = await db.customer.findUnique({
-          where: { id: customerId },
+    // The buyer comes from the session, never from the request body
+    const session = await getSession()
+    const customer = session?.customerId
+      ? await db.customer.findUnique({
+          where: { id: session.customerId },
+          select: { id: true },
         })
-        if (customer) {
-          email = customer.email
-          customerName = `${customer.firstName} ${customer.lastName}`
-        }
-      }
+      : null
+    const customerId = customer?.id ?? null
+    const guestEmail = customerId ? null : data.guestEmail ?? null
+
+    if (!customerId && !guestEmail) {
+      return NextResponse.json({ error: 'Email is required for guest checkout' }, { status: 400 })
     }
 
-    // Validate and get product details
-    const productIds = items.map((item: { productId: string }) => item.productId)
-    const products = await db.product.findMany({ take: 50,
-      where: { id: { in: productIds } },
-      include: { variants: true },
-    })
+    const productIds = [...new Set(data.items.map((item) => item.productId))]
+    const [products, promotion, giftCard, loyaltyAccount, wrapping, savedAddress] = await Promise.all([
+      db.product.findMany({
+        where: { id: { in: productIds }, published: true },
+        include: { variants: true },
+      }),
+      data.promoCodeId ? db.promotion.findUnique({ where: { id: data.promoCodeId } }) : null,
+      data.giftCardId ? db.giftCard.findUnique({ where: { id: data.giftCardId } }) : null,
+      customerId ? db.loyaltyAccount.findUnique({ where: { customerId } }) : null,
+      data.isGift && data.giftWrappingId
+        ? db.giftWrappingOption.findFirst({ where: { id: data.giftWrappingId, isActive: true } })
+        : null,
+      // A saved address is only reused when it belongs to this customer
+      data.shippingAddress.id && customerId
+        ? db.address.findFirst({ where: { id: data.shippingAddress.id, customerId } })
+        : null,
+    ])
 
-    if (products.length !== productIds.length) {
-      return NextResponse.json({ error: 'Some products not found' }, { status: 400 })
+    if (data.promoCodeId && !promotion) {
+      return NextResponse.json({ error: 'Invalid promo code', code: 'PROMO_INVALID' }, { status: 400 })
     }
 
-    // Check stock availability for all items
-    for (const item of items as Array<{ productId: string; variantId?: string; quantity: number }>) {
-      const product = products.find(p => p.id === item.productId)
-      if (!product) continue
-
-      // Skip stock check for digital products
-      if (product.isDigital) continue
-
-      if (item.variantId) {
-        const variant = product.variants.find(v => v.id === item.variantId)
-        if (variant && variant.stock < item.quantity) {
-          return NextResponse.json(
-            { error: `Insufficient stock for ${product.name}. Only ${variant.stock} available.` },
-            { status: 400 }
-          )
-        }
-      } else {
-        // Check product-level inventory
-        if (product.inventoryCount < item.quantity) {
-          return NextResponse.json(
-            { error: `Insufficient stock for ${product.name}. Only ${product.inventoryCount} available.` },
-            { status: 400 }
-          )
-        }
-      }
-    }
-
-    // Create or get address
-    let address
-    if (shippingAddress.id) {
-      address = await db.address.findUnique({
-        where: { id: shippingAddress.id },
+    let priced
+    try {
+      priced = priceOrder({
+        items: data.items,
+        products,
+        promotion,
+        giftCard,
+        giftCardRequestedCents: data.giftCardId ? data.giftCardAppliedCents ?? 0 : 0,
+        loyaltyPointsRequested: data.loyaltyPointsUsed ?? 0,
+        loyaltyPointsAvailable: loyaltyAccount?.points ?? 0,
+        wrappingCents: wrapping?.priceCents ?? 0,
       })
+    } catch (error) {
+      if (error instanceof OrderPricingError) {
+        return NextResponse.json({ error: error.message, code: error.code }, { status: 400 })
+      }
+      throw error
     }
 
-    if (!address) {
-      // Build two explicitly-typed objects so Prisma's union type resolves correctly.
-      // AddressUncheckedCreateInput requires customerId as string (not undefined).
-      const baseAddress = {
-        line1: shippingAddress.line1,
-        line2: shippingAddress.line2 || null,
-        city: shippingAddress.city,
-        state: shippingAddress.state || null,
-        postcode: shippingAddress.postcode,
-        country: shippingAddress.country,
-        isDefault: false,
-      }
-      address = await db.address.create({
-        data: customerId
-          ? ({ ...baseAddress, customerId } satisfies Prisma.AddressUncheckedCreateInput)
-          : (baseAddress as Prisma.AddressUncheckedCreateInput),
-      })
-    }
+    const reference = `CL${randomBytes(6).toString('hex').toUpperCase()}`
+    const loyaltyPointsEarned = customerId ? priced.loyaltyPointsEarned : 0
 
-    // Calculate totals
-    let subtotalCents = 0
-    const orderItems = items.map((item: { productId: string; variantId?: string; quantity: number }) => {
-      const product = products.find((p) => p.id === item.productId)
-      if (!product) throw new Error(`Product ${item.productId} not found`)
-
-      let priceCents: number
-      if (item.variantId) {
-        const variant = product.variants.find((v) => v.id === item.variantId)
-        if (!variant) throw new Error(`Variant ${item.variantId} not found`)
-        priceCents = variant.price
-      } else {
-        priceCents = product.variants[0]?.price || 0
-      }
-
-      subtotalCents += priceCents * item.quantity
-
-      return {
-        productId: item.productId,
-        variantId: item.variantId,
-        name: product.name,
-        priceCents,
-        quantity: item.quantity,
-      }
-    })
-
-    // Calculate shipping (free over $75)
-    const shippingCents = subtotalCents >= 7500 ? 0 : 1200
-
-    // Apply promo code discount
-    let promoDiscountCents = 0
-    let promotion: Awaited<ReturnType<typeof db.promotion.findUnique>> = null
-    if (promoCodeId) {
-      promotion = await db.promotion.findUnique({ where: { id: promoCodeId } })
-      if (promotion && promotion.isActive) {
-        if (promotion.type === 'percentage') {
-          promoDiscountCents = Math.floor((subtotalCents * promotion.value) / 100)
-          if (promotion.maxDiscountCents) {
-            promoDiscountCents = Math.min(promoDiscountCents, promotion.maxDiscountCents)
-          }
-        } else if (promotion.type === 'fixed') {
-          promoDiscountCents = promotion.value
-        } else if (promotion.type === 'free_shipping') {
-          promoDiscountCents = shippingCents
-        }
-      }
-    }
-
-    // Apply gift card discount
-    let giftCardDiscountCents = 0
-    let giftCard: Awaited<ReturnType<typeof db.giftCard.findUnique>> = null
-    if (giftCardId && (giftCardAppliedCents ?? 0) > 0) {
-      giftCard = await db.giftCard.findUnique({ where: { id: giftCardId } })
-      if (giftCard && giftCard.balanceCents >= (giftCardAppliedCents ?? 0)) {
-        giftCardDiscountCents = giftCardAppliedCents ?? 0
-      }
-    }
-
-    // Apply loyalty points discount if applicable
-    let pointsDiscountCents = 0
-    if (loyaltyPointsUsed && loyaltyPointsUsed > 0 && customerId) {
-      const loyaltyAccount = await db.loyaltyAccount.findUnique({
-        where: { customerId },
-      })
-
-      if (loyaltyAccount && loyaltyAccount.points >= loyaltyPointsUsed) {
-        // 100 points = $1 (100 cents)
-        pointsDiscountCents = Math.min(loyaltyPointsUsed, subtotalCents)
-      }
-    }
-
-    const totalCents = Math.max(0, subtotalCents + shippingCents - promoDiscountCents - giftCardDiscountCents - pointsDiscountCents)
-
-    // Generate reference
-    const reference = `CL${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).substring(2, 5).toUpperCase()}`
-
-    // Calculate loyalty points to earn (1 point per dollar)
-    const loyaltyPointsEarned = Math.floor(totalCents / 100)
-
-    // Execute everything in a single transaction
-    const order = await db.$transaction(async (tx) => {
-      // Create order
-      const newOrder = await tx.order.create({
-        data: {
-          reference,
-          customerId,
-          guestEmail: isGuest ? guestEmail : null,
-          addressId: address.id,
-          status: 'PENDING',
-          paymentMethod,
-          subtotalCents,
-          shippingCents,
-          totalCents,
-          currency: 'USD',
-          isGift: isGift || false,
-          giftMessage: isGift ? giftMessage : null,
-          giftWrappingId: isGift ? giftWrappingId : null,
-          isAnonymousGift: isAnonymousGift || false,
-          recipientEmail: isAnonymousGift ? recipientEmail : null,
-          loyaltyPointsEarned,
-          loyaltyPointsUsed: loyaltyPointsUsed || 0,
-          items: {
-            create: orderItems,
-          },
-        },
-        include: {
-          items: {
-            include: {
-              product: true,
+    let order
+    try {
+      // Everything is reserved with conditional updates inside one transaction:
+      // if any reservation loses a race, the whole order rolls back.
+      order = await db.$transaction(async (tx) => {
+        const address =
+          savedAddress ??
+          (await tx.address.create({
+            data: {
+              customerId,
+              line1: data.shippingAddress.line1,
+              line2: data.shippingAddress.line2 || null,
+              city: data.shippingAddress.city,
+              state: data.shippingAddress.state || null,
+              postcode: data.shippingAddress.postcode,
+              country: data.shippingAddress.country,
+              isDefault: false,
             },
-          },
-          address: true,
-        },
-      })
+          }))
 
-      // Deduct loyalty points if used
-      if (loyaltyPointsUsed && loyaltyPointsUsed > 0 && customerId && pointsDiscountCents > 0) {
-        await tx.loyaltyAccount.update({
-          where: { customerId },
-          data: {
-            points: { decrement: loyaltyPointsUsed },
-            totalUsed: { increment: loyaltyPointsUsed },
-          },
-        })
+        for (const line of priced.lines) {
+          if (line.isDigital) continue
 
-        await tx.loyaltyTransaction.create({
-          data: {
-            accountId: (await tx.loyaltyAccount.findUnique({ where: { customerId } }))!.id,
-            points: -loyaltyPointsUsed,
-            type: 'redemption',
-            description: `Redeemed for order ${reference}`,
-            orderId: newOrder.id,
-          },
-        })
-      }
+          if (line.variantId) {
+            const reserved = await tx.variant.updateMany({
+              where: { id: line.variantId, productId: line.productId, stock: { gte: line.quantity } },
+              data: { stock: { decrement: line.quantity } },
+            })
+            if (reserved.count !== 1) {
+              throw new OrderPricingError('OUT_OF_STOCK', `${line.name} just sold out`)
+            }
+            await tx.product.update({
+              where: { id: line.productId },
+              data: {
+                inventoryCount: { decrement: line.quantity },
+                purchaseCount: { increment: line.quantity },
+              },
+            })
+          } else {
+            const reserved = await tx.product.updateMany({
+              where: { id: line.productId, inventoryCount: { gte: line.quantity } },
+              data: {
+                inventoryCount: { decrement: line.quantity },
+                purchaseCount: { increment: line.quantity },
+              },
+            })
+            if (reserved.count !== 1) {
+              throw new OrderPricingError('OUT_OF_STOCK', `${line.name} just sold out`)
+            }
+          }
+        }
 
-      // Increment promo code usage
-      if (promotion) {
-        await tx.promotion.update({
-          where: { id: promotion.id },
-          data: { usageCount: { increment: 1 } },
-        })
-      }
+        if (promotion) {
+          const used = await tx.promotion.updateMany({
+            where: {
+              id: promotion.id,
+              isActive: true,
+              ...(promotion.usageLimit !== null && { usageCount: { lt: promotion.usageLimit } }),
+            },
+            data: { usageCount: { increment: 1 } },
+          })
+          if (used.count !== 1) {
+            throw new OrderPricingError('PROMO_INVALID', 'This promo code has reached its usage limit')
+          }
+        }
 
-      // Deduct gift card balance and create transaction
-      if (giftCard && giftCardDiscountCents > 0) {
-        await tx.giftCard.update({
-          where: { id: giftCard.id },
-          data: {
-            balanceCents: { decrement: giftCardDiscountCents },
-            isRedeemed: giftCard.balanceCents - giftCardDiscountCents <= 0,
-            redeemedAt: giftCard.balanceCents - giftCardDiscountCents <= 0 ? new Date() : undefined,
-            redeemedById: customerId || undefined,
-          },
-        })
+        if (customerId && loyaltyAccount && priced.pointsUsed > 0) {
+          const spent = await tx.loyaltyAccount.updateMany({
+            where: { id: loyaltyAccount.id, points: { gte: priced.pointsUsed } },
+            data: {
+              points: { decrement: priced.pointsUsed },
+              totalUsed: { increment: priced.pointsUsed },
+            },
+          })
+          if (spent.count !== 1) {
+            throw new OrderPricingError('PROMO_INVALID', 'Your loyalty points balance changed. Please review your order.')
+          }
+        }
 
-        await tx.giftCardTransaction.create({
-          data: {
-            giftCardId: giftCard.id,
-            amountCents: giftCardDiscountCents,
-            type: 'redemption',
-            orderId: newOrder.id,
-            description: `Redeemed for order ${reference}`,
-          },
-        })
-      }
-
-      // Deduct inventory for all items
-      for (const item of items as Array<{ productId: string; variantId?: string; quantity: number }>) {
-        const product = products.find(p => p.id === item.productId)
-        if (!product || product.isDigital) continue
-
-        if (item.variantId) {
-          // Deduct from variant
-          await tx.variant.update({
-            where: { id: item.variantId },
-            data: { stock: { decrement: item.quantity } },
+        if (giftCard && priced.giftCardDiscountCents > 0) {
+          const charged = await tx.giftCard.updateMany({
+            where: { id: giftCard.id, balanceCents: { gte: priced.giftCardDiscountCents } },
+            data: { balanceCents: { decrement: priced.giftCardDiscountCents } },
+          })
+          if (charged.count !== 1) {
+            throw new OrderPricingError('GIFT_CARD_INVALID', 'This gift card no longer has enough balance')
+          }
+          await tx.giftCard.updateMany({
+            where: { id: giftCard.id, balanceCents: 0 },
+            data: { isRedeemed: true, redeemedAt: new Date(), redeemedById: customerId },
           })
         }
 
-        // Also deduct from product-level inventory
-        await tx.product.update({
-          where: { id: item.productId },
+        const newOrder = await tx.order.create({
           data: {
-            inventoryCount: { decrement: item.quantity },
-            purchaseCount: { increment: item.quantity },
+            reference,
+            customerId,
+            guestEmail,
+            addressId: address.id,
+            status: 'PENDING',
+            paymentMethod: data.paymentMethod,
+            subtotalCents: priced.subtotalCents,
+            shippingCents: priced.shippingCents,
+            totalCents: priced.totalCents,
+            currency: 'USD',
+            isGift: data.isGift,
+            giftMessage: data.isGift ? data.giftMessage ?? null : null,
+            giftWrappingId: wrapping?.id ?? null,
+            isAnonymousGift: data.isGift && data.isAnonymousGift,
+            recipientEmail: data.isGift && data.isAnonymousGift ? data.recipientEmail ?? null : null,
+            loyaltyPointsEarned,
+            loyaltyPointsUsed: priced.pointsUsed,
+            items: {
+              create: priced.lines.map((line) => ({
+                productId: line.productId,
+                variantId: line.variantId,
+                name: line.name,
+                priceCents: line.priceCents,
+                quantity: line.quantity,
+              })),
+            },
           },
         })
-      }
 
-      return newOrder
-    })
+        if (customerId && loyaltyAccount && priced.pointsUsed > 0) {
+          await tx.loyaltyTransaction.create({
+            data: {
+              accountId: loyaltyAccount.id,
+              points: -priced.pointsUsed,
+              type: 'redemption',
+              description: `Redeemed for order ${reference}`,
+              orderId: newOrder.id,
+            },
+          })
+        }
 
-    // Send order confirmation email (non-blocking)
-    if (email) {
-      sendOrderConfirmation({
-        customerEmail: email,
-        customerName,
-        orderReference: order.reference,
-        total: order.totalCents,
-        currency: order.currency,
-        items: order.items.map(item => ({
-          name: item.name,
-          quantity: item.quantity,
-          price: item.priceCents,
-        })),
-      }).catch(err => {
-        console.error('[ORDER] Failed to send confirmation email:', err)
+        if (giftCard && priced.giftCardDiscountCents > 0) {
+          await tx.giftCardTransaction.create({
+            data: {
+              giftCardId: giftCard.id,
+              amountCents: priced.giftCardDiscountCents,
+              type: 'redemption',
+              orderId: newOrder.id,
+              description: `Redeemed for order ${reference}`,
+            },
+          })
+        }
+
+        return newOrder
       })
+    } catch (error) {
+      if (error instanceof OrderPricingError) {
+        return NextResponse.json({ error: error.message, code: error.code }, { status: 400 })
+      }
+      throw error
+    }
+
+    // Nothing left to pay (gift card or points covered it): no payment
+    // provider is involved, so confirm the order now.
+    let status = order.status
+    if (order.totalCents === 0) {
+      await markOrderPaid(order.id)
+      status = 'PAYMENT_RECEIVED'
     }
 
     return NextResponse.json({
@@ -336,7 +250,7 @@ export async function POST(request: NextRequest) {
         reference: order.reference,
         totalCents: order.totalCents,
         currency: order.currency,
-        status: order.status,
+        status,
       },
     })
   } catch (error) {
@@ -377,8 +291,8 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Order not found' }, { status: 404 })
       }
 
-      // Verify ownership (customer or guest with correct email)
-      if (order.customerId && order.customerId !== session.customerId) {
+      // This endpoint requires a session, so it only ever returns the caller's own orders
+      if (order.customerId !== session.customerId) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
       }
 

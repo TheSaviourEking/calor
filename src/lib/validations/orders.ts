@@ -16,11 +16,12 @@ const shippingAddressSchema = z.object({
   country: z.string().min(2).max(2, 'Country must be a 2-letter code'),
 })
 
+// The buyer is derived from the session in the route, never from this body.
+// guestEmail is only used when there is no session.
 export const orderCreateSchema = z.object({
-  items: z.array(orderItemSchema).min(1, 'At least one item is required'),
+  items: z.array(orderItemSchema).min(1, 'At least one item is required').max(50),
   shippingAddress: shippingAddressSchema,
   paymentMethod: z.enum(['card', 'bank', 'crypto']),
-  isGuest: z.boolean().default(false),
   guestEmail: z.string().email().optional().nullable(),
   isGift: z.boolean().default(false),
   giftMessage: z.string().max(500).optional().nullable(),
@@ -31,9 +32,6 @@ export const orderCreateSchema = z.object({
   promoCodeId: z.string().optional().nullable(),
   giftCardId: z.string().optional().nullable(),
   giftCardAppliedCents: z.number().int().min(0).optional(),
-}).refine(
-  (data) => !data.isGuest || data.guestEmail,
-  { message: 'Guest email is required for guest checkout', path: ['guestEmail'] }
-)
+})
 
 export type OrderCreate = z.infer<typeof orderCreateSchema>
