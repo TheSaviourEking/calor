@@ -2,7 +2,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { NextRequest } from 'next/server'
 
-const { db, tx, getSession, markOrderPaid } = vi.hoisted(() => {
+const { db, tx, getSession, sendOrderConfirmationFor } = vi.hoisted(() => {
   const tx = {
     address: { create: vi.fn() },
     variant: { updateMany: vi.fn() },
@@ -24,12 +24,12 @@ const { db, tx, getSession, markOrderPaid } = vi.hoisted(() => {
     address: { findFirst: vi.fn() },
     $transaction: vi.fn(),
   }
-  return { db, tx, getSession: vi.fn(), markOrderPaid: vi.fn(async () => true) }
+  return { db, tx, getSession: vi.fn(), sendOrderConfirmationFor: vi.fn() }
 })
 
 vi.mock('@/lib/db', () => ({ db }))
 vi.mock('@/lib/auth', () => ({ getSession }))
-vi.mock('@/lib/orders/lifecycle', () => ({ markOrderPaid }))
+vi.mock('@/lib/orders/lifecycle', () => ({ sendOrderConfirmationFor }))
 
 import { POST } from '@/app/api/orders/route'
 
@@ -73,8 +73,9 @@ beforeEach(() => {
     reference: data.reference,
     totalCents: data.totalCents,
     currency: 'USD',
-    status: 'PENDING',
+    status: data.status,
   }))
+  sendOrderConfirmationFor.mockResolvedValue(undefined)
 })
 
 describe('POST /api/orders', () => {
@@ -122,16 +123,38 @@ describe('POST /api/orders', () => {
     expect((await res.json()).code).toBe('PROMO_INVALID')
   })
 
-  it('marks an order paid immediately when a gift card covers the whole total', async () => {
+  it('creates a normal order as PENDING and sends no confirmation yet', async () => {
+    const res = await post({ ...body, guestEmail: 'guest@example.com' })
+    const json = await res.json()
+    expect(res.status).toBe(200)
+    expect(tx.order.create.mock.calls[0][0].data.status).toBe('PENDING')
+    expect(json.order.status).toBe('PENDING')
+    expect(sendOrderConfirmationFor).not.toHaveBeenCalled()
+  })
+
+  it('confirms an order inside the transaction when a gift card covers the whole total', async () => {
     db.giftCard.findUnique.mockResolvedValue({ id: 'g1', balanceCents: 100000, expiresAt: null, isExpired: false })
 
     const res = await post({ ...body, guestEmail: 'guest@example.com', giftCardId: 'g1', giftCardAppliedCents: 100000 })
     const json = await res.json()
     expect(res.status).toBe(200)
     expect(json.order.totalCents).toBe(0)
+    expect(tx.order.create.mock.calls[0][0].data.status).toBe('PAYMENT_RECEIVED')
     expect(json.order.status).toBe('PAYMENT_RECEIVED')
-    expect(markOrderPaid).toHaveBeenCalledWith('ord_1')
+    expect(sendOrderConfirmationFor).toHaveBeenCalledWith('ord_1')
     expect(tx.giftCard.updateMany.mock.calls[0][0].data).toEqual({ balanceCents: { decrement: 6200 } })
+  })
+
+  it('still succeeds when the confirmation email for a zero-total order fails', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    db.giftCard.findUnique.mockResolvedValue({ id: 'g1', balanceCents: 100000, expiresAt: null, isExpired: false })
+    sendOrderConfirmationFor.mockRejectedValue(new Error('smtp down'))
+
+    const res = await post({ ...body, guestEmail: 'guest@example.com', giftCardId: 'g1', giftCardAppliedCents: 100000 })
+    expect(res.status).toBe(200)
+    expect((await res.json()).order.status).toBe('PAYMENT_RECEIVED')
+    expect(errorSpy).toHaveBeenCalledTimes(1)
+    errorSpy.mockRestore()
   })
 
   it('does not reuse a saved address that belongs to another customer', async () => {

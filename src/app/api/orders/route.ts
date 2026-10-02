@@ -4,7 +4,7 @@ import { db } from '@/lib/db'
 import { getSession } from '@/lib/auth'
 import { orderCreateSchema } from '@/lib/validations/orders'
 import { priceOrder, OrderPricingError } from '@/lib/orders/pricing'
-import { markOrderPaid } from '@/lib/orders/lifecycle'
+import { sendOrderConfirmationFor } from '@/lib/orders/lifecycle'
 
 export async function POST(request: NextRequest) {
   try {
@@ -177,7 +177,9 @@ export async function POST(request: NextRequest) {
             customerId,
             guestEmail,
             addressId: address.id,
-            status: 'PENDING',
+            // Nothing left to pay (gift card or points covered it): no payment
+            // provider is involved, so the order is confirmed with its reservations.
+            status: priced.totalCents === 0 ? 'PAYMENT_RECEIVED' : 'PENDING',
             paymentMethod: data.paymentMethod,
             subtotalCents: priced.subtotalCents,
             shippingCents: priced.shippingCents,
@@ -235,12 +237,13 @@ export async function POST(request: NextRequest) {
       throw error
     }
 
-    // Nothing left to pay (gift card or points covered it): no payment
-    // provider is involved, so confirm the order now.
-    let status = order.status
+    // A zero-total order is already confirmed; an email failure must not fail it
     if (order.totalCents === 0) {
-      await markOrderPaid(order.id)
-      status = 'PAYMENT_RECEIVED'
+      try {
+        await sendOrderConfirmationFor(order.id)
+      } catch (err) {
+        console.error('[ORDER] Failed to send confirmation email:', err)
+      }
     }
 
     return NextResponse.json({
@@ -250,7 +253,7 @@ export async function POST(request: NextRequest) {
         reference: order.reference,
         totalCents: order.totalCents,
         currency: order.currency,
-        status,
+        status: order.status,
       },
     })
   } catch (error) {
