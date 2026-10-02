@@ -4,8 +4,8 @@ interface OrderOwner {
 }
 
 interface OrderViewer {
-  customerId?: string | null
-  guestEmail?: string | null
+  customerId?: unknown
+  guestEmail?: unknown
 }
 
 // One rule for "may this caller act on this order", shared by every payment route.
@@ -13,10 +13,14 @@ interface OrderViewer {
 // only open to someone who knows the email it was placed with.
 export function canAccessOrder(order: OrderOwner, viewer: OrderViewer): boolean {
   if (order.customerId) {
-    return !!viewer.customerId && viewer.customerId === order.customerId
+    return typeof viewer.customerId === 'string' && viewer.customerId === order.customerId
   }
 
-  if (!order.guestEmail || !viewer.guestEmail) return false
+  // Request bodies are untyped: anything that is not a string counts as absent
+  if (!order.guestEmail || typeof viewer.guestEmail !== 'string') return false
 
-  return order.guestEmail.trim().toLowerCase() === viewer.guestEmail.trim().toLowerCase()
+  const supplied = viewer.guestEmail.trim().toLowerCase()
+  if (!supplied) return false
+
+  return order.guestEmail.trim().toLowerCase() === supplied
 }

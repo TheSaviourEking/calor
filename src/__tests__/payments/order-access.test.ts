@@ -24,4 +24,11 @@ describe('canAccessOrder', () => {
     expect(canAccessOrder(guestOrder, { customerId: 'cust_1' })).toBe(false)
     expect(canAccessOrder({ customerId: null, guestEmail: null }, { guestEmail: '' })).toBe(false)
   })
+
+  it('treats a non-string guestEmail as absent instead of throwing', () => {
+    for (const bad of [1, true, {}, []]) {
+      expect(() => canAccessOrder(guestOrder, { guestEmail: bad })).not.toThrow()
+      expect(canAccessOrder(guestOrder, { guestEmail: bad })).toBe(false)
+    }
+  })
 })

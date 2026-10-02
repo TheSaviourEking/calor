@@ -1,5 +1,6 @@
 import { db } from '@/lib/db'
-import { sendOrderConfirmation } from '@/lib/email'
+import { sendOrderConfirmation, sendBankTransferInstructions } from '@/lib/email'
+import type { BankDetails } from '@/lib/payments/methods'
 
 // Every payment-driven status change goes through this file. Each transition
 // is a conditional update on the current status, so a webhook delivered twice
@@ -26,6 +27,31 @@ export async function sendOrderConfirmationFor(orderId: string): Promise<void> {
       quantity: item.quantity,
       price: item.priceCents,
     })),
+  })
+}
+
+export async function sendBankTransferInstructionsFor(
+  orderId: string,
+  paymentRef: string,
+  bankDetails: BankDetails
+): Promise<void> {
+  const order = await db.order.findUnique({
+    where: { id: orderId },
+    include: { customer: true },
+  })
+  if (!order) return
+
+  const email = order.customer?.email ?? order.guestEmail
+  if (!email) return
+
+  await sendBankTransferInstructions({
+    customerEmail: email,
+    customerName: order.customer?.firstName ?? 'there',
+    orderReference: order.reference,
+    total: order.totalCents,
+    currency: order.currency,
+    paymentRef,
+    bankDetails,
   })
 }
 

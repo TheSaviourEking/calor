@@ -3,7 +3,7 @@ import { db } from '@/lib/db'
 import { getSession } from '@/lib/auth/session'
 import { canAccessOrder } from '@/lib/orders/access'
 import { getBankDetails } from '@/lib/payments/methods'
-import { sendOrderConfirmationFor } from '@/lib/orders/lifecycle'
+import { sendBankTransferInstructionsFor } from '@/lib/orders/lifecycle'
 
 export async function POST(request: NextRequest) {
   try {
@@ -32,21 +32,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Bank transfer is not available' }, { status: 503 })
     }
 
-    // Keep one stable reference per order so a reload shows the same instructions
-    const alreadyIssued = order.paymentProvider === 'bank_transfer' && !!order.paymentRef
-    const paymentRef = alreadyIssued ? order.paymentRef! : `BT-${order.reference}`
+    const paymentRef = `BT-${order.reference}`
 
-    if (!alreadyIssued) {
-      await db.order.update({
-        where: { id: orderId },
-        data: {
-          paymentMethod: 'bank',
-          paymentProvider: 'bank_transfer',
-          paymentRef,
-        },
-      })
+    // One conditional write: only a still-pending order that has not already
+    // been issued bank details is updated (paymentProvider is nullable, so the
+    // null case is spelled out).
+    const issued = await db.order.updateMany({
+      where: {
+        id: orderId,
+        status: 'PENDING',
+        OR: [{ paymentProvider: null }, { paymentProvider: { not: 'bank_transfer' } }],
+      },
+      data: {
+        paymentMethod: 'bank',
+        paymentProvider: 'bank_transfer',
+        paymentRef,
+      },
+    })
+
+    if (issued.count === 1) {
       // Bank orders have no payment webhook, so this is where the buyer is emailed
-      await sendOrderConfirmationFor(orderId)
+      await sendBankTransferInstructionsFor(orderId, paymentRef, bankDetails)
     }
 
     const amount = (order.totalCents / 100).toFixed(2)

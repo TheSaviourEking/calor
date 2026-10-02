@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-const { db, tx, sendOrderConfirmation } = vi.hoisted(() => {
+const { db, tx, sendOrderConfirmation, sendBankTransferInstructions } = vi.hoisted(() => {
   const tx = {
     order: { updateMany: vi.fn(), findUnique: vi.fn() },
     variant: { updateMany: vi.fn() },
@@ -15,13 +15,18 @@ const { db, tx, sendOrderConfirmation } = vi.hoisted(() => {
     order: { updateMany: vi.fn(), findUnique: vi.fn() },
     $transaction: vi.fn(async (fn: (client: typeof tx) => unknown) => fn(tx)),
   }
-  return { db, tx, sendOrderConfirmation: vi.fn(async () => ({ success: true })) }
+  return {
+    db,
+    tx,
+    sendOrderConfirmation: vi.fn(async () => ({ success: true })),
+    sendBankTransferInstructions: vi.fn(async () => ({ success: true })),
+  }
 })
 
 vi.mock('@/lib/db', () => ({ db }))
-vi.mock('@/lib/email', () => ({ sendOrderConfirmation }))
+vi.mock('@/lib/email', () => ({ sendOrderConfirmation, sendBankTransferInstructions }))
 
-import { markOrderPaid, cancelOrderAndRelease } from '@/lib/orders/lifecycle'
+import { markOrderPaid, cancelOrderAndRelease, sendBankTransferInstructionsFor } from '@/lib/orders/lifecycle'
 
 const paidOrder = {
   id: 'ord_1',
@@ -36,6 +41,52 @@ const paidOrder = {
 beforeEach(() => {
   vi.clearAllMocks()
   db.$transaction.mockImplementation(async (fn: (client: typeof tx) => unknown) => fn(tx))
+})
+
+describe('sendBankTransferInstructionsFor', () => {
+  const bankDetails = {
+    bankName: 'Test Bank',
+    accountName: 'CALO LTD',
+    accountNumber: null,
+    routingNumber: null,
+    swiftCode: null,
+    iban: 'GB00TEST',
+    sortCode: null,
+  }
+
+  it('emails the guest address with the reference and bank details', async () => {
+    db.order.findUnique.mockResolvedValue(paidOrder)
+
+    await sendBankTransferInstructionsFor('ord_1', 'BT-CLABC123', bankDetails)
+
+    expect(sendBankTransferInstructions).toHaveBeenCalledTimes(1)
+    expect(sendBankTransferInstructions).toHaveBeenCalledWith({
+      customerEmail: 'guest@example.com',
+      customerName: 'there',
+      orderReference: 'CLABC123',
+      total: 6200,
+      currency: 'USD',
+      paymentRef: 'BT-CLABC123',
+      bankDetails,
+    })
+    expect(sendOrderConfirmation).not.toHaveBeenCalled()
+  })
+
+  it('does nothing when the order has no email', async () => {
+    db.order.findUnique.mockResolvedValue({ ...paidOrder, guestEmail: null, customer: null })
+
+    await sendBankTransferInstructionsFor('ord_1', 'BT-CLABC123', bankDetails)
+
+    expect(sendBankTransferInstructions).not.toHaveBeenCalled()
+  })
+
+  it('does nothing when the order does not exist', async () => {
+    db.order.findUnique.mockResolvedValue(null)
+
+    await sendBankTransferInstructionsFor('ord_1', 'BT-CLABC123', bankDetails)
+
+    expect(sendBankTransferInstructions).not.toHaveBeenCalled()
+  })
 })
 
 describe('markOrderPaid', () => {
