@@ -268,7 +268,11 @@ export default function PaymentPage() {
         return data.order;
       } catch (err) {
         console.error("Order creation error:", err);
-        setError("Failed to create order. Please try again.");
+        setError(
+          err instanceof Error && err.message
+            ? err.message
+            : "Failed to create order. Please try again.",
+        );
         return null;
       }
     },
