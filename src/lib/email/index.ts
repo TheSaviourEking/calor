@@ -169,6 +169,101 @@ export async function sendOrderConfirmation(data: OrderEmailData): Promise<{ suc
 }
 
 // ============================================
+// BANK TRANSFER INSTRUCTIONS EMAIL
+// ============================================
+
+interface BankTransferEmailData {
+  customerEmail: string
+  customerName: string
+  orderReference: string
+  total: number
+  currency: string
+  paymentRef: string
+  bankDetails: {
+    bankName: string
+    accountName: string
+    accountNumber: string | null
+    routingNumber: string | null
+    swiftCode: string | null
+    iban: string | null
+    sortCode: string | null
+  }
+}
+
+export async function sendBankTransferInstructions(
+  data: BankTransferEmailData
+): Promise<{ success: boolean; error?: string }> {
+  const { customerEmail, customerName, orderReference, total, currency, paymentRef, bankDetails } = data
+
+  const fields: Array<[string, string | null]> = [
+    ['Bank', bankDetails.bankName],
+    ['Account name', bankDetails.accountName],
+    ['Account number', bankDetails.accountNumber],
+    ['Routing number', bankDetails.routingNumber],
+    ['Sort code', bankDetails.sortCode],
+    ['SWIFT / BIC', bankDetails.swiftCode],
+    ['IBAN', bankDetails.iban],
+  ]
+  const bankRows = fields
+    .filter((field): field is [string, string] => !!field[1])
+    .map(([label, value]) => `<tr><td style="padding: 8px 0; color: #6B5D56;">${label}</td><td style="padding: 8px 0; text-align: right;">${value}</td></tr>`)
+    .join('')
+
+  return sendEmail(
+    customerEmail,
+    'calo. <orders@calo.one>',
+    `Payment instructions for your calo. order ${orderReference}`,
+    `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif; background: #F8F5F0; margin: 0; padding: 20px; }
+          .container { max-width: 600px; margin: 0 auto; background: white; padding: 40px; border: 1px solid #E8E2D9; }
+          h1 { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 300; color: #2C2C2C; font-size: 32px; margin: 0 0 20px 0; }
+          .order-ref { color: #C75B39; font-size: 14px; letter-spacing: 0.1em; margin-bottom: 20px; }
+          table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+          td { border-bottom: 1px solid #E8E2D9; }
+          .total { font-size: 20px; font-weight: 500; margin-top: 20px; color: #2C2C2C; }
+          .payment-ref { font-size: 22px; font-weight: 500; letter-spacing: 0.1em; color: #C75B39; margin: 8px 0 0 0; }
+          .note { background: #F8F5F0; padding: 20px; margin-top: 30px; font-size: 14px; color: #6B5D56; border: 1px solid #E8E2D9; }
+          .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #E8E2D9; font-size: 12px; color: #8B7D74; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <h1>Hi ${customerName},</h1>
+          <p>We have received your order. It will ship once your bank transfer is confirmed, which usually takes 1-2 business days.</p>
+
+          <p class="order-ref">Order #${orderReference}</p>
+
+          <p class="total">Amount to transfer: ${(total / 100).toFixed(2)} ${currency}</p>
+
+          <div class="note">
+            <strong>Payment reference</strong>
+            <p class="payment-ref">${paymentRef}</p>
+            You must include this reference with your transfer so we can match your payment.
+          </div>
+
+          <table>
+            <tbody>
+              ${bankRows}
+            </tbody>
+          </table>
+
+          <div class="footer">
+            <p>If you have any questions, reply to this email.</p>
+            <p>The calo. team</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `,
+    'BANK_TRANSFER_INSTRUCTIONS'
+  )
+}
+
+// ============================================
 // WELCOME EMAIL
 // ============================================
 

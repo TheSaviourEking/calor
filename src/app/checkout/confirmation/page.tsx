@@ -1,16 +1,18 @@
 import { db } from '@/lib/db'
 import ClientWrapper from '@/components/layout/ClientWrapper'
-import { Package, CheckCircle } from 'lucide-react'
+import { Package, CheckCircle, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
+import ClearCheckoutState from './ClearCheckoutState'
+import { confirmationView } from '@/lib/orders/confirmation'
 
 export const dynamic = 'force-dynamic'
 
 interface PageProps {
-  searchParams: Promise<{ ref?: string; order_id?: string }>
+  searchParams: Promise<{ ref?: string; order_id?: string; redirect_status?: string }>
 }
 
 export default async function ConfirmationPage({ searchParams }: PageProps) {
-  const { ref, order_id } = await searchParams
+  const { ref, order_id, redirect_status } = await searchParams
 
   // If we have a reference or order_id, try to fetch the order
   let order: Awaited<ReturnType<typeof db.order.findUnique>> & { items: Array<{ name: string; quantity: number; priceCents: number; product: unknown }>; address: unknown } | null = null
@@ -38,8 +40,46 @@ export default async function ConfirmationPage({ searchParams }: PageProps) {
     day: 'numeric',
   })
 
+  const view = confirmationView(order, redirect_status)
+
+  // The payment did not go through: keep the cart and offer another attempt
+  if (view === 'payment_failed') {
+    return (
+      <ClientWrapper>
+        <div className="min-h-screen pt-20 bg-cream">
+          <div className="max-w-2xl mx-auto px-6 lg:px-8 py-16 text-center">
+            <div className="w-20 h-20 bg-terracotta/10 flex items-center justify-center mx-auto mb-8">
+              <AlertCircle className="w-10 h-10 text-terracotta" />
+            </div>
+
+            <h1
+              className="font-display text-charcoal mb-4"
+              style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', fontWeight: 300 }}
+            >
+              Payment not completed
+            </h1>
+
+            <p className="font-body text-warm-gray text-base mb-8 max-w-md mx-auto">
+              Your payment didn&apos;t go through and you have not been charged. Your bag is still saved.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link
+                href="/checkout/payment"
+                className="bg-charcoal text-cream px-8 py-4 font-body text-sm uppercase tracking-wider transition-colors hover:bg-terracotta"
+              >
+                Try again
+              </Link>
+            </div>
+          </div>
+        </div>
+      </ClientWrapper>
+    )
+  }
+
   return (
     <ClientWrapper>
+      {(view === 'success' || view === 'awaiting_transfer') && <ClearCheckoutState />}
       <div className="min-h-screen pt-20 bg-cream">
         <div className="max-w-2xl mx-auto px-6 lg:px-8 py-16 text-center">
           {/* Success Icon */}
@@ -52,11 +92,15 @@ export default async function ConfirmationPage({ searchParams }: PageProps) {
             className="font-display text-charcoal mb-4"
             style={{ fontSize: 'clamp(2rem, 4vw, 3rem)', fontWeight: 300 }}
           >
-            Your warmth is on its way.
+            {view === 'awaiting_transfer' ? 'Your order is reserved.' : 'Your warmth is on its way.'}
           </h1>
 
           <p className="font-body text-warm-gray text-base mb-8 max-w-md mx-auto">
-            Thank you for your order. We&apos;ll send you an email confirmation shortly.
+            {view === 'awaiting_transfer' ? (
+              <>We&apos;ll ship it as soon as your bank transfer arrives. Payment instructions are in your email.</>
+            ) : (
+              <>Thank you for your order. We&apos;ll send you an email confirmation shortly.</>
+            )}
           </p>
 
           {/* Order Details */}

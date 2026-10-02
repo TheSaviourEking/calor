@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createPaymentIntent } from '@/lib/payments/stripe'
 import { getSession } from '@/lib/auth/session'
 import { db } from '@/lib/db'
+import { canAccessOrder } from '@/lib/orders/access'
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,19 +14,15 @@ export async function POST(request: NextRequest) {
     }
 
     const order = await db.order.findUnique({ where: { id: orderId } })
-    if (!order) {
+    const session = await getSession()
+
+    // Same response for "missing" and "not yours" so order ids cannot be probed
+    if (!order || !canAccessOrder(order, { customerId: session?.customerId, guestEmail })) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 })
     }
 
-    // Verify ownership: either an authenticated session owns the order,
-    // or the supplied guestEmail matches the order's guestEmail
-    const session = await getSession()
-    const isOwner =
-      (session?.customerId && order.customerId === session.customerId) ||
-      (order.guestEmail && guestEmail && order.guestEmail === guestEmail)
-
-    if (!isOwner) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (order.status !== 'PENDING') {
+      return NextResponse.json({ error: 'This order can no longer be paid' }, { status: 409 })
     }
 
     const result = await createPaymentIntent(orderId)
