@@ -150,7 +150,7 @@ function StripePaymentForm({
 
 export default function PaymentPage() {
   const router = useRouter();
-  const { items, getTotal, clearCart } = useCartStore();
+  const { items, getTotal } = useCartStore();
   const { formatPrice } = useLocaleStore();
 
   const [selectedMethod, setSelectedMethod] = useState("card");
@@ -271,14 +271,13 @@ export default function PaymentPage() {
     [checkoutData, items],
   );
 
-  // Leave checkout for the confirmation page
+  // Leave checkout; the cart is cleared on the confirmation page
   const finishCheckout = useCallback(
     (id: string) => {
-      clearCart();
       sessionStorage.removeItem("calor_checkout_sid");
       router.push(`/checkout/confirmation?order_id=${id}`);
     },
-    [clearCart, router],
+    [router],
   );
 
   const handlePaymentSuccess = () => {
