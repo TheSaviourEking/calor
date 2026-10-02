@@ -69,7 +69,12 @@ interface CheckoutData {
   promoCodeId?: string;
   giftCardId?: string;
   giftCardAppliedCents?: number;
+  giftWrappingCents?: number;
+  promoDiscountCents?: number;
+  loyaltyDiscountCents?: number;
 }
+
+type MethodAvailability = { card: boolean; bank: boolean; crypto: boolean };
 
 interface BankDetails {
   bankName: string;
@@ -156,11 +161,45 @@ export default function PaymentPage() {
   const [bankDetails, setBankDetails] = useState<BankDetails | null>(null);
   const [cryptoUrl, setCryptoUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [orderTotalCents, setOrderTotalCents] = useState<number | null>(null);
+  const [availableMethods, setAvailableMethods] =
+    useState<MethodAvailability | null>(null);
 
   const total = getTotal();
   const shipping = total >= 7500 ? 0 : 1200;
-  const wrappingCost = checkoutData?.isGift ? 0 : 0; // Gift wrapping cost is handled in checkout
-  const grandTotal = total + shipping + wrappingCost;
+  const wrappingCost = checkoutData?.giftWrappingCents ?? 0;
+  const estimatedDiscount =
+    (checkoutData?.promoDiscountCents ?? 0) +
+    (checkoutData?.loyaltyDiscountCents ?? 0) +
+    (checkoutData?.giftCardAppliedCents ?? 0);
+  // Before the order exists this is an estimate; afterwards it is the server's total
+  const grandTotal =
+    orderTotalCents ??
+    Math.max(0, total + shipping + wrappingCost - estimatedDiscount);
+
+  // Only offer payment methods this deployment has configured
+  useEffect(() => {
+    fetch("/api/payment/methods")
+      .then((res) => res.json())
+      .then((data) => setAvailableMethods(data.methods))
+      .catch(() => setAvailableMethods({ card: true, bank: false, crypto: false }));
+  }, []);
+
+  // If the selected method is not configured, fall back to card
+  useEffect(() => {
+    if (
+      availableMethods &&
+      !availableMethods[selectedMethod as keyof MethodAvailability]
+    ) {
+      setSelectedMethod("card");
+    }
+  }, [availableMethods, selectedMethod]);
+
+  const visibleMethods = paymentMethods.filter(
+    (method) =>
+      !availableMethods ||
+      availableMethods[method.id as keyof MethodAvailability],
+  );
 
   // Load checkout data from server-side session to avoid PII in client storage
   useEffect(() => {
@@ -184,7 +223,7 @@ export default function PaymentPage() {
   // Create order when component mounts
   const createOrder = useCallback(
     async (paymentMethod: string) => {
-      if (!checkoutData || orderId) return null;
+      if (!checkoutData) return null;
 
       try {
         const response = await fetch("/api/orders", {
@@ -205,7 +244,6 @@ export default function PaymentPage() {
               country: checkoutData.country,
             },
             paymentMethod,
-            isGuest: true, // For now, treating all as guest checkout
             guestEmail: checkoutData.email,
             isGift: checkoutData.isGift,
             giftMessage: checkoutData.giftMessage,
@@ -230,8 +268,22 @@ export default function PaymentPage() {
         return null;
       }
     },
-    [checkoutData, items, orderId],
+    [checkoutData, items],
   );
+
+  // Leave checkout for the confirmation page
+  const finishCheckout = useCallback(
+    (id: string) => {
+      clearCart();
+      sessionStorage.removeItem("calor_checkout_sid");
+      router.push(`/checkout/confirmation?order_id=${id}`);
+    },
+    [clearCart, router],
+  );
+
+  const handlePaymentSuccess = () => {
+    if (orderId) finishCheckout(orderId);
+  };
 
   // Initialize payment based on method
   const initializePayment = useCallback(
@@ -241,14 +293,27 @@ export default function PaymentPage() {
       setIsProcessing(true);
       setError(null);
 
-      // Create order first
-      const order = await createOrder(method);
-      if (!order) {
-        setIsProcessing(false);
-        return;
+      // Create the order once; switching payment method reuses it
+      let currentOrderId = orderId;
+      if (!currentOrderId) {
+        const order = await createOrder(method);
+        if (!order) {
+          setIsProcessing(false);
+          return;
+        }
+
+        currentOrderId = order.id as string;
+        setOrderId(currentOrderId);
+        setOrderTotalCents(order.totalCents);
+
+        // Fully covered by gift card or points: nothing left to pay
+        if (order.status === "PAYMENT_RECEIVED") {
+          finishCheckout(currentOrderId);
+          return;
+        }
       }
 
-      setOrderId(order.id);
+      const guestEmail = checkoutData.email || null;
 
       if (method === "card") {
         // Create Stripe payment intent
@@ -256,11 +321,7 @@ export default function PaymentPage() {
           const response = await fetch("/api/payment/create-intent", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              orderId: order.id,
-              // Pass guestEmail so guests can own their payment intent
-              guestEmail: checkoutData?.email || null,
-            }),
+            body: JSON.stringify({ orderId: currentOrderId, guestEmail }),
           });
           const data = await response.json();
           if (!response.ok)
@@ -278,7 +339,7 @@ export default function PaymentPage() {
           const response = await fetch("/api/payment/crypto-charge", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ orderId: order.id }),
+            body: JSON.stringify({ orderId: currentOrderId, guestEmail }),
           });
           const data = await response.json();
           if (!response.ok)
@@ -297,7 +358,8 @@ export default function PaymentPage() {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              orderId: order.id,
+              orderId: currentOrderId,
+              guestEmail,
               region: checkoutData.country,
             }),
           });
@@ -313,7 +375,7 @@ export default function PaymentPage() {
 
       setIsProcessing(false);
     },
-    [checkoutData, createOrder],
+    [checkoutData, createOrder, finishCheckout, orderId],
   );
 
   // Handle method selection
@@ -336,13 +398,6 @@ export default function PaymentPage() {
       window.location.href = cryptoUrl;
     }
   }, [cryptoUrl]);
-
-  // Handle successful payment
-  const handlePaymentSuccess = () => {
-    clearCart();
-    sessionStorage.removeItem("calor_checkout_sid");
-    router.push(`/checkout/confirmation?order_id=${orderId}`);
-  };
 
   useEffect(() => {
     if (items.length === 0) {
@@ -400,7 +455,7 @@ export default function PaymentPage() {
                 Select Payment Method
               </h2>
               <div className="space-y-3">
-                {paymentMethods.map((method) => (
+                {visibleMethods.map((method) => (
                   <button
                     key={method.id}
                     type="button"

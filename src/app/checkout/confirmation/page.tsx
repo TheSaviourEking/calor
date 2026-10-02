@@ -2,6 +2,7 @@ import { db } from '@/lib/db'
 import ClientWrapper from '@/components/layout/ClientWrapper'
 import { Package, CheckCircle } from 'lucide-react'
 import Link from 'next/link'
+import ClearCheckoutState from './ClearCheckoutState'
 
 export const dynamic = 'force-dynamic'
 
@@ -40,6 +41,7 @@ export default async function ConfirmationPage({ searchParams }: PageProps) {
 
   return (
     <ClientWrapper>
+      {order && <ClearCheckoutState />}
       <div className="min-h-screen pt-20 bg-cream">
         <div className="max-w-2xl mx-auto px-6 lg:px-8 py-16 text-center">
           {/* Success Icon */}

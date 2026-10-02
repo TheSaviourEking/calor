@@ -216,6 +216,7 @@ export default function CheckoutClient({
       isGift,
       giftMessage: isGift ? giftMessage : null,
       giftWrappingId: isGift ? selectedWrapping : null,
+      giftWrappingCents: isGift ? wrappingCost : 0,
       isAnonymousGift: isGift && isAnonymousGift,
       recipientEmail: isGift && isAnonymousGift ? recipientEmail : null,
       senderName: isGift && !isAnonymousGift ? senderName : null,
