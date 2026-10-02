@@ -12,7 +12,9 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const event = JSON.parse(body)
+  const payload = JSON.parse(body)
+  // Coinbase Commerce wraps the event: { id, scheduled_for, event: { type, data } }
+  const event = payload?.event ?? payload
 
   try {
     await handleCryptoWebhook(event)

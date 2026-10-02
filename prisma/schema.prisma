@@ -194,8 +194,8 @@ model Customer {
 
 model Address {
   id         String   @id @default(cuid())
-  customerId String
-  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  customerId String?  // null for guest checkout addresses
+  customer   Customer? @relation(fields: [customerId], references: [id], onDelete: Cascade)
   line1      String
   line2      String?
   city       String
