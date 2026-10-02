@@ -5,9 +5,15 @@ import { getSession } from '@/lib/auth'
 import { orderCreateSchema } from '@/lib/validations/orders'
 import { priceOrder, OrderPricingError } from '@/lib/orders/pricing'
 import { sendOrderConfirmationFor } from '@/lib/orders/lifecycle'
+import { rateLimitByIp } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
   try {
+    const rl = await rateLimitByIp(request, 'orders:create', { windowMs: 60_000, maxRequests: 10 })
+    if (!rl.allowed) {
+      return NextResponse.json({ error: 'Too many orders. Please try again in a minute.' }, { status: 429 })
+    }
+
     const parsed = orderCreateSchema.safeParse(await request.json())
 
     if (!parsed.success) {
@@ -28,6 +34,13 @@ export async function POST(request: NextRequest) {
         })
       : null
     const customerId = customer?.id ?? null
+
+    // Every order reserves stock, so the API is only open to guests when the
+    // storefront actually offers guest checkout
+    if (!customerId && process.env.GUEST_CHECKOUT_ENABLED !== 'true') {
+      return NextResponse.json({ error: 'Please sign in to place an order' }, { status: 401 })
+    }
+
     const guestEmail = customerId ? null : data.guestEmail ?? null
 
     if (!customerId && !guestEmail) {

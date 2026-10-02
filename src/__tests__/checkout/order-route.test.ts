@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { NextRequest } from 'next/server'
 
 const { db, tx, getSession, sendOrderConfirmationFor } = vi.hoisted(() => {
@@ -47,12 +47,24 @@ const body = {
   paymentMethod: 'card',
 }
 
-function post(payload: unknown) {
-  return POST(new NextRequest('http://localhost/api/orders', { method: 'POST', body: JSON.stringify(payload) }))
+// Every request gets its own client address unless a test pins one, so the
+// rate limiter never interferes with unrelated tests
+let ipCounter = 0
+function post(payload: unknown, ip = `10.0.${Math.floor(ipCounter / 250)}.${(ipCounter++ % 250) + 1}`) {
+  return POST(
+    new NextRequest('http://localhost/api/orders', {
+      method: 'POST',
+      headers: { 'x-forwarded-for': ip },
+      body: JSON.stringify(payload),
+    })
+  )
 }
 
 beforeEach(() => {
   vi.clearAllMocks()
+  // The limiter warns once when Upstash is not configured
+  vi.spyOn(console, 'warn').mockImplementation(() => {})
+  process.env.GUEST_CHECKOUT_ENABLED = 'true'
   getSession.mockResolvedValue(null)
   db.customer.findUnique.mockResolvedValue(null)
   db.product.findMany.mockResolvedValue([product])
@@ -78,10 +90,46 @@ beforeEach(() => {
   sendOrderConfirmationFor.mockResolvedValue(undefined)
 })
 
+afterEach(() => {
+  delete process.env.GUEST_CHECKOUT_ENABLED
+})
+
 describe('POST /api/orders', () => {
   it('rejects a request with no session and no guest email', async () => {
     const res = await post(body)
     expect(res.status).toBe(400)
+    expect(db.$transaction).not.toHaveBeenCalled()
+  })
+
+  it('requires sign-in when guest checkout is not enabled', async () => {
+    delete process.env.GUEST_CHECKOUT_ENABLED
+
+    const res = await post({ ...body, guestEmail: 'guest@example.com' })
+    expect(res.status).toBe(401)
+    expect(await res.json()).toEqual({ error: 'Please sign in to place an order' })
+    expect(db.$transaction).not.toHaveBeenCalled()
+  })
+
+  it('lets a signed-in buyer order when guest checkout is not enabled', async () => {
+    delete process.env.GUEST_CHECKOUT_ENABLED
+    getSession.mockResolvedValue({ customerId: 'cust_1', email: 'me@example.com' })
+    db.customer.findUnique.mockResolvedValue({ id: 'cust_1' })
+
+    const res = await post(body)
+    expect(res.status).toBe(200)
+  })
+
+  it('rate limits the 11th order request from one address within a minute', async () => {
+    const ip = '203.0.113.7'
+    for (let i = 0; i < 10; i++) {
+      const allowed = await post({ ...body, guestEmail: 'guest@example.com' }, ip)
+      expect(allowed.status).toBe(200)
+    }
+    db.$transaction.mockClear()
+
+    const res = await post({ ...body, guestEmail: 'guest@example.com' }, ip)
+    expect(res.status).toBe(429)
+    expect(await res.json()).toEqual({ error: 'Too many orders. Please try again in a minute.' })
     expect(db.$transaction).not.toHaveBeenCalled()
   })
 
