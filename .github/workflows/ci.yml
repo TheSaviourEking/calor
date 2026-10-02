@@ -51,8 +51,13 @@ jobs:
       - name: Type check
         run: bunx tsc --noEmit
 
-      - name: Push schema to test database
-        run: bunx prisma db push --skip-generate
+      # Build the test database from the migrations, exactly as a deploy does
+      - name: Apply migrations to test database
+        run: bunx prisma migrate deploy
+
+      # Fails when schema.prisma was changed without adding a migration
+      - name: Check migrations match the schema
+        run: bunx prisma migrate diff --from-url "$DATABASE_URL" --to-schema-datamodel prisma/schema.prisma --exit-code
 
       - name: Generate Prisma client
         run: bunx prisma generate
