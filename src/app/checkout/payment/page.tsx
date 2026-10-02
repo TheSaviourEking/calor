@@ -27,6 +27,10 @@ const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "pk_test_placeholder",
 );
 
+// The unpaid order this browser tab last created, so it can be released if
+// the buyer comes back and places the order again
+const PENDING_ORDER_KEY = "calor_checkout_order";
+
 const paymentMethods = [
   {
     id: "card",
@@ -275,6 +279,11 @@ export default function PaymentPage() {
   const finishCheckout = useCallback(
     (id: string) => {
       sessionStorage.removeItem("calor_checkout_sid");
+      try {
+        sessionStorage.removeItem(PENDING_ORDER_KEY);
+      } catch {
+        /* ignore */
+      }
       router.push(`/checkout/confirmation?order_id=${id}`);
     },
     [router],
@@ -295,6 +304,28 @@ export default function PaymentPage() {
       // Create the order once; switching payment method reuses it
       let currentOrderId = orderId;
       if (!currentOrderId) {
+        // A reload or a trip back to shipping loses the order id: release the
+        // previous unpaid order so it does not keep its stock reserved
+        let previousId: string | null = null;
+        try {
+          previousId = sessionStorage.getItem(PENDING_ORDER_KEY);
+        } catch {
+          /* ignore */
+        }
+        if (previousId) {
+          // A failure is fine: the old order may already be paid or cancelled
+          await fetch(`/api/orders/${previousId}/cancel`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ guestEmail: checkoutData.email || null }),
+          }).catch(() => {});
+          try {
+            sessionStorage.removeItem(PENDING_ORDER_KEY);
+          } catch {
+            /* ignore */
+          }
+        }
+
         const order = await createOrder(method);
         if (!order) {
           setIsProcessing(false);
@@ -303,6 +334,11 @@ export default function PaymentPage() {
 
         currentOrderId = order.id as string;
         setOrderId(currentOrderId);
+        try {
+          sessionStorage.setItem(PENDING_ORDER_KEY, currentOrderId);
+        } catch {
+          /* ignore */
+        }
         setOrderTotalCents(order.totalCents);
 
         // Fully covered by gift card or points: nothing left to pay

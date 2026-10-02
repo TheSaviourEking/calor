@@ -14,6 +14,7 @@ export default function ClearCheckoutState() {
     clearAll()
     try {
       sessionStorage.removeItem('calor_checkout_sid')
+      sessionStorage.removeItem('calor_checkout_order')
     } catch { /* ignore */ }
   }, [clearCart, clearAll])
 
