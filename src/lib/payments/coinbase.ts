@@ -89,8 +89,17 @@ export async function handleCryptoWebhook(event: { type: string; data: { id?: st
   const orderId = event.data?.metadata?.orderId
 
   switch (event.type) {
-    case 'charge:confirmed': {
+    // Resolved: the owner accepted an under/over/late payment in the dashboard
+    case 'charge:confirmed':
+    case 'charge:resolved': {
       if (orderId) await markOrderPaid(orderId)
+      break
+    }
+
+    // The order was already cancelled and released when the charge expired,
+    // so this needs a human rather than a state change
+    case 'charge:delayed': {
+      console.error('[Coinbase] Payment arrived after the charge expired — resolve it in the Coinbase dashboard:', { chargeId: event.data?.id, orderId })
       break
     }
 
