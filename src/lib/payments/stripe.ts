@@ -1,16 +1,26 @@
 import Stripe from 'stripe'
 import { db } from '@/lib/db'
-import { sendOrderConfirmation } from '@/lib/email'
+import { markOrderPaid, cancelOrderAndRelease } from '@/lib/orders/lifecycle'
 
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder')
 
 export async function createPaymentIntent(orderId: string) {
-  const order = await db.order.findUnique({
-    where: { id: orderId },
-    include: { items: { include: { product: true } } },
-  })
+  const order = await db.order.findUnique({ where: { id: orderId } })
 
   if (!order) throw new Error('Order not found')
+  if (order.status !== 'PENDING') throw new Error('Order is not awaiting payment')
+
+  // Reuse the open intent when the buyer reloads or comes back to card payment
+  if (order.paymentProvider === 'stripe' && order.paymentRef) {
+    const existing = await stripe.paymentIntents.retrieve(order.paymentRef)
+    const reusable = existing.status !== 'canceled' && existing.status !== 'succeeded'
+    if (reusable && existing.amount === order.totalCents) {
+      return {
+        clientSecret: existing.client_secret,
+        paymentIntentId: existing.id,
+      }
+    }
+  }
 
   const paymentIntent = await stripe.paymentIntents.create({
     amount: order.totalCents,
@@ -43,45 +53,23 @@ export async function handleStripeWebhook(event: Stripe.Event) {
   switch (event.type) {
     case 'payment_intent.succeeded': {
       const paymentIntent = event.data.object as Stripe.PaymentIntent
-      const { orderId, _reference } = paymentIntent.metadata
-
-      const order = await db.order.update({
-        where: { id: orderId },
-        data: { status: 'PAYMENT_RECEIVED' },
-        include: {
-          customer: true,
-          items: { include: { product: true } },
-        },
-      })
-
-      // Send confirmation email
-      if (order.customer) {
-        await sendOrderConfirmation({
-          customerEmail: order.customer.email,
-          customerName: order.customer.firstName,
-          orderReference: order.reference,
-          total: order.totalCents,
-          currency: order.currency,
-          items: order.items.map((item) => ({
-            name: item.name,
-            quantity: item.quantity,
-            price: item.priceCents,
-          })),
-        })
-      }
-
+      const { orderId } = paymentIntent.metadata
+      if (orderId) await markOrderPaid(orderId)
       break
     }
 
     case 'payment_intent.payment_failed': {
+      // A failed attempt is not terminal — the buyer can retry on the same
+      // intent, so the order stays PENDING and keeps its stock.
+      const paymentIntent = event.data.object as Stripe.PaymentIntent
+      console.warn('[Stripe] Payment attempt failed:', paymentIntent.id)
+      break
+    }
+
+    case 'payment_intent.canceled': {
       const paymentIntent = event.data.object as Stripe.PaymentIntent
       const { orderId } = paymentIntent.metadata
-
-      await db.order.update({
-        where: { id: orderId },
-        data: { status: 'CANCELLED' },
-      })
-
+      if (orderId) await cancelOrderAndRelease(orderId, paymentIntent.id)
       break
     }
 
