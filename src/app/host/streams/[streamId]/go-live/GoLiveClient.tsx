@@ -14,6 +14,7 @@ import { LiveKitRoom, useTracks, VideoTrack, RoomAudioRenderer } from '@livekit/
 import { Track } from 'livekit-client'
 import '@livekit/components-styles'
 import ClientWrapper from '@/components/layout/ClientWrapper'
+import { realtimeAuth } from '@/lib/realtime-client'
 
 function HostVideo() {
   const tracks = useTracks([Track.Source.Camera, Track.Source.ScreenShare])
@@ -139,6 +140,7 @@ export default function GoLiveClient() {
     const url = process.env.NEXT_PUBLIC_LIVE_STREAM_URL || '/?XTransformPort=3032'
     socketRef.current = io(url, {
       transports: ['websocket'],
+      auth: realtimeAuth,
     })
 
     const socket = socketRef.current

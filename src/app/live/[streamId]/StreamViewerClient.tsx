@@ -14,6 +14,7 @@ import { Track } from 'livekit-client'
 import '@livekit/components-styles'
 import ClientWrapper from '@/components/layout/ClientWrapper'
 import { useCartStore, useLocaleStore } from '@/stores'
+import { realtimeAuth } from '@/lib/realtime-client'
 
 function StreamVideo() {
   const tracks = useTracks([Track.Source.Camera, Track.Source.ScreenShare])
@@ -176,6 +177,7 @@ export default function StreamViewerClient() {
     const url = process.env.NEXT_PUBLIC_LIVE_STREAM_URL || '/?XTransformPort=3032'
     socketRef.current = io(url, {
       transports: ['websocket'],
+      auth: realtimeAuth,
     })
 
     const socket = socketRef.current

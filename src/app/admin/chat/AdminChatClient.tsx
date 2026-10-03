@@ -6,6 +6,7 @@ import { MessageCircle, Send, X, Users, Clock, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 import { useAuthStore } from '@/stores'
+import { realtimeAuth } from '@/lib/realtime-client'
 
 interface ChatSession {
   id: string
@@ -38,11 +39,12 @@ export default function AdminChatClient() {
 
   useEffect(() => {
     const url = process.env.NEXT_PUBLIC_SUPPORT_CHAT_URL || '/?XTransformPort=3031'
-    const socket = io(url, { transports: ['websocket'] })
+    const socket = io(url, { transports: ['websocket'], auth: realtimeAuth })
     socketRef.current = socket
 
     socket.on('connect', () => {
-      socket.emit('admin_auth', { adminId: customer?.id || 'admin' })
+      // The service reads who we are from the handshake token
+      socket.emit('admin_auth')
     })
 
     socket.on('admin_authenticated', () => {

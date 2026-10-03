@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { MessageCircle, Send, Lock, X, Minimize2, Maximize2 } from 'lucide-react'
 import { io, Socket } from 'socket.io-client'
+import { realtimeAuth } from '@/lib/realtime-client'
 
 interface Message {
   id: string
@@ -32,6 +33,7 @@ export default function SupportChatClient() {
     const socket = io(url, {
       path: '/socket.io',
       transports: ['websocket', 'polling'],
+      auth: realtimeAuth,
     })
 
     socketRef.current = socket
