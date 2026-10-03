@@ -3,7 +3,6 @@ import { randomBytes } from 'crypto'
 import { AccessToken } from 'livekit-server-sdk'
 import { db } from '@/lib/db'
 import { config } from '@/lib/config'
-import { getSession } from '@/lib/auth/session'
 import { requireStreamOwner } from '@/lib/auth/guards'
 
 interface RouteParams {
@@ -29,9 +28,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       if (!stream) {
         return NextResponse.json({ error: 'Stream not found' }, { status: 404 })
       }
-      const session = await getSession()
-      const suffix = randomBytes(4).toString('hex')
-      identity = session?.customerId ? `viewer-${session.customerId}-${suffix}` : `guest-${suffix}${randomBytes(4).toString('hex')}`
+      // Random only: the identity is visible to everyone in the room
+      identity = `viewer-${randomBytes(8).toString('hex')}`
     }
 
     const roomName = `stream-${id}`

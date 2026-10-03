@@ -67,8 +67,15 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       })
     }
 
+    // Only the owning host (or an admin) gets the RTMP key
+    let responseStream: typeof stream & { streamKey?: string } = stream
+    if ((await requireStreamOwner(id)).ok) {
+      const secret = await db.liveStream.findUnique({ where: { id }, select: { streamKey: true } })
+      if (secret) responseStream = { ...stream, streamKey: secret.streamKey }
+    }
+
     return NextResponse.json({
-      stream,
+      stream: responseStream,
       viewerCount,
     })
   } catch (error) {

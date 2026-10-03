@@ -27,6 +27,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           },
           orderBy: { scheduledStart: 'desc' },
           take: 10,
+          omit: { streamKey: true, password: true },
           include: {
             _count: {
               select: { viewers: true },
