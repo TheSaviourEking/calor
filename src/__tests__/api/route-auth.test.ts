@@ -192,6 +192,8 @@ describe('other handlers', () => {
     ['gift-cards/check'],
     ['checkout/validate-giftcard'],
     ['checkout/validate-promo'],
+    ['promotions/check'],
+    ['referrals/validate'],
   ])('POST /api/%s is rate limited per IP', async (file) => {
     const ip = { 'x-forwarded-for': `203.0.113.${Math.floor(Math.random() * 250)}` }
     let last = 0

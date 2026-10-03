@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getSession } from '@/lib/auth/session'
+import { rateLimitByIp } from '@/lib/rate-limit'
 
 // Validate and apply referral code
 export async function POST(request: NextRequest) {
   try {
+    // Slow down guessing of codes
+    const rl = await rateLimitByIp(request, 'referral:validate', { windowMs: 60_000, maxRequests: 10 })
+    if (!rl.allowed) {
+      return NextResponse.json({ error: 'Too many attempts. Please try again later.' }, { status: 429 })
+    }
+
     const body = await request.json()
     const { code } = body
 
