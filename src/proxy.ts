@@ -29,7 +29,9 @@ export function proxy(request: NextRequest) {
     const origin = request.headers.get("origin");
     const allowedOrigins = [
       process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000",
-      "https://calorco.com",
+      "https://calo.one",
+      "https://www.calo.one",
+      "https://staging.calo.one",
     ];
     if (origin && allowedOrigins.includes(origin)) {
       response.headers.set("Access-Control-Allow-Origin", origin);
