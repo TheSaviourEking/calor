@@ -91,6 +91,7 @@ describe('admin-only handlers', () => {
     ['experience/configurations', 'POST'], ['experience/sensory', 'POST'], ['experience/3d-models', 'POST'],
     ['experience/features', 'POST'], ['experience/size-visualizer', 'POST'],
     ['gift-cards', 'POST'], ['abandoned-cart', 'GET'], ['abandoned-cart/recover', 'POST'],
+    ['admin/audit-logs', 'POST'],
   ]
 
   it.each(cases.map((c) => [label(c), c] as const))('%s returns 401 without a session', async (_name, c) => {
@@ -133,6 +134,7 @@ describe('customer handlers', () => {
     ['wellness/challenges/[id]', 'POST', { id: 'x' }],
     ['wellness/couple-goals', 'GET'], ['wellness/couple-goals', 'POST'], ['wellness/couple-goals', 'PUT'],
     ['wellness/patterns', 'POST'], ['wellness/patterns', 'PUT'], ['wellness/patterns', 'DELETE'],
+    ['abandoned-cart', 'POST'], ['recommendations', 'POST'],
   ]
 
   it.each(cases.map((c) => [label(c), c] as const))('%s returns 401 without a session', async (_name, c) => {

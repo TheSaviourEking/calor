@@ -9,6 +9,16 @@ const resend = new Resend(resendApiKey)
 const isEmailEnabled = !!resendApiKey && !resendApiKey.includes('placeholder')
 
 
+// Escape a customer- or admin-entered string before interpolating it into HTML
+export function escapeHtml(value: string): string {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
 // Log email attempts
 function maskEmail(email: string): string {
   const [local, domain] = email.split('@')
@@ -428,6 +438,9 @@ export async function sendGiftCardEmail(data: {
   message?: string
 }): Promise<{ success: boolean; error?: string }> {
   const { recipientEmail, recipientName, senderName, code, value, message } = data
+  const safeRecipientName = escapeHtml(recipientName)
+  const safeSenderName = escapeHtml(senderName)
+  const safeMessage = message ? escapeHtml(message) : ''
 
   return sendEmail(
     recipientEmail,
@@ -453,8 +466,8 @@ export async function sendGiftCardEmail(data: {
       <body>
         <div class="container">
           <h1>You've received a gift</h1>
-          <p>Hi ${recipientName},</p>
-          <p>${senderName} has sent you a calo. gift card.</p>
+          <p>Hi ${safeRecipientName},</p>
+          <p>${safeSenderName} has sent you a calo. gift card.</p>
           
           <div class="gift-box">
             <p class="value">Gift Card Value: $${(value / 100).toFixed(2)}</p>
@@ -462,10 +475,10 @@ export async function sendGiftCardEmail(data: {
             <p class="code">${code}</p>
           </div>
           
-          ${message ? `
+          ${safeMessage ? `
           <div class="message-box">
-            <p style="margin: 0;">"${message}"</p>
-            <p style="margin-top: 10px; font-style: normal; font-size: 13px;">— ${senderName}</p>
+            <p style="margin: 0;">"${safeMessage}"</p>
+            <p style="margin-top: 10px; font-style: normal; font-size: 13px;">— ${safeSenderName}</p>
           </div>
           ` : ''}
           
@@ -510,7 +523,7 @@ export async function sendAbandonedCartEmail(data: {
   const { email, name, cartData, discountCode, discountPercent } = data
 
   const itemsList = cartData.items
-    .map((item) => `<tr><td style="padding: 8px 0;">${item.name} x${item.quantity}</td><td style="padding: 8px 0; text-align: right;">$${(item.price / 100).toFixed(2)}</td></tr>`)
+    .map((item) => `<tr><td style="padding: 8px 0;">${escapeHtml(item.name)} x${item.quantity}</td><td style="padding: 8px 0; text-align: right;">$${(item.price / 100).toFixed(2)}</td></tr>`)
     .join('')
 
   return sendEmail(
@@ -535,7 +548,7 @@ export async function sendAbandonedCartEmail(data: {
       </head>
       <body>
         <div class="container">
-          <h1>Hi ${name},</h1>
+          <h1>Hi ${escapeHtml(name)},</h1>
           <p>We noticed you left something in your cart. Come back and complete your purchase with a special ${discountPercent}% discount just for you.</p>
           
           <div class="discount-box">
@@ -610,10 +623,10 @@ export async function sendPriceDropAlert(data: {
       </head>
       <body>
         <div class="container">
-          <h1>Hi ${customerName},</h1>
+          <h1>Hi ${escapeHtml(customerName)},</h1>
           <p>Good news! An item on your wishlist has dropped in price.</p>
           
-          <p style="font-size: 18px; font-weight: 500;">${productName}</p>
+          <p style="font-size: 18px; font-weight: 500;">${escapeHtml(productName)}</p>
           
           <div class="price-box">
             <span class="old-price">$${(originalPrice / 100).toFixed(2)}</span>
@@ -665,8 +678,8 @@ export async function sendBackInStockAlert(data: {
       </head>
       <body>
         <div class="container">
-          <h1>Hi ${customerName},</h1>
-          <p>Great news! <strong>${productName}</strong> is back in stock.</p>
+          <h1>Hi ${escapeHtml(customerName)},</h1>
+          <p>Great news! <strong>${escapeHtml(productName)}</strong> is back in stock.</p>
           
           <p>Don't wait - popular items sell out quickly.</p>
           

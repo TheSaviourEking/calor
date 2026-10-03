@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { requireAdminUser } from '@/lib/auth/guards'
+import { requireAdminUser, requireCustomer } from '@/lib/auth/guards'
 
-// Track abandoned carts - called when user leaves checkout without completing
+// Track abandoned carts - called when user leaves checkout without completing.
+// Signed-in customers only (guest checkout is disabled); the customer id and
+// email come from the session, never from the body.
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireCustomer()
+    if (!auth.ok) return auth.response
+    const customerId = auth.customerId
+
     const body = await request.json()
-    const { sessionId, customerId, email, cartData } = body
+    const { sessionId, cartData } = body
 
     if (!sessionId || !cartData) {
       return NextResponse.json(
@@ -15,17 +21,30 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const customer = await db.customer.findUnique({
+      where: { id: customerId },
+      select: { email: true },
+    })
+    const email = customer?.email ?? null
+
     // Check if abandoned cart already exists for this session
     const existing = await db.abandonedCart.findUnique({
       where: { sessionId },
     })
+
+    if (existing && existing.customerId && existing.customerId !== customerId) {
+      return NextResponse.json(
+        { error: 'Abandoned cart not found' },
+        { status: 404 }
+      )
+    }
 
     if (existing) {
       // Update existing cart
       const updated = await db.abandonedCart.update({
         where: { sessionId },
         data: {
-          customerId: customerId || existing.customerId,
+          customerId,
           email: email || existing.email,
           cartData: JSON.stringify(cartData),
           updatedAt: new Date(),
@@ -38,8 +57,8 @@ export async function POST(request: NextRequest) {
     const abandonedCart = await db.abandonedCart.create({
       data: {
         sessionId,
-        customerId: customerId || null,
-        email: email || null,
+        customerId,
+        email,
         cartData: JSON.stringify(cartData),
       },
     })
