@@ -5,10 +5,19 @@ import { randomBytes } from 'crypto'
 import { createClient } from 'redis'
 import { createAdapter } from '@socket.io/redis-adapter'
 import { createServiceLogger } from '../logger'
+import { verifyRealtimeToken, type RealtimeUser } from '../realtime-token'
+import { isAdmin, cleanMessage } from '../authz'
 
 const log = createServiceLogger('support-chat')
 const PORT = Number(process.env.PORT) || 3031
 const db = new PrismaClient()
+
+const REALTIME_TOKEN_SECRET = process.env.REALTIME_TOKEN_SECRET
+const MAX_MESSAGE_LENGTH = 2000
+
+if (!REALTIME_TOKEN_SECRET) {
+  log.warn('REALTIME_TOKEN_SECRET is not set — every connection is anonymous and admin chat is disabled')
+}
 
 function parseAllowedOrigins(raw?: string): string[] {
   if (!raw) return ['http://localhost:3000', 'https://calo.one', 'https://www.calo.one', 'https://staging.calo.one', 'https://calor-rose.vercel.app']
@@ -51,19 +60,41 @@ function generateSessionId(): string {
 
 const adminSockets = new Map<string, string>() // socketId -> adminId
 
+// Identify the connection from the handshake token. No token (or a bad one)
+// means an anonymous visitor, which is fine for starting a support chat.
+io.use(async (socket, next) => {
+  socket.data.user = await verifyRealtimeToken(socket.handshake.auth?.token, REALTIME_TOKEN_SECRET)
+  next()
+})
+
 io.on('connection', (socket) => {
   log.act('client_connected', { socketId: socket.id })
 
-  // Admin authentication
-  socket.on('admin_auth', (data: { adminId: string; token?: string }) => {
-    adminSockets.set(socket.id, data.adminId)
+  const user = socket.data.user as RealtimeUser | null
+
+  // Admin events are refused unless the handshake token says admin
+  const requireAdmin = (): boolean => {
+    if (isAdmin(user)) return true
+    socket.emit('error', { message: 'Admin access required' })
+    return false
+  }
+
+  // Customer events only work on a session this socket has started or rejoined
+  const inSession = (sessionId: unknown): sessionId is string =>
+    typeof sessionId === 'string' && socket.rooms.has(sessionId)
+
+  // Admin authentication — the identity comes from the handshake token, not the payload
+  socket.on('admin_auth', () => {
+    if (!requireAdmin()) return
+    adminSockets.set(socket.id, user!.customerId)
     socket.join('admin_dashboard')
     socket.emit('admin_authenticated', { success: true })
-    log.act('admin_auth', { socketId: socket.id, adminId: data.adminId, token: data.token })
+    log.act('admin_auth', { socketId: socket.id, adminId: user!.customerId })
   })
 
   // Admin lists all sessions
   socket.on('admin_list_sessions', async () => {
+    if (!requireAdmin()) return
     try {
       const sessions = await db.supportChatSession.findMany({
         where: { status: { in: ['active', 'closed'] } },
@@ -85,6 +116,7 @@ io.on('connection', (socket) => {
 
   // Admin joins a specific session
   socket.on('admin_join_session', async (data: { sessionId: string }) => {
+    if (!requireAdmin()) return
     try {
       const session = await db.supportChatSession.findUnique({
         where: { sessionId: data.sessionId },
@@ -114,17 +146,19 @@ io.on('connection', (socket) => {
 
   // Admin sends a message to a session
   socket.on('admin_send_message', async (data: { sessionId: string; message: string }) => {
+    if (!requireAdmin()) return
     try {
       const session = await db.supportChatSession.findUnique({
         where: { sessionId: data.sessionId },
       })
-      if (!session) return
+      const text = cleanMessage(data.message, MAX_MESSAGE_LENGTH)
+      if (!session || !text) return
 
       const message = await db.supportMessage.create({
         data: {
           sessionId: session.id,
           isFromCustomer: false,
-          message: data.message,
+          message: text,
         },
       })
 
@@ -147,6 +181,7 @@ io.on('connection', (socket) => {
 
   // Admin closes a session
   socket.on('admin_close_session', async (data: { sessionId: string }) => {
+    if (!requireAdmin()) return
     try {
       await db.supportChatSession.updateMany({
         where: { sessionId: data.sessionId },
@@ -161,14 +196,16 @@ io.on('connection', (socket) => {
   })
 
   // Customer initiates a support chat
-  socket.on('start_session', async (data: { customerId?: string }) => {
+  socket.on('start_session', async () => {
     try {
       const sessionId = generateSessionId()
+      // Linked to a customer only when the handshake token proves who it is
+      const customerId = user?.customerId ?? null
 
       const session = await db.supportChatSession.create({
         data: {
           sessionId,
-          customerId: data.customerId || null,
+          customerId,
         },
       })
 
@@ -178,7 +215,7 @@ io.on('connection', (socket) => {
       // Notify admin dashboard of new session
       io.to('admin_dashboard').emit('new_session', {
         sessionId,
-        customerId: data.customerId,
+        customerId,
         createdAt: new Date(),
       })
 
@@ -198,7 +235,7 @@ io.on('connection', (socket) => {
         timestamp: welcomeMessage.createdAt,
       })
 
-      log.act('start_session', { socketId: socket.id, sessionId, customerId: data.customerId })
+      log.act('start_session', { socketId: socket.id, sessionId, customerId })
     } catch (error) {
       log.error({ err: error, socketId: socket.id }, 'Error starting session')
       socket.emit('error', { message: 'Failed to start session' })
@@ -241,11 +278,17 @@ io.on('connection', (socket) => {
   // Customer sends message
   socket.on('send_message', async (data: { sessionId: string; message: string }) => {
     try {
+      const text = cleanMessage(data.message, MAX_MESSAGE_LENGTH)
+      if (!inSession(data.sessionId) || !text) {
+        socket.emit('error', { message: 'Session not found' })
+        return
+      }
+
       const session = await db.supportChatSession.findUnique({
         where: { sessionId: data.sessionId },
       })
 
-      if (!session) {
+      if (!session || session.status !== 'active') {
         socket.emit('error', { message: 'Session not found' })
         return
       }
@@ -254,7 +297,7 @@ io.on('connection', (socket) => {
         data: {
           sessionId: session.id,
           isFromCustomer: true,
-          message: data.message,
+          message: text,
         },
       })
 
@@ -320,6 +363,7 @@ io.on('connection', (socket) => {
 
   // End session
   socket.on('end_session', async (data: { sessionId: string }) => {
+    if (!inSession(data.sessionId)) return
     try {
       await db.supportChatSession.updateMany({
         where: { sessionId: data.sessionId },
@@ -339,7 +383,8 @@ io.on('connection', (socket) => {
 
   // Typing indicator
   socket.on('typing', (data: { sessionId: string; isTyping: boolean }) => {
-    socket.to(data.sessionId).emit('user_typing', { isTyping: data.isTyping })
+    if (!inSession(data.sessionId)) return
+    socket.to(data.sessionId).emit('user_typing', { isTyping: data.isTyping === true })
   })
 
   socket.on('disconnect', () => {
