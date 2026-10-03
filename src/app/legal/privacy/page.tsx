@@ -57,7 +57,7 @@ export default function PrivacyPage() {
                 5. Your Rights
               </h2>
               <p className="font-body text-warm-gray text-base leading-relaxed">
-                You have the right to access, correct, or delete your personal data at any time. Contact us at privacy@calorco.com to exercise these rights.
+                You have the right to access, correct, or delete your personal data at any time. Contact us at privacy@calo.one to exercise these rights.
               </p>
             </section>
 
@@ -75,7 +75,7 @@ export default function PrivacyPage() {
                 7. Contact
               </h2>
               <p className="font-body text-warm-gray text-base leading-relaxed">
-                For privacy-related inquiries, contact us at privacy@calorco.com.
+                For privacy-related inquiries, contact us at privacy@calo.one.
               </p>
             </section>
           </div>

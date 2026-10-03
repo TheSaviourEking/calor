@@ -253,7 +253,7 @@ const slides: any[] = [
       headline: 'CALOR',
       tagline: 'Redefining Intimate Commerce',
       cta: 'Let\'s Build the Future Together',
-      contact: 'investors@calor.com',
+      contact: 'investors@calo.one',
     }
   },
 ]

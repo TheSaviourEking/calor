@@ -2,11 +2,13 @@
 
 import Link from 'next/link'
 import { useSearchParams, useRouter } from 'next/navigation'
+import { safeInternalPath } from '@/lib/safe-redirect'
 
 export default function AgeGateClient() {
     const searchParams = useSearchParams()
     const router = useRouter()
-    const callbackUrl = searchParams.get('callbackUrl') || '/'
+    // proxy.ts sends `callbackUrl`; checkout/page.tsx sends `returnTo`
+    const callbackUrl = safeInternalPath(searchParams.get('callbackUrl') ?? searchParams.get('returnTo'))
 
     const handleYes = () => {
         // Set cookie for middleware

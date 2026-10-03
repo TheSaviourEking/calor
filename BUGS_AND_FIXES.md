@@ -15,7 +15,7 @@
 
 ## 🔴 CRITICAL — Fix Before Launch
 
-### [ ] 1. OAuth buttons point to wrong URLs — 404 on click
+### [x] 1. OAuth buttons point to wrong URLs — 404 on click
 **File:** `src/app/account/AccountClient.tsx` — Lines 57, 62  
 **Problem:**  
 ```ts
@@ -33,7 +33,7 @@ window.location.href = '/api/auth/oauth/apple'
 
 ---
 
-### [ ] 2. Guest card checkout is broken — `create-intent` requires a session
+### [x] 2. Guest card checkout is broken — `create-intent` requires a session
 **Files:**  
 - `src/app/api/payment/create-intent/route.ts` — Lines 8–11  
 - `src/app/checkout/payment/page.tsx` — Line 206  
@@ -57,6 +57,7 @@ A guest user will create an order → call `create-intent` → get 401 → never
 ---
 
 ### [ ] 3. Guest order address creation will throw — `customerId: null!`
+> **Status 2026-10-01:** Still open. The non-null assertion was replaced by a type cast, which hides the error from the compiler but not from Prisma. Fixed by `docs/superpowers/plans/2026-10-01-checkout-order-integrity.md`.
 **File:** `src/app/api/orders/route.ts` — Lines 101–113  
 **Problem:**  
 For guest orders, `customerId` is `null`. The address creation uses a non-null assertion (`!`), passing `null` as a required foreign key:
@@ -74,7 +75,7 @@ If `Address.customerId` is a required field in the Prisma schema, this throws an
 
 ---
 
-### [ ] 4. Apple OAuth leaks client secret to the frontend
+### [x] 4. Apple OAuth leaks client secret to the frontend
 **File:** `src/app/api/auth/oauth/apple/route.ts` — Lines 141–144  
 **Problem:**  
 The Apple `clientSecret` (a signed JWT derived from your `APPLE_PRIVATE_KEY`) is returned to the client in the JSON response:
@@ -90,7 +91,7 @@ The client secret is sensitive — it should never leave the server.
 
 ---
 
-### [ ] 5. Debug `console.log` leaks session data in admin page
+### [x] 5. Debug `console.log` leaks session data in admin page
 **File:** `src/app/admin/page.tsx` — Line 8  
 **Problem:**  
 ```ts
@@ -103,6 +104,7 @@ This logs the full session object (email, customerId) to the server console on e
 ---
 
 ### [ ] 6. `vercel.json` doesn't exist — cron jobs will never run on Vercel
+> **Status 2026-10-01:** Not applicable. Cron jobs run from the VPS crontab (`scripts/setup-crontab.sh`), not Vercel Cron.
 **File:** `vercel.json` — missing  
 **Problem:**  
 The `LAUNCH_CHECKLIST.md` instructs creating a `vercel.json` with cron config. Without it, all 4 scheduled jobs never fire:
@@ -126,7 +128,7 @@ The `LAUNCH_CHECKLIST.md` instructs creating a `vercel.json` with cron config. W
 
 ---
 
-### [ ] 7. Cron secret header is inconsistent — 3 different patterns
+### [x] 7. Cron secret header is inconsistent — 3 different patterns
 **Problem:**  
 Three different auth mechanisms are used across the codebase for cron security:
 
@@ -145,7 +147,7 @@ In production, depending on what you set, only one or none of the cron jobs woul
 
 ## 🟠 HIGH — Data / Logic Issues
 
-### [ ] 8. Abandoned cart cron handler uses `GET` but Vercel cron sends `GET` — method inconsistency with other crons
+### [x] 8. Abandoned cart cron handler uses `GET` but Vercel cron sends `GET` — method inconsistency with other crons
 **File:** `src/app/api/cron/abandoned-cart/route.ts` — Line 8  
 **Problem:**  
 ```ts
@@ -157,7 +159,7 @@ All other cron handlers use `POST` (e.g. `stock-alerts`). The `LAUNCH_CHECKLIST.
 
 ---
 
-### [ ] 9. Admin dashboard always shows `$0` revenue
+### [x] 9. Admin dashboard always shows `$0` revenue
 **File:** `src/app/admin/page.tsx` — Line 44  
 **Problem:**  
 ```ts
@@ -176,7 +178,7 @@ Or redirect stats fetching to use the analytics API.
 
 ---
 
-### [ ] 10. Sessions revoke button comparison logic is broken
+### [x] 10. Sessions revoke button comparison logic is broken
 **File:** `src/app/account/sessions/page.tsx` — Line 88  
 **Problem:**  
 ```ts
@@ -190,7 +192,7 @@ Or redirect stats fetching to use the analytics API.
 
 ---
 
-### [ ] 11. `salesByDay` raw SQL is SQLite-specific — breaks on PostgreSQL
+### [x] 11. `salesByDay` raw SQL is SQLite-specific — breaks on PostgreSQL
 **File:** `src/app/api/admin/analytics/route.ts` — Lines 150–161  
 **Problem:**  
 ```sql
@@ -212,7 +214,7 @@ Or use a Prisma `groupBy` query instead to stay DB-agnostic.
 
 ## 🟡 MEDIUM — Code Quality / Polish
 
-### [ ] 12. `text-mid-gray` Tailwind class is undefined — PENDING badge has invisible text
+### [x] 12. `text-mid-gray` Tailwind class is undefined — PENDING badge has invisible text
 **File:** `src/app/account/orders/page.tsx` — Line 33  
 **Problem:**  
 ```ts
@@ -224,7 +226,7 @@ PENDING: 'bg-sand text-mid-gray',
 
 ---
 
-### [ ] 13. Loyalty points slider max has a ×100 unit error
+### [x] 13. Loyalty points slider max has a ×100 unit error
 **File:** `src/app/checkout/CheckoutClient.tsx` — Lines 599–606  
 **Problem:**  
 ```ts
@@ -239,7 +241,7 @@ max={Math.min(
 
 ---
 
-### [ ] 14. `adminApiHandler` returns 401 instead of 403 for non-admin users
+### [x] 14. `adminApiHandler` returns 401 instead of 403 for non-admin users
 **File:** `src/lib/admin/middleware.ts` — Line 29  
 **Problem:**  
 ```ts
@@ -252,6 +254,7 @@ When an authenticated (but non-admin) user calls an admin API, they receive `401
 ---
 
 ### [ ] 15. R2 custom domain not whitelisted in `next.config.ts`
+> **Status 2026-10-01:** Still open by design — add the hostname to `remotePatterns` once the R2 custom domain exists.
 **File:** `next.config.ts` — Lines 10–14  
 **Problem:**  
 ```ts
@@ -266,7 +269,8 @@ The `LAUNCH_CHECKLIST.md` instructs setting up a custom domain for R2 (e.g. `ass
 
 ---
 
-### [ ] 16. Apple OAuth always uses `keys[0]` without matching `kid` — fragile key rotation
+### [x] 16. Apple OAuth always uses `keys[0]` without matching `kid` — fragile key rotation
+> **Status:** Fixed 2026-10-01 (jose createRemoteJWKSet, no fallback key).
 **File:** `src/app/api/auth/oauth/apple/route.ts` — Line 165  
 **Problem:**  
 ```ts
@@ -283,7 +287,7 @@ if (!key) throw new Error('No matching Apple public key found')
 
 ---
 
-### [ ] 17. `COINBASE_COMMERCE_API_KEY` and `COINBASE_WEBHOOK_SECRET` are hard-required in config
+### [x] 17. `COINBASE_COMMERCE_API_KEY` and `COINBASE_WEBHOOK_SECRET` are hard-required in config
 **File:** `src/lib/config.ts` — Lines 2–21  
 **Problem:**  
 ```ts
@@ -318,7 +322,7 @@ And conditionally show the "Pay with Crypto" option on the payment page only whe
 | Login timing-attack prevention (dummy hash) | ✅ Solid |
 | Rate limiting (Redis with in-memory fallback) | ✅ Solid |
 | Google OAuth CSRF state cookie validation | ✅ Solid |
-| Apple OAuth CSRF state cookie validation | ✅ Solid |
+| Apple OAuth CSRF state cookie validation | ✅ Fixed 2026-10-01 (state cookie now `SameSite=None; Secure` for Apple's form_post callback) |
 | Checkout: PII stored server-side, only UUID in sessionStorage | ✅ Solid |
 | Password validation (uppercase, lowercase, number, special char) | ✅ Solid |
 | Email verification flow | ✅ Solid |
@@ -341,11 +345,11 @@ Day 1 — Critical (all small):
   ✅ #5  Remove console.log (1 min)
   ✅ #1  Fix OAuth button URLs (5 min)
   ✅ #4  Remove Apple clientSecret from response (5 min)
-  ✅ #6  Create vercel.json with cron config (5 min)
+  ➖ #6  Create vercel.json with cron config (5 min)
   ✅ #8  Fix abandoned-cart cron GET→POST (5 min)
   ✅ #12 Fix text-mid-gray class (1 min)
   ✅ #14 Fix 401→403 in adminApiHandler (5 min)
-  ✅ #3  Fix guest address customerId null assertion (15 min)
+  ⬜ #3  Fix guest address customerId null assertion (15 min)
   ✅ #7  Standardize cron secret headers (30 min)
   ✅ #9  Wire up real revenue to admin dashboard (30 min)
 
@@ -356,9 +360,9 @@ Day 2 — High/Medium:
   ✅ #13 Fix loyalty slider max unit error (15 min)
   ✅ #17 Make Coinbase vars optional (15 min)
   ✅ #16 Fix Apple key selection by kid (30 min)
-  ✅ #15 Add R2 custom domain to next.config.ts (at deploy time)
+  ⬜ #15 Add R2 custom domain to next.config.ts (at deploy time)
 ```
 
 ---
 
-*Last updated: 2026-06-15*
+*Last updated: 2026-10-01*

@@ -84,7 +84,7 @@ export default function TermsPage() {
                 8. Contact
               </h2>
               <p className="font-body text-warm-gray text-base leading-relaxed">
-                For questions about these terms, contact us at legal@calorco.com.
+                For questions about these terms, contact us at legal@calo.one.
               </p>
             </section>
           </div>
