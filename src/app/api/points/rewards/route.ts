@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { requireAdminUser } from '@/lib/auth/guards'
 
 // GET /api/points/rewards - Get available rewards for redemption
 export async function GET(request: NextRequest) {
@@ -90,6 +91,9 @@ export async function GET(request: NextRequest) {
 // POST /api/points/rewards - Create a new reward (admin only)
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireAdminUser()
+    if (!auth.ok) return auth.response
+
     const body = await request.json()
     const {
       name,

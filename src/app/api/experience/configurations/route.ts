@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { requireAdminUser } from '@/lib/auth/guards'
 
 // GET - List product configurations
 export async function GET(request: NextRequest) {
@@ -42,6 +43,9 @@ export async function GET(request: NextRequest) {
 // POST - Create a new product configuration option
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireAdminUser()
+    if (!auth.ok) return auth.response
+
     const data = await request.json()
 
     const configuration = await db.productConfiguration.create({

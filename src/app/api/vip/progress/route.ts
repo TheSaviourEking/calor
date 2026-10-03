@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { requireAdminUser } from '@/lib/auth/guards'
 
 // GET /api/vip/progress - Get customer's VIP progress
 export async function GET(request: NextRequest) {
@@ -95,6 +96,9 @@ export async function GET(request: NextRequest) {
 // PUT /api/vip/progress - Update VIP progress (called after order)
 export async function PUT(request: NextRequest) {
   try {
+    const auth = await requireAdminUser()
+    if (!auth.ok) return auth.response
+
     const body = await request.json()
     const { customerId, pointsEarned, amountSpent } = body
 

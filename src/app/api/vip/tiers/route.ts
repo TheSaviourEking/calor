@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { requireAdminUser } from '@/lib/auth/guards'
 
 // GET /api/vip/tiers - Get all VIP tiers
 export async function GET() {
@@ -28,6 +29,9 @@ export async function GET() {
 // POST /api/vip/tiers - Create a new VIP tier (admin only)
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireAdminUser()
+    if (!auth.ok) return auth.response
+
     const body = await request.json()
     const {
       name,
@@ -94,6 +98,9 @@ export async function POST(request: NextRequest) {
 // PUT /api/vip/tiers - Update a VIP tier (admin only)
 export async function PUT(request: NextRequest) {
   try {
+    const auth = await requireAdminUser()
+    if (!auth.ok) return auth.response
+
     const body = await request.json()
     const { id, ...data } = body
 

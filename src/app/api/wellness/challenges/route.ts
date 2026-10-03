@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { requireAdminUser } from '@/lib/auth/guards'
 
 // GET /api/wellness/challenges - List all active challenges
 export async function GET(request: NextRequest) {
@@ -62,6 +63,9 @@ export async function GET(request: NextRequest) {
 // POST /api/wellness/challenges - Create a new challenge (admin)
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireAdminUser()
+    if (!auth.ok) return auth.response
+
     const body = await request.json()
     const {
       title,
