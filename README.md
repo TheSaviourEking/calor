@@ -63,7 +63,7 @@ A complete, production-ready e-commerce platform for the wellness industry with 
 |----------|------------|
 | **Framework** | Next.js 16 (App Router) |
 | **Language** | TypeScript 5 |
-| **Database** | SQLite / PostgreSQL (Prisma ORM) |
+| **Database** | PostgreSQL (Prisma ORM) |
 | **Styling** | Tailwind CSS 4 |
 | **UI Components** | shadcn/ui |
 | **State** | Zustand |
@@ -106,8 +106,8 @@ Open [http://localhost:3000](http://localhost:3000)
 
 | Document | Purpose |
 |----------|---------|
-| [DEPLOYMENT.md](./DEPLOYMENT.md) | Full deployment guide |
-| [MINI-SERVICES.md](./MINI-SERVICES.md) | WebSocket services docs |
+| [LAUNCH_CHECKLIST.md](./LAUNCH_CHECKLIST.md) | Accounts, env vars and go-live steps |
+| [PROD_CHECKLIST.md](./PROD_CHECKLIST.md) | Production readiness checklist |
 | [worklog.md](./worklog.md) | Development history |
 
 ---
@@ -136,10 +136,9 @@ calor/
 │   └── stores/                 # Zustand stores
 ├── prisma/
 │   └── schema.prisma           # Database schema (117+ models)
-├── mini-services/              # WebSocket services
-│   ├── support-chat/           # Port 3031
-│   └── live-stream/            # Port 3032
-└── db/                         # SQLite database files
+└── mini-services/              # WebSocket services
+    ├── support-chat/           # Port 3031
+    └── live-stream/            # Port 3032
 ```
 
 ---
