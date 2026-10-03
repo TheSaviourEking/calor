@@ -90,6 +90,7 @@ describe('admin-only handlers', () => {
     ['wellness/daily-rewards', 'POST'], ['wellness/toy-brands', 'POST'],
     ['experience/configurations', 'POST'], ['experience/sensory', 'POST'], ['experience/3d-models', 'POST'],
     ['experience/features', 'POST'], ['experience/size-visualizer', 'POST'],
+    ['gift-cards', 'POST'], ['abandoned-cart', 'GET'], ['abandoned-cart/recover', 'POST'],
   ]
 
   it.each(cases.map((c) => [label(c), c] as const))('%s returns 401 without a session', async (_name, c) => {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { requireAdminUser } from '@/lib/auth/guards'
 
 // Track abandoned carts - called when user leaves checkout without completing
 export async function POST(request: NextRequest) {
@@ -56,6 +57,9 @@ export async function POST(request: NextRequest) {
 // Get abandoned carts (for admin)
 export async function GET(request: NextRequest) {
   try {
+    const auth = await requireAdminUser()
+    if (!auth.ok) return auth.response
+
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status')
     const limit = parseInt(searchParams.get('limit') || '50')
