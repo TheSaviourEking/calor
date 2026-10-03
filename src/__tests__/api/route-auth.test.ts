@@ -266,6 +266,9 @@ const PUBLIC_HANDLERS: string[] = [
   'GET /api/experience/3d-models', 'GET /api/experience/configurations', 'GET /api/experience/experiences',
   'GET /api/experience/features', 'GET /api/experience/sensory', 'GET /api/experience/size-visualizer',
 
+  // Which payment methods this deployment offers (three booleans, no details)
+  'GET /api/payment/methods',
+
   // Live shopping, viewer side: host directory and public stream data
   // (lists omit stream keys and passwords; chat returns display fields only)
   'GET /api/hosts', 'GET /api/hosts/[id]',
@@ -277,10 +280,6 @@ const PUBLIC_HANDLERS: string[] = [
 // They are listed so the inventory stays green; they are NOT public by design
 // and are reported for follow-up. Remove each entry when it is fixed.
 const KNOWN_FINDINGS: string[] = [
-  // Sets payment method/reference on any order id and returns its total (no ownership check)
-  'POST /api/payment/bank-transfer',
-  // Creates a Coinbase charge for any order id and overwrites its payment reference
-  'POST /api/payment/crypto-charge',
   // Records an unverified registry purchase; registryItemId is not scoped to the registry
   'POST /api/registry/[id]/purchases',
   // Anyone can increment purchaseCount on arbitrary product ids
