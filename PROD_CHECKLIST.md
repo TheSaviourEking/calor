@@ -1,5 +1,7 @@
 # CALŌR — Production Readiness Checklist
 
+> Partly out of date — README "Deployment" is the source of truth for how the app, realtime services and cron jobs are deployed.
+
 Last updated: June 2026  
 Status legend: `[ ]` Not done · `[x]` Done · `[~]` Partial / in progress · `[!]` Blocked
 
@@ -54,6 +56,7 @@ These are security issues or broken core flows. Ship nothing until these are gre
   - To create first admin: must seed via `create-test-users.ts` or direct DB UPDATE
   - Document this process and create a one-time bootstrap script
   - Suggested: `bun scripts/create-test-users.ts` sets `isAdmin: true` for `admin@calor.com`
+  - **Warning: do not run `scripts/create-test-users.ts` in production — it creates a known-password admin.**
 
 ---
 

@@ -149,6 +149,7 @@ calor/
 # Development
 bun run dev          # Start development server
 bun run lint         # Run ESLint
+bun run test         # Run the vitest suite
 
 # Database
 bun run db:push      # Push schema changes
@@ -159,7 +160,28 @@ bun run db:reset     # Reset database
 # Production
 bun run build        # Build for production
 bun start            # Start production server
+bun run build:vps    # Standalone build (STANDALONE=true) with static assets copied in
+bun run start:vps    # Start the standalone server with bun
+bun run build:services  # Compile the support-chat and live-stream binaries to dist/bin
 ```
+
+---
+
+## Deployment
+
+Production is `calo.one`; staging is `staging.calo.one`.
+
+- **Web app** - Vercel. `bun run build` runs `next build`. The build does not apply database migrations; run `bun run db:migrate:deploy` (Prisma `migrate deploy`) against the target database before releasing a schema change.
+- **Realtime mini-services** - a VPS. `.github/workflows/deploy-prod.yml` and `deploy-staging.yml` run `bun run build:services`, push the binaries to `/opt/calor/prod` or `/opt/calor/staging`, and restart them with PM2 (`ecosystem.config.js`) behind Caddy (`Caddyfile.prod`).
+
+  | PM2 app | Port |
+  |---------|------|
+  | `prod-support-chat-1` / `prod-support-chat-2` | 3031 / 3033 |
+  | `prod-live-stream-1` / `prod-live-stream-2` | 3032 / 3034 |
+  | `staging-support-chat` | 3041 |
+  | `staging-live-stream` | 3042 |
+
+- **Cron jobs** - the VPS crontab, installed once by `scripts/setup-crontab.sh`. It calls the `/api/cron/*` routes with `POST` and `Authorization: Bearer $CRON_SECRET` (`APP_URL` and `CRON_SECRET` come from `/opt/calor/.env`).
 
 ---
 

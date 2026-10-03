@@ -269,8 +269,8 @@ The `LAUNCH_CHECKLIST.md` instructs setting up a custom domain for R2 (e.g. `ass
 
 ---
 
-### [ ] 16. Apple OAuth always uses `keys[0]` without matching `kid` — fragile key rotation
-> **Status 2026-10-01:** Partly fixed (matches by `kid`, but still falls back to `keys[0]`). Finished by `docs/superpowers/plans/2026-10-01-repo-hygiene.md` Task 5.
+### [x] 16. Apple OAuth always uses `keys[0]` without matching `kid` — fragile key rotation
+> **Status:** Fixed 2026-10-01 (jose createRemoteJWKSet, no fallback key).
 **File:** `src/app/api/auth/oauth/apple/route.ts` — Line 165  
 **Problem:**  
 ```ts
@@ -322,7 +322,7 @@ And conditionally show the "Pay with Crypto" option on the payment page only whe
 | Login timing-attack prevention (dummy hash) | ✅ Solid |
 | Rate limiting (Redis with in-memory fallback) | ✅ Solid |
 | Google OAuth CSRF state cookie validation | ✅ Solid |
-| Apple OAuth CSRF state cookie validation | ✅ Solid |
+| Apple OAuth CSRF state cookie validation | ✅ Fixed 2026-10-01 (state cookie now `SameSite=None; Secure` for Apple's form_post callback) |
 | Checkout: PII stored server-side, only UUID in sessionStorage | ✅ Solid |
 | Password validation (uppercase, lowercase, number, special char) | ✅ Solid |
 | Email verification flow | ✅ Solid |
@@ -345,11 +345,11 @@ Day 1 — Critical (all small):
   ✅ #5  Remove console.log (1 min)
   ✅ #1  Fix OAuth button URLs (5 min)
   ✅ #4  Remove Apple clientSecret from response (5 min)
-  ✅ #6  Create vercel.json with cron config (5 min)
+  ➖ #6  Create vercel.json with cron config (5 min)
   ✅ #8  Fix abandoned-cart cron GET→POST (5 min)
   ✅ #12 Fix text-mid-gray class (1 min)
   ✅ #14 Fix 401→403 in adminApiHandler (5 min)
-  ✅ #3  Fix guest address customerId null assertion (15 min)
+  ⬜ #3  Fix guest address customerId null assertion (15 min)
   ✅ #7  Standardize cron secret headers (30 min)
   ✅ #9  Wire up real revenue to admin dashboard (30 min)
 
@@ -360,7 +360,7 @@ Day 2 — High/Medium:
   ✅ #13 Fix loyalty slider max unit error (15 min)
   ✅ #17 Make Coinbase vars optional (15 min)
   ✅ #16 Fix Apple key selection by kid (30 min)
-  ✅ #15 Add R2 custom domain to next.config.ts (at deploy time)
+  ⬜ #15 Add R2 custom domain to next.config.ts (at deploy time)
 ```
 
 ---

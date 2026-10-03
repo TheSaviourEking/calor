@@ -1,5 +1,7 @@
 # CALŌR — Launch Checklist
 
+> Partly out of date — README "Deployment" is the source of truth for how the app, realtime services and cron jobs are deployed.
+
 Complete deployment guide. Go through each section in order.
 
 ---
@@ -495,6 +497,8 @@ stripe trigger payment_intent.succeeded
 Set up scheduled tasks for automated maintenance:
 
 ### Vercel Cron (vercel.json)
+> Note: crons actually run from the VPS crontab (`scripts/setup-crontab.sh`), not Vercel cron.
+
 Create `vercel.json` in project root if it doesn't exist:
 ```json
 {
