@@ -105,6 +105,18 @@ describe('markOrderPaid', () => {
     )
   })
 
+  it('still returns true when the confirmation email fails', async () => {
+    db.order.updateMany.mockResolvedValue({ count: 1 })
+    db.order.findUnique.mockResolvedValue(paidOrder)
+    sendOrderConfirmation.mockRejectedValueOnce(new Error('smtp down'))
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    expect(await markOrderPaid('ord_1')).toBe(true)
+    expect(db.order.updateMany).toHaveBeenCalledTimes(1)
+    expect(errorSpy).toHaveBeenCalledTimes(1)
+    errorSpy.mockRestore()
+  })
+
   it('does nothing on a repeated delivery', async () => {
     db.order.updateMany.mockResolvedValue({ count: 0 })
     db.order.findUnique.mockResolvedValue({ status: 'PAYMENT_RECEIVED', reference: 'CLABC123' })
@@ -217,6 +229,25 @@ describe('cancelOrderAndRelease', () => {
     })
     expect(tx.order.findUnique).not.toHaveBeenCalled()
     expect(tx.product.update).not.toHaveBeenCalled()
+  })
+
+  it('requires the order to still have no reference when null is given', async () => {
+    tx.order.updateMany.mockResolvedValue({ count: 0 })
+
+    await cancelOrderAndRelease('ord_1', null)
+    expect(tx.order.updateMany).toHaveBeenCalledWith({
+      where: { id: 'ord_1', status: 'PENDING', paymentRef: null },
+      data: { status: 'CANCELLED' },
+    })
+  })
+
+  it('has no paymentRef key in the where when undefined is given', async () => {
+    tx.order.updateMany.mockResolvedValue({ count: 0 })
+
+    await cancelOrderAndRelease('ord_1', undefined)
+    const where = tx.order.updateMany.mock.calls[0][0].where
+    expect(where).toEqual({ id: 'ord_1', status: 'PENDING' })
+    expect('paymentRef' in where).toBe(false)
   })
 
   it('does not scope by reference when none is given', async () => {

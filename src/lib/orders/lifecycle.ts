@@ -74,14 +74,19 @@ export async function markOrderPaid(orderId: string): Promise<boolean> {
     return false
   }
 
-  await sendOrderConfirmationFor(orderId)
+  try {
+    await sendOrderConfirmationFor(orderId)
+  } catch (err) {
+    console.error('[orders] Order marked paid but the confirmation email failed:', { orderId, err })
+  }
   return true
 }
 
-export async function cancelOrderAndRelease(orderId: string, paymentRef?: string): Promise<boolean> {
+// paymentRef: undefined = do not check the reference (webhooks always pass one); null = the order must still have no reference
+export async function cancelOrderAndRelease(orderId: string, paymentRef?: string | null): Promise<boolean> {
   return db.$transaction(async (tx) => {
     const result = await tx.order.updateMany({
-      where: paymentRef ? { id: orderId, status: 'PENDING', paymentRef } : { id: orderId, status: 'PENDING' },
+      where: { id: orderId, status: 'PENDING', ...(paymentRef !== undefined && { paymentRef }) },
       data: { status: 'CANCELLED' },
     })
     if (result.count !== 1) return false

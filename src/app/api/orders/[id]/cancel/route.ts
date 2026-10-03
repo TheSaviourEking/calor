@@ -28,6 +28,14 @@ export async function POST(
       return NextResponse.json({ error: 'This order can no longer be cancelled' }, { status: 409 })
     }
 
+    // Crypto and bank payments can be in flight without anything we can check
+    // here, so these orders are never auto-cancelled: an expired charge
+    // cancels itself via the Coinbase webhook, and an admin cancels an unpaid
+    // bank transfer.
+    if (order.paymentProvider === 'coinbase' || order.paymentProvider === 'bank_transfer') {
+      return NextResponse.json({ error: 'This order may already be paid and cannot be cancelled here' }, { status: 409 })
+    }
+
     if (order.paymentProvider === 'stripe' && order.paymentRef) {
       try {
         const intent = await stripe.paymentIntents.retrieve(order.paymentRef)
@@ -38,12 +46,13 @@ export async function POST(
           await stripe.paymentIntents.cancel(order.paymentRef)
         }
       } catch (err) {
-        // A stale payment reference must not block the release
+        // A failure here must not release an order that might be paid
         console.error('[ORDER] Failed to cancel payment intent:', err)
+        return NextResponse.json({ error: 'Could not confirm the payment state, please try again' }, { status: 503 })
       }
     }
 
-    const cancelled = await cancelOrderAndRelease(order.id)
+    const cancelled = await cancelOrderAndRelease(order.id, order.paymentRef)
 
     return NextResponse.json({ success: true, cancelled })
   } catch (error) {

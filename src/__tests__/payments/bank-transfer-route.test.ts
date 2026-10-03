@@ -85,6 +85,17 @@ describe('POST /api/payment/bank-transfer', () => {
     expect(res.status).toBe(409)
   })
 
+  it('returns 409 and writes nothing for a PENDING coinbase order', async () => {
+    db.order.findUnique.mockResolvedValue({ ...guestOrder, paymentProvider: 'coinbase', paymentRef: 'ch_1' })
+    const res = await post({ orderId: 'ord_1', guestEmail: 'guest@example.com' })
+    expect(res.status).toBe(409)
+    expect(await res.json()).toEqual({
+      error: 'This order is waiting for your crypto payment. To pay another way, go back and place the order again.',
+    })
+    expect(db.order.updateMany).not.toHaveBeenCalled()
+    expect(sendBankTransferInstructionsFor).not.toHaveBeenCalled()
+  })
+
   it('returns 503 when bank details are not configured', async () => {
     delete process.env.BANK_TRANSFER_DETAILS
     db.order.findUnique.mockResolvedValue(guestOrder)
@@ -105,7 +116,7 @@ describe('POST /api/payment/bank-transfer', () => {
       where: {
         id: 'ord_1',
         status: 'PENDING',
-        OR: [{ paymentProvider: null }, { paymentProvider: { not: 'bank_transfer' } }],
+        OR: [{ paymentProvider: null }, { paymentProvider: 'stripe' }],
       },
       data: {
         paymentMethod: 'bank',
@@ -117,8 +128,10 @@ describe('POST /api/payment/bank-transfer', () => {
     expect(sendBankTransferInstructionsFor).toHaveBeenCalledWith('ord_1', 'BT-CLABC123', expectedBankDetails)
   })
 
-  it('returns the same reference and sends no email when already issued or a race was lost', async () => {
-    db.order.findUnique.mockResolvedValue(guestOrder)
+  it('returns the same reference and sends no email when already issued', async () => {
+    db.order.findUnique
+      .mockResolvedValueOnce(guestOrder)
+      .mockResolvedValueOnce({ status: 'PENDING', paymentProvider: 'bank_transfer' })
     db.order.updateMany.mockResolvedValue({ count: 0 })
 
     const res = await post({ orderId: 'ord_1', guestEmail: 'guest@example.com' })
@@ -126,6 +139,32 @@ describe('POST /api/payment/bank-transfer', () => {
 
     expect(res.status).toBe(200)
     expect(json.paymentRef).toBe('BT-CLABC123')
+    expect(sendBankTransferInstructionsFor).not.toHaveBeenCalled()
+  })
+
+  it('returns 409 with the lock message and sends no email when a crypto charge won the race', async () => {
+    db.order.findUnique
+      .mockResolvedValueOnce(guestOrder)
+      .mockResolvedValueOnce({ status: 'PENDING', paymentProvider: 'coinbase' })
+    db.order.updateMany.mockResolvedValue({ count: 0 })
+
+    const res = await post({ orderId: 'ord_1', guestEmail: 'guest@example.com' })
+    expect(res.status).toBe(409)
+    expect(await res.json()).toEqual({
+      error: 'This order is waiting for your crypto payment. To pay another way, go back and place the order again.',
+    })
+    expect(sendBankTransferInstructionsFor).not.toHaveBeenCalled()
+  })
+
+  it('returns 409 when the order stopped being payable during the write', async () => {
+    db.order.findUnique
+      .mockResolvedValueOnce(guestOrder)
+      .mockResolvedValueOnce({ status: 'CANCELLED', paymentProvider: null })
+    db.order.updateMany.mockResolvedValue({ count: 0 })
+
+    const res = await post({ orderId: 'ord_1', guestEmail: 'guest@example.com' })
+    expect(res.status).toBe(409)
+    expect(await res.json()).toEqual({ error: 'This order can no longer be paid' })
     expect(sendBankTransferInstructionsFor).not.toHaveBeenCalled()
   })
 })
