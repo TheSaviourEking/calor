@@ -27,12 +27,16 @@ export function proxy(request: NextRequest) {
   // CORS for API routes
   if (pathname.startsWith("/api/")) {
     const origin = request.headers.get("origin");
-    const allowedOrigins = [
-      process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000",
-      "https://calo.one",
-      "https://www.calo.one",
-      "https://staging.calo.one",
-    ];
+    // Each deployment trusts calo.one plus its own origin. Staging gets
+    // staging.calo.one via NEXT_PUBLIC_BASE_URL, so production never grants
+    // credentialed CORS to it.
+    const allowedOrigins = ["https://calo.one", "https://www.calo.one"];
+    if (process.env.NEXT_PUBLIC_BASE_URL) {
+      allowedOrigins.push(process.env.NEXT_PUBLIC_BASE_URL);
+    }
+    if (process.env.NODE_ENV !== "production") {
+      allowedOrigins.push("http://localhost:3000");
+    }
     if (origin && allowedOrigins.includes(origin)) {
       response.headers.set("Access-Control-Allow-Origin", origin);
       response.headers.set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
