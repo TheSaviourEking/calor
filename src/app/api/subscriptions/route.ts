@@ -85,10 +85,16 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Subscription not found' }, { status: 404 })
     }
 
+    const invalidState = (message: string) =>
+      NextResponse.json({ error: message }, { status: 400 })
+
     let updateData: any = {}
 
     switch (action) {
-      case 'pause':
+      case 'pause': {
+        if (existingSub.status !== 'active') {
+          return invalidState('Only an active subscription can be paused')
+        }
         const pauseStart = new Date()
         const pauseEnd = new Date()
         pauseEnd.setMonth(pauseEnd.getMonth() + 1)
@@ -103,8 +109,12 @@ export async function PUT(request: NextRequest) {
           })
         }
         break
+      }
 
-      case 'resume':
+      case 'resume': {
+        if (existingSub.status !== 'paused') {
+          return invalidState('Only a paused subscription can be resumed')
+        }
         updateData = {
           status: 'active',
           pauseStartDate: null,
@@ -116,12 +126,16 @@ export async function PUT(request: NextRequest) {
           })
         }
         break
+      }
 
-      case 'cancel':
+      case 'cancel': {
+        if (existingSub.status !== 'active' && existingSub.status !== 'paused') {
+          return invalidState('Only an active or paused subscription can be cancelled')
+        }
+        // Status stays as is; the customer.subscription.deleted webhook marks it
+        // cancelled when the period ends.
         updateData = {
-          status: 'cancelled',
-          cancelledAt: new Date(),
-          cancellationReason: reason || null,
+          cancellationReason: typeof reason === 'string' ? reason.trim().slice(0, 500) || null : null,
           cancelAtPeriodEnd: true
         }
         if (existingSub.stripeSubscriptionId) {
@@ -130,20 +144,30 @@ export async function PUT(request: NextRequest) {
           })
         }
         break
-      
-      case 'skip_next':
+      }
+
+      case 'skip_next': {
+        if (existingSub.status !== 'active') {
+          return invalidState('Only an active subscription can skip a box')
+        }
         const nextMonth = new Date()
         nextMonth.setMonth(nextMonth.getMonth() + 1)
         const skipMonth = nextMonth.toISOString().slice(0, 7)
-        await db.subscriptionSkip.create({
-          data: {
-            subscriptionId,
-            skipMonth,
-            reason: reason || null
-          }
+        const existingSkip = await db.subscriptionSkip.findFirst({
+          where: { subscriptionId, skipMonth }
         })
+        if (!existingSkip) {
+          await db.subscriptionSkip.create({
+            data: {
+              subscriptionId,
+              skipMonth,
+              reason: typeof reason === 'string' ? reason.trim().slice(0, 500) || null : null
+            }
+          })
+        }
         return NextResponse.json({ success: true, message: 'Next box skipped' })
-      
+      }
+
       default:
         return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
     }
