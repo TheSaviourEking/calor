@@ -171,7 +171,7 @@ bun run build:services  # Compile the support-chat and live-stream binaries to d
 
 Production is `calo.one`; staging is `staging.calo.one`.
 
-- **Web app** - Vercel. `bun run build` runs `next build`. The build does not apply database migrations; run `bun run db:migrate:deploy` (Prisma `migrate deploy`) against the target database before releasing a schema change.
+- **Web app** - Vercel. `bun run build` runs `scripts/migrate-deploy.mjs` (Prisma `migrate deploy`) and then `next build`. Migrations apply automatically on Vercel production builds; staging migrates only when `MIGRATE_ON_DEPLOY=true` is set, and `MIGRATE_ON_DEPLOY=false` turns it off anywhere. If `DATABASE_URL` is a transaction-mode pooler, set `MIGRATE_DATABASE_URL` to a direct connection.
 - **Realtime mini-services** - a VPS. `.github/workflows/deploy-prod.yml` and `deploy-staging.yml` run `bun run build:services`, push the binaries to `/opt/calor/prod` or `/opt/calor/staging`, and restart them with PM2 (`ecosystem.config.js`) behind Caddy (`Caddyfile.prod`).
 
   | PM2 app | Port |
