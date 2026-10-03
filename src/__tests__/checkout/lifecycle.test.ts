@@ -231,6 +231,25 @@ describe('cancelOrderAndRelease', () => {
     expect(tx.product.update).not.toHaveBeenCalled()
   })
 
+  it('requires the order to still have no reference when null is given', async () => {
+    tx.order.updateMany.mockResolvedValue({ count: 0 })
+
+    await cancelOrderAndRelease('ord_1', null)
+    expect(tx.order.updateMany).toHaveBeenCalledWith({
+      where: { id: 'ord_1', status: 'PENDING', paymentRef: null },
+      data: { status: 'CANCELLED' },
+    })
+  })
+
+  it('has no paymentRef key in the where when undefined is given', async () => {
+    tx.order.updateMany.mockResolvedValue({ count: 0 })
+
+    await cancelOrderAndRelease('ord_1', undefined)
+    const where = tx.order.updateMany.mock.calls[0][0].where
+    expect(where).toEqual({ id: 'ord_1', status: 'PENDING' })
+    expect('paymentRef' in where).toBe(false)
+  })
+
   it('does not scope by reference when none is given', async () => {
     tx.order.updateMany.mockResolvedValue({ count: 0 })
 

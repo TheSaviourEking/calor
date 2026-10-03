@@ -39,14 +39,14 @@ export async function POST(request: NextRequest) {
 
     const paymentRef = `BT-${order.reference}`
 
-    // One conditional write: only a still-pending order that has not already
-    // been issued bank details is updated (paymentProvider is nullable, so the
-    // null case is spelled out).
+    // One conditional write: only a still-pending order that has no crypto
+    // charge or bank details yet is updated (paymentProvider is nullable, so
+    // the null case is spelled out).
     const issued = await db.order.updateMany({
       where: {
         id: orderId,
         status: 'PENDING',
-        OR: [{ paymentProvider: null }, { paymentProvider: { not: 'bank_transfer' } }],
+        OR: [{ paymentProvider: null }, { paymentProvider: 'stripe' }],
       },
       data: {
         paymentMethod: 'bank',
@@ -55,7 +55,19 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    if (issued.count === 1) {
+    if (issued.count !== 1) {
+      const current = await db.order.findUnique({
+        where: { id: orderId },
+        select: { status: true, paymentProvider: true },
+      })
+      if (current?.status === 'PENDING' && current.paymentProvider === 'coinbase') {
+        return NextResponse.json({ error: new PaymentMethodLockedError('coinbase').message }, { status: 409 })
+      }
+      // Already issued bank details falls through to the same response
+      if (current?.status !== 'PENDING' || current.paymentProvider !== 'bank_transfer') {
+        return NextResponse.json({ error: 'This order can no longer be paid' }, { status: 409 })
+      }
+    } else {
       // Bank orders have no payment webhook, so this is where the buyer is emailed
       await sendBankTransferInstructionsFor(orderId, paymentRef, bankDetails)
     }

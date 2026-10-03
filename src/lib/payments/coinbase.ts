@@ -54,14 +54,28 @@ export async function createCryptoCharge(orderId: string): Promise<{ chargeId: s
 
   const charge: CoinbaseChargeResponse = await response.json()
 
-  await db.order.update({
-    where: { id: orderId },
+  // Conditional write: bank details may have been issued while we talked to
+  // Coinbase. The charge was never shown to the buyer and expires unpaid.
+  const claimed = await db.order.updateMany({
+    where: {
+      id: orderId,
+      status: 'PENDING',
+      OR: [{ paymentProvider: null }, { paymentProvider: { not: 'bank_transfer' } }],
+    },
     data: {
       paymentMethod: 'crypto',
       paymentProvider: 'coinbase',
       paymentRef: charge.data.id,
     },
   })
+
+  if (claimed.count !== 1) {
+    const current = await db.order.findUnique({ where: { id: orderId }, select: { status: true, paymentProvider: true } })
+    if (current?.status === 'PENDING' && current.paymentProvider === 'bank_transfer') {
+      throw new PaymentMethodLockedError('bank_transfer')
+    }
+    throw new Error('Order is not awaiting payment')
+  }
 
   return {
     chargeId: charge.data.id,

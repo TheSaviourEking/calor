@@ -39,15 +39,28 @@ export async function createPaymentIntent(orderId: string) {
     description: `calo. order ${order.reference}`,
   })
 
-  // Update order with payment reference
-  await db.order.update({
-    where: { id: orderId },
-    data: {
-      paymentMethod: 'card',
-      paymentProvider: 'stripe',
-      paymentRef: paymentIntent.id,
+  // Conditional write: the order must still be pending and not locked to
+  // crypto or bank transfer by a request that ran while we talked to Stripe
+  const claimed = await db.order.updateMany({
+    where: {
+      id: orderId,
+      status: 'PENDING',
+      OR: [{ paymentProvider: null }, { paymentProvider: 'stripe' }],
     },
+    data: { paymentMethod: 'card', paymentProvider: 'stripe', paymentRef: paymentIntent.id },
   })
+
+  if (claimed.count !== 1) {
+    // Nobody can pay this intent; do not leave it open
+    await stripe.paymentIntents.cancel(paymentIntent.id).catch((err) => {
+      console.error('[Stripe] Failed to cancel an unused payment intent:', err)
+    })
+    const current = await db.order.findUnique({ where: { id: orderId }, select: { status: true, paymentProvider: true } })
+    if (current?.status === 'PENDING' && (current.paymentProvider === 'coinbase' || current.paymentProvider === 'bank_transfer')) {
+      throw new PaymentMethodLockedError(current.paymentProvider)
+    }
+    throw new Error('Order is not awaiting payment')
+  }
 
   return {
     clientSecret: paymentIntent.client_secret,

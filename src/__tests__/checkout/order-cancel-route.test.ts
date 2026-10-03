@@ -93,7 +93,7 @@ describe('POST /api/orders/[id]/cancel', () => {
     expect(res.status).toBe(200)
     expect(await res.json()).toEqual({ success: true, cancelled: true })
     expect(cancelOrderAndRelease).toHaveBeenCalledTimes(1)
-    expect(cancelOrderAndRelease).toHaveBeenCalledWith('ord_1', undefined)
+    expect(cancelOrderAndRelease).toHaveBeenCalledWith('ord_1', null)
     expect(retrieve).not.toHaveBeenCalled()
   })
 
@@ -102,7 +102,7 @@ describe('POST /api/orders/[id]/cancel', () => {
     db.order.findUnique.mockResolvedValue(customerOrder)
     const res = await post('ord_1')
     expect(res.status).toBe(200)
-    expect(cancelOrderAndRelease).toHaveBeenCalledWith('ord_1', undefined)
+    expect(cancelOrderAndRelease).toHaveBeenCalledWith('ord_1', null)
   })
 
   it('cancels an unpaid Stripe payment intent before releasing the order', async () => {

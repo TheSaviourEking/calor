@@ -52,7 +52,7 @@ export async function POST(
       }
     }
 
-    const cancelled = await cancelOrderAndRelease(order.id, order.paymentRef ?? undefined)
+    const cancelled = await cancelOrderAndRelease(order.id, order.paymentRef)
 
     return NextResponse.json({ success: true, cancelled })
   } catch (error) {
