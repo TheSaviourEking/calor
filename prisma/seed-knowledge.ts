@@ -47,7 +47,7 @@ const knowledgeEntries = [
     },
     {
         question: 'How do I start a return?',
-        answer: 'Starting a return is easy:\n\n1. Visit our **Returns Portal** at calor.com/returns\n2. Enter your order number and email address\n3. Select the item(s) you want to return\n4. Print the prepaid return label\n5. Drop off at any carrier pickup location\n\nYou can also contact us and we\'ll walk you through it.',
+        answer: 'Starting a return is easy:\n\n1. Visit our **Returns Portal** at calo.one/returns\n2. Enter your order number and email address\n3. Select the item(s) you want to return\n4. Print the prepaid return label\n5. Drop off at any carrier pickup location\n\nYou can also contact us and we\'ll walk you through it.',
         category: 'returns',
         keywords: 'start return,how to return,return process,return label,send back',
         intent: 'returns',
@@ -154,7 +154,7 @@ const knowledgeEntries = [
     },
     {
         question: 'How do I delete my account?',
-        answer: 'We\'re sorry to see you go! To request account deletion:\n\n1. Contact our support team at **support@calor.com**\n2. Or visit **Account Settings → Delete Account**\n\nWe\'ll remove all your personal data within 30 days, in compliance with privacy regulations. Order history may be retained for legal/financial requirements.',
+        answer: 'We\'re sorry to see you go! To request account deletion:\n\n1. Contact our support team at **support@calo.one**\n2. Or visit **Account Settings → Delete Account**\n\nWe\'ll remove all your personal data within 30 days, in compliance with privacy regulations. Order history may be retained for legal/financial requirements.',
         category: 'account',
         keywords: 'delete account,remove account,close account,erase data,gdpr',
         intent: 'account_help',
@@ -172,7 +172,7 @@ const knowledgeEntries = [
     },
     {
         question: 'How can I contact customer support?',
-        answer: 'We\'re here to help! Reach us through:\n\n💬 **Live Chat** — You\'re using it right now!\n📧 **Email** — support@calor.com (response within 24 hours)\n🎫 **Support Ticket** — Visit our Support Center at calor.com/support\n\nOur support team is available Monday–Friday, 9 AM – 6 PM EST.',
+        answer: 'We\'re here to help! Reach us through:\n\n💬 **Live Chat** — You\'re using it right now!\n📧 **Email** — support@calo.one (response within 24 hours)\n🎫 **Support Ticket** — Visit our Support Center at calo.one/support\n\nOur support team is available Monday–Friday, 9 AM – 6 PM EST.',
         category: 'general',
         keywords: 'contact,support,help,customer service,email,phone,hours,reach',
         intent: 'general',

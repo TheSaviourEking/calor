@@ -19,7 +19,7 @@ Complete deployment guide. Go through each section in order.
 ## Phase 1: Create Accounts (All Free Tier)
 
 ### 1.1 Domain Registrar
-- [ ] Buy domain (e.g., `calorco.com`)
+- [ ] Domain is `calo.one` (staging: `staging.calo.one`)
   - **Namecheap** ($8-12/year) or **Cloudflare Registrar** (at-cost)
   - Note your domain: `________________`
 

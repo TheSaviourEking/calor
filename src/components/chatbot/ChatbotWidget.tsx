@@ -169,7 +169,7 @@ export default function ChatbotWidget() {
             setMessages(prev => [...prev, {
               id: nanoid(),
               senderType: 'bot',
-              content: '🔗 Connecting you to our support team... You can also reach us directly at support@calor.com or visit our Support Center.',
+              content: '🔗 Connecting you to our support team... You can also reach us directly at support@calo.one or visit our Support Center.',
               createdAt: new Date().toISOString(),
               suggestedActions: ['escalate_to_support'],
             }])

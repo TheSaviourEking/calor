@@ -362,7 +362,7 @@ async function main() {
         warnings: ['Adult content', 'Headphones recommended']
       }),
       cleaningGuide: 'N/A - Digital product.',
-      usageGuide: 'Access via calorco.com/audio or download our app. Browse by category, duration, or narrator. Create playlists. Download for offline listening. Cancel subscription anytime in account settings.',
+      usageGuide: 'Access via calo.one/audio or download our app. Browse by category, duration, or narrator. Create playlists. Download for offline listening. Cancel subscription anytime in account settings.',
       estimatedDeliveryDays: 0,
     },
     {
