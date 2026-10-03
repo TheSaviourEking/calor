@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { requireAdminUser } from '@/lib/auth/guards'
 
 // GET /api/wellness/daily-rewards - Get daily rewards
 export async function GET(_request: NextRequest) {
@@ -22,6 +23,9 @@ export async function GET(_request: NextRequest) {
 // POST /api/wellness/daily-rewards - Seed daily rewards
 export async function POST(_request: NextRequest) {
   try {
+    const auth = await requireAdminUser()
+    if (!auth.ok) return auth.response
+
     // Default 7-day reward cycle
     const rewards = [
       { day: 1, rewardType: 'points', rewardValue: 10 },

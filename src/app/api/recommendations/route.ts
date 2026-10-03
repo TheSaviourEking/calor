@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { getSession } from '@/lib/auth/session'
+import { requireCustomer } from '@/lib/auth/guards'
 
 // GET /api/recommendations - Get personalized recommendations
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const customerId = searchParams.get('customerId')
+    // Personalisation is for the signed-in customer only; ?customerId= is ignored
+    const customerId = (await getSession())?.customerId ?? null
     const sessionId = searchParams.get('sessionId')
     const productId = searchParams.get('productId') // For product-specific recommendations
     const type = searchParams.get('type') || 'personalized' // personalized, similar, frequently_bought_together
@@ -230,8 +233,12 @@ export async function GET(request: NextRequest) {
 // POST /api/recommendations - Generate/store recommendations
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireCustomer()
+    if (!auth.ok) return auth.response
+    const customerId = auth.customerId
+
     const body = await request.json()
-    const { customerId, sessionId, productId, type, score, reasons, sourceData } = body
+    const { sessionId, productId, type, score, reasons, sourceData } = body
 
     if (!productId) {
       return NextResponse.json(
@@ -240,47 +247,36 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Store user recommendation
-    if (customerId || sessionId) {
-      const orConditions = [
-        ...(customerId ? [{ customerId }] : []),
-        ...(sessionId ? [{ sessionId }] : []),
-      ]
-      const existing = await db.userRecommendation.findFirst({
-        where: {
-          OR: orConditions,
-          productId,
-        },
-      })
+    // Store the recommendation for the session customer
+    const existing = await db.userRecommendation.findFirst({
+      where: { customerId, productId },
+    })
 
-      if (existing) {
-        const recommendation = await db.userRecommendation.update({
-          where: { id: existing.id },
-          data: {
-            score: score ?? existing.score,
-            reasons: reasons ? JSON.stringify(reasons) : existing.reasons,
-          },
-        })
-        return NextResponse.json({ recommendation })
-      }
-
-      const recommendation = await db.userRecommendation.create({
+    if (existing) {
+      const recommendation = await db.userRecommendation.update({
+        where: { id: existing.id },
         data: {
-          customerId: customerId || null,
-          sessionId: sessionId || null,
-          productId,
-          type: type || 'personalized',
-          score: score || 0.5,
-          reasons: reasons ? JSON.stringify(reasons) : null,
-          sourceData: sourceData ? JSON.stringify(sourceData) : null,
-          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+          score: score ?? existing.score,
+          reasons: reasons ? JSON.stringify(reasons) : existing.reasons,
         },
       })
-
       return NextResponse.json({ recommendation })
     }
 
-    return NextResponse.json({ message: 'No user context provided' })
+    const recommendation = await db.userRecommendation.create({
+      data: {
+        customerId,
+        sessionId: sessionId || null,
+        productId,
+        type: type || 'personalized',
+        score: score || 0.5,
+        reasons: reasons ? JSON.stringify(reasons) : null,
+        sourceData: sourceData ? JSON.stringify(sourceData) : null,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+      },
+    })
+
+    return NextResponse.json({ recommendation })
   } catch (error) {
     console.error('Error creating recommendation:', error)
     return NextResponse.json(

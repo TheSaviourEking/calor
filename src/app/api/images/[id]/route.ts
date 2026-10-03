@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { requireAdminUser } from '@/lib/auth/guards'
 
 // Delete an image
 export async function DELETE(
@@ -7,6 +8,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const auth = await requireAdminUser()
+    if (!auth.ok) return auth.response
+
     const { id } = await params
 
     await db.productImage.delete({
@@ -29,6 +33,9 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const auth = await requireAdminUser()
+    if (!auth.ok) return auth.response
+
     const { id } = await params
     const body = await request.json()
     const { sortOrder, altText } = body

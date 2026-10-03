@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { sendAbandonedCartEmail } from '@/lib/email'
+import { requireAdminUser } from '@/lib/auth/guards'
 
 // Send recovery email
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireAdminUser()
+    if (!auth.ok) return auth.response
+
     const body = await request.json()
-    const { cartId, discountPercent = 10 } = body
+    const { cartId } = body
+    // Whole percent between 5 and 20; anything unparseable falls back to 10
+    const discountPercent = Math.min(20, Math.max(5, Math.floor(Number(body.discountPercent) || 10)))
 
     const abandonedCart = await db.abandonedCart.findUnique({
       where: { id: cartId },

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { requireCustomer, requireAdminUser } from '@/lib/auth/guards'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -26,6 +27,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           },
           orderBy: { scheduledStart: 'desc' },
           take: 10,
+          omit: { streamKey: true, password: true },
           include: {
             _count: {
               select: { viewers: true },
@@ -68,7 +70,20 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 // PUT /api/hosts/[id] - Update host profile
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
+    const auth = await requireCustomer()
+    if (!auth.ok) return auth.response
+
     const { id } = await params
+
+    const target = await db.streamHost.findUnique({ where: { id }, select: { customerId: true } })
+    if (!target) {
+      return NextResponse.json({ error: 'Host not found' }, { status: 404 })
+    }
+    if (target.customerId !== auth.customerId) {
+      const admin = await requireAdminUser()
+      if (!admin.ok) return admin.response
+    }
+
     const body = await request.json()
 
     const { displayName, bio, avatar, socialLinks, defaultStreamDays, defaultStreamTime } = body

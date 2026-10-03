@@ -19,8 +19,19 @@ export async function GET(request: NextRequest) {
       where.customerId = customerId
     }
     
-    // Only show approved reviews for public API
-    if (approved === 'true' || !approved) {
+    // Only admins may list unapproved reviews; everyone else sees approved ones
+    let isAdmin = false
+    if (approved && approved !== 'true') {
+      const session = await getSession()
+      if (session?.customerId) {
+        const customer = await db.customer.findUnique({
+          where: { id: session.customerId },
+          select: { isAdmin: true },
+        })
+        isAdmin = customer?.isAdmin ?? false
+      }
+    }
+    if (!isAdmin) {
       where.isApproved = true
     }
 

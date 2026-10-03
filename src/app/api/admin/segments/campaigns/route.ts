@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { requireAdminUser } from '@/lib/auth/guards'
 
 // GET /api/admin/segments/campaigns - List campaigns
 export async function GET(request: NextRequest) {
   try {
+    const auth = await requireAdminUser()
+    if (!auth.ok) return auth.response
+
     const searchParams = request.nextUrl.searchParams
     const segmentId = searchParams.get('segmentId')
     const campaignId = searchParams.get('campaignId')
@@ -71,6 +75,9 @@ export async function GET(request: NextRequest) {
 // POST /api/admin/segments/campaigns - Create campaign
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireAdminUser()
+    if (!auth.ok) return auth.response
+
     const body = await request.json()
     const {
       segmentId,
@@ -127,6 +134,9 @@ export async function POST(request: NextRequest) {
 // PUT /api/admin/segments/campaigns - Update campaign
 export async function PUT(request: NextRequest) {
   try {
+    const auth = await requireAdminUser()
+    if (!auth.ok) return auth.response
+
     const body = await request.json()
     const { id, ...updates } = body
 
@@ -164,6 +174,9 @@ export async function PUT(request: NextRequest) {
 // DELETE /api/admin/segments/campaigns - Delete campaign
 export async function DELETE(request: NextRequest) {
   try {
+    const auth = await requireAdminUser()
+    if (!auth.ok) return auth.response
+
     const searchParams = request.nextUrl.searchParams
     const id = searchParams.get('id')
 
@@ -185,6 +198,9 @@ export async function DELETE(request: NextRequest) {
 // PATCH /api/admin/segments/campaigns - Send campaign
 export async function PATCH(request: NextRequest) {
   try {
+    const auth = await requireAdminUser()
+    if (!auth.ok) return auth.response
+
     const body = await request.json()
     const { id, action } = body
 

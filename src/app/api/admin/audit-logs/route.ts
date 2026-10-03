@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getSession } from '@/lib/auth'
+import { requireAdminUser } from '@/lib/auth/guards'
 
 // Get audit logs (admin only)
 export async function GET(request: NextRequest) {
@@ -93,9 +94,17 @@ export async function GET(request: NextRequest) {
 // Create audit log entry
 export async function POST(request: NextRequest) {
   try {
-    const session = await getSession()
+    const auth = await requireAdminUser()
+    if (!auth.ok) return auth.response
+
     const body = await request.json()
-    
+
+    // The acting admin is the session's, never the body's
+    const admin = await db.customer.findUnique({
+      where: { id: auth.customerId },
+      select: { email: true },
+    })
+
     const { action, entity, entityId, changes, description, success, errorMessage } = body
 
     // Get request metadata
@@ -106,13 +115,8 @@ export async function POST(request: NextRequest) {
 
     const log = await db.auditLog.create({
       data: {
-        adminId: session?.customerId || null,
-        adminEmail: session?.customerId 
-          ? (await db.customer.findUnique({ 
-              where: { id: session.customerId },
-              select: { email: true }
-            }))?.email 
-          : null,
+        adminId: auth.customerId,
+        adminEmail: admin?.email ?? null,
         action,
         entity,
         entityId,

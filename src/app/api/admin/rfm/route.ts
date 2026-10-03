@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { requireAdminUser } from '@/lib/auth/guards'
 
 // GET /api/admin/rfm - Get RFM overview and statistics
 export async function GET(request: NextRequest) {
   try {
+    const auth = await requireAdminUser()
+    if (!auth.ok) return auth.response
+
     const searchParams = request.nextUrl.searchParams
     const action = searchParams.get('action')
 
@@ -26,6 +30,9 @@ export async function GET(request: NextRequest) {
 // POST /api/admin/rfm - Run RFM calculation
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireAdminUser()
+    if (!auth.ok) return auth.response
+
     const body = await request.json()
     const { action } = body
 

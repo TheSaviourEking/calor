@@ -25,19 +25,32 @@ export async function GET(
       where,
       orderBy: { createdAt: 'desc' },
       take: limit,
-      include: {
-        customer: {
-          select: {
-            firstName: true,
-            lastName: true,
-          },
-        },
+      select: {
+        id: true,
+        message: true,
+        type: true,
+        createdAt: true,
+        isPinned: true,
+        isHighlighted: true,
+        reactionCounts: true,
+        guestName: true,
+        customer: { select: { firstName: true } },
       },
     })
 
-    // Reverse to get chronological order
+    // Public chat history: display fields only, never the sender's id, last
+    // name or moderation details. Reverse to get chronological order.
     return NextResponse.json({
-      messages: messages.reverse(),
+      messages: messages.reverse().map((m) => ({
+        id: m.id,
+        message: m.message,
+        type: m.type,
+        createdAt: m.createdAt,
+        isPinned: m.isPinned,
+        isHighlighted: m.isHighlighted,
+        reactionCounts: m.reactionCounts,
+        displayName: m.customer?.firstName || m.guestName || 'Guest',
+      })),
     })
   } catch (error) {
     console.error('Error fetching chat messages:', error)

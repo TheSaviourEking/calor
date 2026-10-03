@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { RoomServiceClient } from 'livekit-server-sdk'
 import { db } from '@/lib/db'
 import { config } from '@/lib/config'
+import { requireStreamOwner } from '@/lib/auth/guards'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -11,6 +12,8 @@ interface RouteParams {
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params
+    const auth = await requireStreamOwner(id)
+    if (!auth.ok) return auth.response
 
     const stream = await db.liveStream.findUnique({
       where: { id },

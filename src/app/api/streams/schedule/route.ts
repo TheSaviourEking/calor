@@ -21,6 +21,7 @@ export async function GET(request: NextRequest) {
           lte: endDate,
         },
       },
+      omit: { streamKey: true, password: true },
       include: {
         host: {
           select: {

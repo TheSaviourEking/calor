@@ -1,28 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { verifyToken } from '@/lib/auth'
-import { cookies } from 'next/headers'
+import { getSession } from '@/lib/auth/session'
+
+// Durations offered by the booking UI (ConsultationsClient)
+const ALLOWED_DURATIONS = [30, 45, 60]
+const ALLOWED_TYPES = ['video', 'phone', 'chat']
+const CANCELLABLE = ['pending', 'confirmed']
 
 export async function GET(request: NextRequest) {
   try {
-    const cookieStore = await cookies()
-    const token = cookieStore.get('token')?.value
     const { searchParams } = new URL(request.url)
-    const customerId = searchParams.get('customerId')
+    const userId = (await getSession())?.customerId ?? null
 
-    let userId: string | null = null
-    
-    if (token) {
-      const decoded = await verifyToken(token)
-      if (decoded) {
-        userId = decoded.customerId
-      }
-    }
-
-    // Get user's bookings
-    if (customerId && userId === customerId) {
+    // Get the caller's own bookings (the customerId parameter only signals intent)
+    if (searchParams.get('customerId') && userId) {
       const bookings = await db.consultationBooking.findMany({ take: 50,
-        where: { customerId },
+        where: { customerId: userId },
         include: {
           consultant: true,
           review: true
@@ -110,22 +103,28 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const cookieStore = await cookies()
-    const token = cookieStore.get('token')?.value
-
-    if (!token) {
+    const session = await getSession()
+    if (!session?.customerId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const decoded = await verifyToken(token)
-    if (!decoded) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
     }
 
     const { consultantId, scheduledAt, duration, type, notes } = await request.json()
 
     if (!consultantId || !scheduledAt || !duration || !type) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    }
+
+    if (!ALLOWED_DURATIONS.includes(duration)) {
+      return NextResponse.json({ error: 'Invalid duration' }, { status: 400 })
+    }
+
+    if (!ALLOWED_TYPES.includes(type)) {
+      return NextResponse.json({ error: 'Invalid consultation type' }, { status: 400 })
+    }
+
+    const start = new Date(scheduledAt)
+    if (Number.isNaN(start.getTime()) || start.getTime() <= Date.now()) {
+      return NextResponse.json({ error: 'Scheduled time must be in the future' }, { status: 400 })
     }
 
     // Get consultant info
@@ -137,25 +136,53 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Consultant not found' }, { status: 404 })
     }
 
+    if (!consultant.isAvailable) {
+      return NextResponse.json({ error: 'Consultant is not available' }, { status: 400 })
+    }
+
     // Calculate price
     const priceCents = Math.ceil((consultant.hourlyRate * duration) / 60)
+    const end = new Date(start.getTime() + duration * 60000)
 
-    // Create booking
-    const booking = await db.consultationBooking.create({
-      data: {
-        consultantId,
-        customerId: decoded.customerId,
-        scheduledAt: new Date(scheduledAt),
-        duration,
-        type,
-        notes,
-        priceCents,
-        status: 'pending'
-      },
-      include: {
-        consultant: true
-      }
+    // Refuse overlapping bookings, then create
+    const booking = await db.$transaction(async (tx) => {
+      const nearby = await tx.consultationBooking.findMany({
+        where: {
+          consultantId,
+          status: { in: ['pending', 'confirmed'] },
+          scheduledAt: {
+            gte: new Date(start.getTime() - Math.max(...ALLOWED_DURATIONS) * 60000),
+            lt: end
+          }
+        },
+        select: { scheduledAt: true, duration: true }
+      })
+      const overlaps = nearby.some(b =>
+        b.scheduledAt.getTime() < end.getTime() &&
+        b.scheduledAt.getTime() + b.duration * 60000 > start.getTime()
+      )
+      if (overlaps) return null
+
+      return tx.consultationBooking.create({
+        data: {
+          consultantId,
+          customerId: session.customerId,
+          scheduledAt: start,
+          duration,
+          type,
+          notes,
+          priceCents,
+          status: 'pending'
+        },
+        include: {
+          consultant: true
+        }
+      })
     })
+
+    if (!booking) {
+      return NextResponse.json({ error: 'That time is no longer available' }, { status: 409 })
+    }
 
     return NextResponse.json({ 
       success: true, 
@@ -170,16 +197,9 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const cookieStore = await cookies()
-    const token = cookieStore.get('token')?.value
-
-    if (!token) {
+    const session = await getSession()
+    if (!session?.customerId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const decoded = await verifyToken(token)
-    if (!decoded) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
     }
 
     const { bookingId, status } = await request.json()
@@ -188,19 +208,35 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
+    // Customers may only cancel a pending or confirmed booking
+    const cancelError = NextResponse.json(
+      { error: 'You can only cancel a pending or confirmed booking' },
+      { status: 400 }
+    )
+    if (status !== 'cancelled') return cancelError
+
     // Verify booking belongs to user
     const existingBooking = await db.consultationBooking.findFirst({
-      where: { id: bookingId, customerId: decoded.customerId }
+      where: { id: bookingId, customerId: session.customerId }
     })
 
     if (!existingBooking) {
       return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
     }
 
-    // Update booking status
-    const booking = await db.consultationBooking.update({
+    if (!CANCELLABLE.includes(existingBooking.status)) return cancelError
+
+    const result = await db.consultationBooking.updateMany({
+      where: { id: bookingId, customerId: session.customerId, status: { in: ['pending', 'confirmed'] } },
+      data: { status: 'cancelled' }
+    })
+
+    if (result.count === 0) {
+      return NextResponse.json({ error: 'Booking can no longer be cancelled' }, { status: 409 })
+    }
+
+    const booking = await db.consultationBooking.findUnique({
       where: { id: bookingId },
-      data: { status },
       include: { consultant: true }
     })
 

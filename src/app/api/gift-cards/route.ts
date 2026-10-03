@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getSession } from '@/lib/auth/session'
 import { sendGiftCardEmail } from '@/lib/email'
+import { requireAdminUser } from '@/lib/auth/guards'
 
 // Generate a unique gift card code
 function generateGiftCardCode(): string {
@@ -61,9 +62,12 @@ export async function GET(request: NextRequest) {
   }
 }
 
+// Issues a funded gift card without taking payment, so only admins may call it
 export async function POST(request: NextRequest) {
   try {
-    const session = await getSession()
+    const auth = await requireAdminUser()
+    if (!auth.ok) return auth.response
+
     const body = await request.json()
 
     const {
@@ -109,7 +113,7 @@ export async function POST(request: NextRequest) {
         code,
         initialValueCents: valueCents,
         balanceCents: valueCents,
-        purchaserId: session?.customerId || null,
+        purchaserId: auth.customerId,
         recipientEmail,
         recipientName,
         senderName,

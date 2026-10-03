@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { randomBytes } from 'crypto'
 import { AccessToken } from 'livekit-server-sdk'
 import { db } from '@/lib/db'
 import { config } from '@/lib/config'
+import { requireStreamOwner } from '@/lib/auth/guards'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -10,16 +12,24 @@ interface RouteParams {
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params
-    const body = await request.json()
-    const { identity, role } = body
+    const body = await request.json().catch(() => ({}))
+    const role = body?.role === 'host' ? 'host' : 'viewer'
 
-    if (!identity || !role) {
-      return NextResponse.json({ error: 'identity and role required' }, { status: 400 })
-    }
+    // The identity is chosen here, never by the client
+    let identity: string
 
-    const stream = await db.liveStream.findUnique({ where: { id } })
-    if (!stream) {
-      return NextResponse.json({ error: 'Stream not found' }, { status: 404 })
+    if (role === 'host') {
+      // Only the stream's own host (or an admin) may publish
+      const auth = await requireStreamOwner(id)
+      if (!auth.ok) return auth.response
+      identity = `host-${auth.customerId}`
+    } else {
+      const stream = await db.liveStream.findUnique({ where: { id }, select: { id: true } })
+      if (!stream) {
+        return NextResponse.json({ error: 'Stream not found' }, { status: 404 })
+      }
+      // Random only: the identity is visible to everyone in the room
+      identity = `viewer-${randomBytes(8).toString('hex')}`
     }
 
     const roomName = `stream-${id}`
@@ -28,11 +38,12 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       ttl: '4h',
     })
 
-    if (role === 'host') {
-      token.addGrant({ roomJoin: true, room: roomName, canPublish: true, canSubscribe: true })
-    } else {
-      token.addGrant({ roomJoin: true, room: roomName, canPublish: false, canSubscribe: true })
-    }
+    token.addGrant({
+      roomJoin: true,
+      room: roomName,
+      canPublish: role === 'host',
+      canSubscribe: true,
+    })
 
     const jwt = await token.toJwt()
 

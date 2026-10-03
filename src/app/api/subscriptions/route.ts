@@ -1,28 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { verifyToken } from '@/lib/auth'
-import { cookies } from 'next/headers'
+import { getSession } from '@/lib/auth/session'
 import { stripe } from '@/lib/payments/stripe'
 import { createSubscriptionCheckout } from '@/lib/payments/stripe-subscriptions'
 import { config } from '@/lib/config'
 
 export async function GET(request: NextRequest) {
   try {
-    const cookieStore = await cookies()
-    const token = cookieStore.get('token')?.value
-
-    if (!token) {
+    const session = await getSession()
+    if (!session?.customerId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const decoded = await verifyToken(token)
-    if (!decoded) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
     }
 
     // Get user's subscriptions
     const subscriptions = await db.subscription.findMany({ /* take: handled */
-      where: { customerId: decoded.customerId },
+      where: { customerId: session.customerId },
       include: {
         plan: true,
         shippingAddress: true,
@@ -43,16 +35,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const cookieStore = await cookies()
-    const token = cookieStore.get('token')?.value
-
-    if (!token) {
+    const session = await getSession()
+    if (!session?.customerId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const decoded = await verifyToken(token)
-    if (!decoded) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
     }
 
     const { planId } = await request.json()
@@ -65,7 +50,7 @@ export async function POST(request: NextRequest) {
     const cancelUrl = `${config.app.baseUrl}/subscriptions`
 
     const checkoutUrl = await createSubscriptionCheckout(
-      decoded.customerId,
+      session.customerId,
       planId,
       successUrl,
       cancelUrl
@@ -80,16 +65,9 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const cookieStore = await cookies()
-    const token = cookieStore.get('token')?.value
-
-    if (!token) {
+    const session = await getSession()
+    if (!session?.customerId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const decoded = await verifyToken(token)
-    if (!decoded) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
     }
 
     const { subscriptionId, action, reason } = await request.json()
@@ -100,17 +78,23 @@ export async function PUT(request: NextRequest) {
 
     // Verify subscription belongs to user
     const existingSub = await db.subscription.findFirst({
-      where: { id: subscriptionId, customerId: decoded.customerId }
+      where: { id: subscriptionId, customerId: session.customerId }
     })
 
     if (!existingSub) {
       return NextResponse.json({ error: 'Subscription not found' }, { status: 404 })
     }
 
+    const invalidState = (message: string) =>
+      NextResponse.json({ error: message }, { status: 400 })
+
     let updateData: any = {}
 
     switch (action) {
-      case 'pause':
+      case 'pause': {
+        if (existingSub.status !== 'active') {
+          return invalidState('Only an active subscription can be paused')
+        }
         const pauseStart = new Date()
         const pauseEnd = new Date()
         pauseEnd.setMonth(pauseEnd.getMonth() + 1)
@@ -125,8 +109,12 @@ export async function PUT(request: NextRequest) {
           })
         }
         break
+      }
 
-      case 'resume':
+      case 'resume': {
+        if (existingSub.status !== 'paused') {
+          return invalidState('Only a paused subscription can be resumed')
+        }
         updateData = {
           status: 'active',
           pauseStartDate: null,
@@ -138,12 +126,16 @@ export async function PUT(request: NextRequest) {
           })
         }
         break
+      }
 
-      case 'cancel':
+      case 'cancel': {
+        if (existingSub.status !== 'active' && existingSub.status !== 'paused') {
+          return invalidState('Only an active or paused subscription can be cancelled')
+        }
+        // Status stays as is; the customer.subscription.deleted webhook marks it
+        // cancelled when the period ends.
         updateData = {
-          status: 'cancelled',
-          cancelledAt: new Date(),
-          cancellationReason: reason || null,
+          cancellationReason: typeof reason === 'string' ? reason.trim().slice(0, 500) || null : null,
           cancelAtPeriodEnd: true
         }
         if (existingSub.stripeSubscriptionId) {
@@ -152,20 +144,30 @@ export async function PUT(request: NextRequest) {
           })
         }
         break
-      
-      case 'skip_next':
+      }
+
+      case 'skip_next': {
+        if (existingSub.status !== 'active') {
+          return invalidState('Only an active subscription can skip a box')
+        }
         const nextMonth = new Date()
         nextMonth.setMonth(nextMonth.getMonth() + 1)
         const skipMonth = nextMonth.toISOString().slice(0, 7)
-        await db.subscriptionSkip.create({
-          data: {
-            subscriptionId,
-            skipMonth,
-            reason: reason || null
-          }
+        const existingSkip = await db.subscriptionSkip.findFirst({
+          where: { subscriptionId, skipMonth }
         })
+        if (!existingSkip) {
+          await db.subscriptionSkip.create({
+            data: {
+              subscriptionId,
+              skipMonth,
+              reason: typeof reason === 'string' ? reason.trim().slice(0, 500) || null : null
+            }
+          })
+        }
         return NextResponse.json({ success: true, message: 'Next box skipped' })
-      
+      }
+
       default:
         return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
     }

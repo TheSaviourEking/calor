@@ -15,6 +15,7 @@ export async function GET(request: NextRequest) {
         isPrivate: false,
         recordingUrl: { not: null },
       },
+      omit: { streamKey: true, password: true },
       include: {
         host: {
           select: {

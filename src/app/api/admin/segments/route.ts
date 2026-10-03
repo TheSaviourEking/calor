@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { requireAdminUser } from '@/lib/auth/guards'
 
 // GET /api/admin/segments - List all segments
 export async function GET(request: NextRequest) {
   try {
+    const auth = await requireAdminUser()
+    if (!auth.ok) return auth.response
+
     const searchParams = request.nextUrl.searchParams
     const segmentId = searchParams.get('id')
     const includeMembers = searchParams.get('includeMembers') === 'true'
@@ -77,6 +81,9 @@ export async function GET(request: NextRequest) {
 // POST /api/admin/segments - Create new segment
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireAdminUser()
+    if (!auth.ok) return auth.response
+
     const body = await request.json()
     const {
       name,
@@ -128,6 +135,9 @@ export async function POST(request: NextRequest) {
 // PUT /api/admin/segments - Update segment
 export async function PUT(request: NextRequest) {
   try {
+    const auth = await requireAdminUser()
+    if (!auth.ok) return auth.response
+
     const body = await request.json()
     const { id, ...updates } = body
 
@@ -162,6 +172,9 @@ export async function PUT(request: NextRequest) {
 // DELETE /api/admin/segments - Delete segment
 export async function DELETE(request: NextRequest) {
   try {
+    const auth = await requireAdminUser()
+    if (!auth.ok) return auth.response
+
     const searchParams = request.nextUrl.searchParams
     const id = searchParams.get('id')
 

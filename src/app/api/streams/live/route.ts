@@ -12,6 +12,7 @@ export async function GET(request: NextRequest) {
         status: 'live',
         isPrivate: false,
       },
+      omit: { streamKey: true, password: true },
       include: {
         host: {
           select: {
