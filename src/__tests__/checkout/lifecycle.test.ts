@@ -105,6 +105,18 @@ describe('markOrderPaid', () => {
     )
   })
 
+  it('still returns true when the confirmation email fails', async () => {
+    db.order.updateMany.mockResolvedValue({ count: 1 })
+    db.order.findUnique.mockResolvedValue(paidOrder)
+    sendOrderConfirmation.mockRejectedValueOnce(new Error('smtp down'))
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    expect(await markOrderPaid('ord_1')).toBe(true)
+    expect(db.order.updateMany).toHaveBeenCalledTimes(1)
+    expect(errorSpy).toHaveBeenCalledTimes(1)
+    errorSpy.mockRestore()
+  })
+
   it('does nothing on a repeated delivery', async () => {
     db.order.updateMany.mockResolvedValue({ count: 0 })
     db.order.findUnique.mockResolvedValue({ status: 'PAYMENT_RECEIVED', reference: 'CLABC123' })

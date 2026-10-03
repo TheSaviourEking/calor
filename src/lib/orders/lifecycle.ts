@@ -74,7 +74,11 @@ export async function markOrderPaid(orderId: string): Promise<boolean> {
     return false
   }
 
-  await sendOrderConfirmationFor(orderId)
+  try {
+    await sendOrderConfirmationFor(orderId)
+  } catch (err) {
+    console.error('[orders] Order marked paid but the confirmation email failed:', { orderId, err })
+  }
   return true
 }
 

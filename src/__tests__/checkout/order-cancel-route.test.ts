@@ -137,15 +137,38 @@ describe('POST /api/orders/[id]/cancel', () => {
     expect(cancelOrderAndRelease).not.toHaveBeenCalled()
   })
 
-  it('still releases the order when Stripe cannot be reached', async () => {
+  it.each(['coinbase', 'bank_transfer'])('returns 409 and releases nothing for a PENDING %s order', async (paymentProvider) => {
+    db.order.findUnique.mockResolvedValue({ ...guestOrder, paymentProvider, paymentRef: 'ref_1' })
+
+    const res = await post('ord_1', { guestEmail: 'guest@example.com' })
+    expect(res.status).toBe(409)
+    expect(await res.json()).toEqual({ error: 'This order may already be paid and cannot be cancelled here' })
+    expect(cancelOrderAndRelease).not.toHaveBeenCalled()
+  })
+
+  it('returns 503 and releases nothing when the payment intent cannot be retrieved', async () => {
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     db.order.findUnique.mockResolvedValue(stripeOrder)
     retrieve.mockRejectedValue(new Error('No such payment_intent'))
 
     const res = await post('ord_1', { guestEmail: 'guest@example.com' })
-    expect(res.status).toBe(200)
-    expect(await res.json()).toEqual({ success: true, cancelled: true })
-    expect(cancelOrderAndRelease).toHaveBeenCalledWith('ord_1')
+    expect(res.status).toBe(503)
+    expect(await res.json()).toEqual({ error: 'Could not confirm the payment state, please try again' })
+    expect(cancelOrderAndRelease).not.toHaveBeenCalled()
+    expect(errorSpy).toHaveBeenCalledTimes(1)
+    errorSpy.mockRestore()
+  })
+
+  it('returns 503 and releases nothing when the payment intent cannot be cancelled', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    db.order.findUnique.mockResolvedValue(stripeOrder)
+    retrieve.mockResolvedValue({ id: 'pi_1', status: 'requires_payment_method' })
+    cancel.mockRejectedValue(new Error('payment_intent_unexpected_state'))
+
+    const res = await post('ord_1', { guestEmail: 'guest@example.com' })
+    expect(res.status).toBe(503)
+    expect(await res.json()).toEqual({ error: 'Could not confirm the payment state, please try again' })
+    expect(cancelOrderAndRelease).not.toHaveBeenCalled()
     expect(errorSpy).toHaveBeenCalledTimes(1)
     errorSpy.mockRestore()
   })
