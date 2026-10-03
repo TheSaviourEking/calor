@@ -21,15 +21,18 @@ if (!REALTIME_TOKEN_SECRET) {
 // Last-resort safety net: log a stray rejection instead of letting it end the process
 process.on('unhandledRejection', (err) => log.error({ err }, '[Live Stream] Unhandled rejection'))
 
-// An id from a payload, or null unless it is a non-empty string.
-// Prisma drops an undefined where-value, so a bad id must never reach a query.
 // Reaction types the viewer UI sends
 const ALLOWED_REACTIONS = new Set(['heart'])
 
 // offerId -> customerIds that have claimed it. Per-instance memory: it holds one
 // claim per customer per offer, which also satisfies any perCustomerLimit.
 const claimedBy = new Map<string, Set<string>>()
+// offerId -> customerIds with a claim in flight, reserved before any await so a
+// burst of claim events from one customer cannot all pass the check
+const claimPending = new Map<string, Set<string>>()
 
+// An id from a payload, or null unless it is a non-empty string.
+// Prisma drops an undefined where-value, so a bad id must never reach a query.
 const idOf = (v: unknown): string | null => (typeof v === 'string' && v ? v : null)
 
 // In-memory state for active streams
@@ -420,16 +423,24 @@ io.on('connection', (socket) => {
   })
 
   socket.on('claim_offer', async (data) => {
-    try {
-      const streamId = idOf(data?.streamId)
-      const offerId = idOf(data?.offerId)
-      if (!inStream(streamId) || !offerId) return
-      const claimantId = user?.customerId
-      if (!claimantId) {
-        socket.emit('error', { message: 'Sign in to claim offers' })
-        return
-      }
+    const streamId = idOf(data?.streamId)
+    const offerId = idOf(data?.offerId)
+    if (!inStream(streamId) || !offerId) return
+    const claimantId = user?.customerId
+    if (!claimantId) {
+      socket.emit('error', { message: 'Sign in to claim offers' })
+      return
+    }
 
+    // Check and reserve synchronously, before any await
+    if (claimPending.get(offerId)?.has(claimantId)) return // a claim is already in flight
+    const repeat = !!claimedBy.get(offerId)?.has(claimantId)
+    if (!repeat) {
+      if (!claimPending.has(offerId)) claimPending.set(offerId, new Set())
+      claimPending.get(offerId)!.add(claimantId)
+    }
+
+    try {
       const offer = await db.streamOffer.findFirst({
         where: { id: offerId, streamId, isActive: true },
       })
@@ -440,7 +451,7 @@ io.on('connection', (socket) => {
       }
 
       // One claim per customer per offer: repeat the answer, do not increment
-      if (claimedBy.get(offerId)?.has(claimantId)) {
+      if (repeat) {
         socket.emit('offer_claimed', { streamId, offerId, promoCode: offer.promoCode })
         return
       }
@@ -486,6 +497,11 @@ io.on('connection', (socket) => {
     } catch (error) {
       log.error({ err: error, socketId: socket.id }, 'Error claiming offer')
       socket.emit('error', { message: 'Failed to claim offer' })
+    } finally {
+      if (!repeat) {
+        claimPending.get(offerId)?.delete(claimantId)
+        if (claimPending.get(offerId)?.size === 0) claimPending.delete(offerId)
+      }
     }
   })
 
