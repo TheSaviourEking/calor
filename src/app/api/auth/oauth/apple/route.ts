@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { randomBytes } from 'crypto'
-import { jwtVerify, SignJWT, importPKCS8, importX509 } from 'jose'
+import { jwtVerify, SignJWT, importPKCS8, createRemoteJWKSet } from 'jose'
 import { config } from '@/lib/config'
 import { createSession } from '@/lib/auth/session'
+
+// Apple publishes its signing keys as a JWK set. jose fetches and caches it,
+// picks the key whose `kid` matches the token, and refetches on rotation.
+const APPLE_KEYS = createRemoteJWKSet(new URL('https://appleid.apple.com/auth/keys'))
 
 // Apple OAuth callback
 export async function POST(request: NextRequest) {
@@ -25,16 +29,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.redirect(new URL('/account?error=invalid_state', request.url))
     }
 
-    // Verify Apple ID token — pass idToken so we can match by kid
-    const applePublicKey = await getApplePublicKey(idToken)
-    const { payload } = await jwtVerify(idToken, applePublicKey, {
+    const appleClientId = process.env.APPLE_CLIENT_ID
+    if (!appleClientId) {
+      return NextResponse.redirect(new URL('/account?error=apple_not_configured', request.url))
+    }
+
+    // Verify the Apple ID token. A token whose key id is not in Apple's
+    // current key set fails verification — there is no fallback key.
+    const { payload } = await jwtVerify(idToken, APPLE_KEYS, {
       issuer: 'https://appleid.apple.com',
-      audience: process.env.APPLE_CLIENT_ID || '',
+      audience: appleClientId,
     })
 
     const appleUserId = payload.sub as string
     const appleEmail = payload.email as string
-    const emailVerified = payload.email_verified === 'true'
+    // Apple sends this claim as a boolean or as the string "true"
+    const emailVerified = payload.email_verified === true || payload.email_verified === 'true'
 
     // Parse user info if provided (first sign in)
     let firstName = 'User'
@@ -155,30 +165,4 @@ export async function GET(request: NextRequest) {
     console.error('Apple OAuth URL generation error:', error)
     return NextResponse.json({ error: 'Failed to generate auth URL' }, { status: 500 })
   }
-}
-
-// Helper to get Apple's public key for token verification
-// Matches the correct key by `kid` from the JWT header to handle key rotation
-async function getApplePublicKey(idToken?: string) {
-  const response = await fetch('https://appleid.apple.com/auth/keys')
-  const data = await response.json()
-
-  let key = data.keys[0] // fallback to first key
-
-  // If we have an idToken, match by kid header for robustness against key rotation
-  if (idToken) {
-    try {
-      const headerB64 = idToken.split('.')[0]
-      const header = JSON.parse(Buffer.from(headerB64, 'base64').toString('utf8'))
-      const matched = data.keys.find((k: { kid: string }) => k.kid === header.kid)
-      if (matched) key = matched
-    } catch {
-      // Fallback to first key if header parsing fails
-    }
-  }
-
-  return await importX509(
-    `-----BEGIN CERTIFICATE-----\n${key.x5c[0]}\n-----END CERTIFICATE-----`,
-    'RS256'
-  )
 }
