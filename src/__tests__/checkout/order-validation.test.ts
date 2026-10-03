@@ -51,26 +51,24 @@ describe('Order Validation', () => {
     }
   })
 
-  it('should require guestEmail when isGuest is true', () => {
+  it('should reject a malformed guestEmail', () => {
     const result = orderCreateSchema.safeParse({
       ...validOrder,
-      isGuest: true,
-      guestEmail: null,
+      guestEmail: 'not-an-email',
     })
     expect(result.success).toBe(false)
-    if (!result.success) {
-      const guestError = result.error.issues.find((i) => i.path.includes('guestEmail'))
-      expect(guestError).toBeDefined()
-    }
   })
 
-  it('should accept guest checkout with a valid email', () => {
+  it('should accept a guestEmail and drop any client-supplied isGuest flag', () => {
     const result = orderCreateSchema.safeParse({
       ...validOrder,
       isGuest: true,
       guestEmail: 'guest@example.com',
     })
     expect(result.success).toBe(true)
+    if (result.success) {
+      expect('isGuest' in result.data).toBe(false)
+    }
   })
 
   it('should reject quantity of 0', () => {

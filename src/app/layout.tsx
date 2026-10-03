@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import CookieConsent from "@/components/layout/CookieConsent";
 import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const cormorant = Cormorant_Garamond({
   subsets: ["latin"],
@@ -95,6 +96,7 @@ export default function RootLayout({
         <Toaster position="bottom-center" />
         <CookieConsent />
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
