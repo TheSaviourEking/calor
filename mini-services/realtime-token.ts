@@ -42,6 +42,7 @@ export async function verifyRealtimeToken(
     const { payload } = await jwtVerify(token, new TextEncoder().encode(secret), {
       issuer: ISSUER,
       audience: AUDIENCE,
+      algorithms: ['HS256'],
     })
     if (typeof payload.customerId !== 'string' || !payload.customerId) return null
 

@@ -37,6 +37,45 @@ describe('realtime token', () => {
     expect(await verifyRealtimeToken(token, secret)).toBeNull()
   })
 
+  it('returns null for a token with the right secret and audience but the wrong issuer', async () => {
+    const token = await new SignJWT({ customerId: 'c1', isAdmin: true, hostId: null })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setIssuer('someone-else')
+      .setAudience('calor-realtime')
+      .setExpirationTime('5m')
+      .sign(new TextEncoder().encode(secret))
+    expect(await verifyRealtimeToken(token, secret)).toBeNull()
+  })
+
+  it('returns null for an unsigned (alg none) token', async () => {
+    const b64 = (value: unknown) => Buffer.from(JSON.stringify(value)).toString('base64url')
+    const token = `${b64({ alg: 'none', typ: 'JWT' })}.${b64({
+      customerId: 'c1',
+      isAdmin: true,
+      hostId: null,
+      iss: 'calor-web',
+      aud: 'calor-realtime',
+      exp: Math.floor(Date.now() / 1000) + 300,
+    })}.`
+    expect(await verifyRealtimeToken(token, secret)).toBeNull()
+  })
+
+  it('returns null for a token signed with HS512 using the same secret', async () => {
+    const token = await new SignJWT({ customerId: 'c1', isAdmin: true, hostId: null })
+      .setProtectedHeader({ alg: 'HS512' })
+      .setIssuer('calor-web')
+      .setAudience('calor-realtime')
+      .setExpirationTime('5m')
+      .sign(new TextEncoder().encode(secret))
+    expect(await verifyRealtimeToken(token, secret)).toBeNull()
+  })
+
+  it('defaults the lifetime to 300 seconds', async () => {
+    const token = await signRealtimeToken(user, secret)
+    const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString())
+    expect(payload.exp - payload.iat).toBe(300)
+  })
+
   it('returns null for a missing token, a non-string token, garbage, or a missing secret', async () => {
     expect(await verifyRealtimeToken(undefined, secret)).toBeNull()
     expect(await verifyRealtimeToken({ token: 'x' }, secret)).toBeNull()
