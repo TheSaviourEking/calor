@@ -2,9 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { requireCustomer } from '@/lib/auth/guards'
 
-// Upper bound on the loyalty points a couple can assign to their own goal
-const MAX_COUPLE_GOAL_POINTS = 50
-
 // GET /api/wellness/couple-goals - Get couple goals
 export async function GET(request: NextRequest) {
   try {
@@ -75,7 +72,6 @@ export async function POST(request: NextRequest) {
       targetDate,
       isRecurring,
       recurrence,
-      pointsReward,
     } = body
 
     if (!title || !category) {
@@ -114,7 +110,8 @@ export async function POST(request: NextRequest) {
         targetDate: targetDate ? new Date(targetDate) : null,
         isRecurring: isRecurring || false,
         recurrence,
-        pointsReward: Math.min(Math.max(0, Math.floor(Number(pointsReward) || 0)), MAX_COUPLE_GOAL_POINTS),
+        // Goals created through the API never carry points; a client cannot assign itself a reward
+        pointsReward: 0,
         createdBy: auth.customerId,
       },
     })
@@ -148,17 +145,12 @@ export async function PUT(request: NextRequest) {
     if (progress !== undefined) {
       updateData.progress = Math.min(100, Math.max(0, progress))
     }
-    if (completed !== undefined) {
-      updateData.completed = completed
-      if (completed) {
-        updateData.completedAt = new Date()
-      }
-    }
 
     const existing = await db.coupleGoal.findFirst({
       where: {
         id: goalId,
         couplesLink: {
+          status: 'active',
           OR: [
             { customer1Id: auth.customerId },
             { customer2Id: auth.customerId },
@@ -171,13 +163,45 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Goal not found' }, { status: 404 })
     }
 
-    const goal = await db.coupleGoal.update({
-      where: { id: goalId },
-      data: updateData,
-    })
+    if (existing.completed && completed === false) {
+      return NextResponse.json(
+        { error: 'A completed goal cannot be reopened' },
+        { status: 409 }
+      )
+    }
 
-    // Award points only the first time the goal is completed
-    if (completed && !existing.completed && goal.pointsReward > 0) {
+    let goal
+    let justCompleted = false
+    if (completed === true) {
+      // Completion is one atomic transition; only the request that flips it earns the reward
+      const flipped = await db.coupleGoal.updateMany({
+        where: {
+          id: goalId,
+          completed: false,
+          couplesLink: {
+            status: 'active',
+            OR: [
+              { customer1Id: auth.customerId },
+              { customer2Id: auth.customerId },
+            ],
+          },
+        },
+        data: { ...updateData, completed: true, completedAt: new Date() },
+      })
+      justCompleted = flipped.count === 1
+      goal = await db.coupleGoal.findUnique({ where: { id: goalId } })
+    } else {
+      goal = await db.coupleGoal.update({
+        where: { id: goalId },
+        data: updateData,
+      })
+    }
+    if (!goal) {
+      return NextResponse.json({ error: 'Goal not found' }, { status: 404 })
+    }
+
+    // Award points only on the transition to completed
+    if (justCompleted && goal.pointsReward > 0) {
       const coupleLink = await db.couplesLink.findUnique({
         where: { id: goal.couplesLinkId },
       })

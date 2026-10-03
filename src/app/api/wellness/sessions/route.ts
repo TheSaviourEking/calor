@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { requireCustomer } from '@/lib/auth/guards'
 
+// Session points a customer can earn per calendar day (server time)
+const SESSION_POINTS_DAILY_CAP = 50
+
 // GET /api/wellness/sessions - Get toy sessions
 export async function GET(request: NextRequest) {
   try {
@@ -93,6 +96,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'customerId is required' },
         { status: 400 }
+      )
+    }
+
+    // One open session at a time, so parallel sessions cannot each earn a reward
+    const openSession = await db.toySession.findFirst({
+      where: { customerId, endedAt: null },
+      select: { id: true },
+    })
+    if (openSession) {
+      return NextResponse.json(
+        { error: 'You already have an active session' },
+        { status: 409 }
       )
     }
 
@@ -217,10 +232,19 @@ export async function PUT(request: NextRequest) {
     if (peakIntensity !== undefined) updateData.peakIntensity = peakIntensity
     if (patternChanges !== undefined) updateData.patternChanges = patternChanges
 
-    const session = await db.toySession.update({
-      where: { id: sessionId },
+    // End the session atomically; only the request that ends it can earn points
+    const ended = await db.toySession.updateMany({
+      where: { id: sessionId, customerId: auth.customerId, endedAt: null },
       data: updateData,
     })
+    if (ended.count !== 1) {
+      return NextResponse.json({ error: 'Session not found or already ended' }, { status: 404 })
+    }
+
+    const session = await db.toySession.findUnique({ where: { id: sessionId } })
+    if (!session) {
+      return NextResponse.json({ error: 'Session not found or already ended' }, { status: 404 })
+    }
 
     // Update toy's total session time
     if (session.smartToyId && duration) {
@@ -232,31 +256,48 @@ export async function PUT(request: NextRequest) {
       })
     }
 
-    // Award points for session completion
+    // Award points for session completion, within the daily cap
     if (session.customerId && duration && duration >= 60) {
-      const pointsEarned = Math.min(50, Math.floor(duration / 60) * 5) // 5 points per minute, max 50
-
-      const loyaltyAccount = await db.loyaltyAccount.upsert({
-        where: { customerId: session.customerId },
-        create: {
-          customerId: session.customerId,
-          points: pointsEarned,
-          totalEarned: pointsEarned,
-        },
-        update: {
-          points: { increment: pointsEarned },
-          totalEarned: { increment: pointsEarned },
-        },
-      })
-
-      await db.loyaltyTransaction.create({
-        data: {
-          accountId: loyaltyAccount.id,
-          points: pointsEarned,
+      const startOfToday = new Date()
+      startOfToday.setHours(0, 0, 0, 0)
+      const today = await db.loyaltyTransaction.aggregate({
+        where: {
+          account: { customerId: session.customerId },
           type: 'bonus',
           description: 'Wellness session completed',
+          createdAt: { gte: startOfToday },
         },
+        _sum: { points: true },
       })
+      const alreadyToday = today._sum.points ?? 0
+      const pointsEarned = Math.min(
+        Math.min(50, Math.floor(duration / 60) * 5), // 5 points per minute, max 50
+        SESSION_POINTS_DAILY_CAP - alreadyToday
+      )
+
+      if (pointsEarned > 0) {
+        const loyaltyAccount = await db.loyaltyAccount.upsert({
+          where: { customerId: session.customerId },
+          create: {
+            customerId: session.customerId,
+            points: pointsEarned,
+            totalEarned: pointsEarned,
+          },
+          update: {
+            points: { increment: pointsEarned },
+            totalEarned: { increment: pointsEarned },
+          },
+        })
+
+        await db.loyaltyTransaction.create({
+          data: {
+            accountId: loyaltyAccount.id,
+            points: pointsEarned,
+            type: 'bonus',
+            description: 'Wellness session completed',
+          },
+        })
+      }
     }
 
     return NextResponse.json({ session })

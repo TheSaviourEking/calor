@@ -80,8 +80,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const newProgress = (existing?.progress || 0) + (progress || 1)
     const isCompleted = newProgress >= challenge.requirementValue
 
-    // Create or update completion
-    const completion = await db.challengeCompletion.upsert({
+    // Record progress; completion is flipped separately so it can be claimed only once
+    let completion = await db.challengeCompletion.upsert({
       where: {
         challengeId_customerId: { challengeId: id, customerId },
       },
@@ -89,26 +89,41 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         challengeId: id,
         customerId,
         progress: newProgress,
-        completed: isCompleted,
-        completedAt: isCompleted ? new Date() : null,
-        pointsEarned: isCompleted ? challenge.points : 0,
+        completed: false,
+        pointsEarned: 0,
       },
       update: {
         progress: newProgress,
-        completed: isCompleted,
-        completedAt: isCompleted ? new Date() : null,
-        pointsEarned: isCompleted ? challenge.points : 0,
       },
     })
 
-    // If completed, update challenge stats and award points
-    if (isCompleted && !existing?.completed) {
-      await Promise.all([
-        db.challenge.update({
+    // Atomic transition to completed: only the request that flips it awards points
+    let credited = false
+    if (isCompleted) {
+      const flipped = await db.challengeCompletion.updateMany({
+        where: { challengeId: id, customerId, completed: false },
+        data: {
+          completed: true,
+          completedAt: new Date(),
+          pointsEarned: challenge.points,
+        },
+      })
+      credited = flipped.count === 1
+
+      if (credited) {
+        completion = {
+          ...completion,
+          completed: true,
+          completedAt: new Date(),
+          pointsEarned: challenge.points,
+        }
+
+        await db.challenge.update({
           where: { id },
           data: { completionCount: { increment: 1 } },
-        }),
-        db.loyaltyAccount.upsert({
+        })
+
+        const loyaltyAccount = await db.loyaltyAccount.upsert({
           where: { customerId },
           create: {
             customerId,
@@ -119,24 +134,23 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
             points: { increment: challenge.points },
             totalEarned: { increment: challenge.points },
           },
-        }),
-        db.loyaltyTransaction.create({
+        })
+
+        await db.loyaltyTransaction.create({
           data: {
-            accountId: (await db.loyaltyAccount.findUnique({
-              where: { customerId },
-            }))!.id,
+            accountId: loyaltyAccount.id,
             points: challenge.points,
             type: 'bonus',
             description: `Completed challenge: ${challenge.title}`,
           },
-        }),
-      ])
+        })
+      }
     }
 
     return NextResponse.json({
       completion,
       isCompleted,
-      pointsEarned: isCompleted ? challenge.points : 0,
+      pointsEarned: credited ? challenge.points : 0,
     })
   } catch (error) {
     console.error('Error completing challenge:', error)

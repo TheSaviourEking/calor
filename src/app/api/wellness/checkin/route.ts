@@ -114,6 +114,34 @@ export async function POST(_request: NextRequest) {
     const rewardType = dailyReward?.rewardType || 'points'
     const rewardValue = dailyReward?.rewardValue || 10
 
+    // Ensure the streak row exists, then let one conditional update decide who checks in today
+    await db.userStreak.upsert({
+      where: { customerId },
+      create: { customerId },
+      update: {},
+    })
+    const gate = await db.userStreak.updateMany({
+      where: {
+        customerId,
+        OR: [{ lastActivityAt: null }, { lastActivityAt: { lt: todayStart } }],
+      },
+      data: {
+        currentStreak: newStreak,
+        longestStreak: Math.max(newStreak, streak?.longestStreak || 0),
+        totalDays: { increment: 1 },
+        lastActivityAt: now,
+      },
+    })
+    if (gate.count !== 1) {
+      const checkedIn = await db.dailyCheckIn.findFirst({
+        where: { customerId, checkedAt: { gte: todayStart } },
+      })
+      return NextResponse.json(
+        { error: 'Already checked in today', checkIn: checkedIn },
+        { status: 400 }
+      )
+    }
+
     // Create check-in record
     const checkIn = await db.dailyCheckIn.create({
       data: {
@@ -126,23 +154,7 @@ export async function POST(_request: NextRequest) {
       },
     })
 
-    // Update streak
-    streak = await db.userStreak.upsert({
-      where: { customerId },
-      create: {
-        customerId,
-        currentStreak: newStreak,
-        longestStreak: newStreak,
-        totalDays: 1,
-        lastActivityAt: now,
-      },
-      update: {
-        currentStreak: newStreak,
-        longestStreak: Math.max(newStreak, streak?.longestStreak || 0),
-        totalDays: { increment: 1 },
-        lastActivityAt: now,
-      },
-    })
+    streak = await db.userStreak.findUnique({ where: { customerId } })
 
     // Award points
     if (rewardType === 'points') {

@@ -3,6 +3,9 @@ import { db } from '@/lib/db'
 import { nanoid } from 'nanoid'
 import { requireCustomer } from '@/lib/auth/guards'
 
+// Thrown inside the redemption transaction to roll it back with a client-facing message
+class RedeemError extends Error {}
+
 // GET /api/points/redeem - Get customer's redemption history
 export async function GET(_request: NextRequest) {
   try {
@@ -114,82 +117,92 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Generate redemption code/value based on type
-    let discountCode: string | null = null
-    let giftCardCode: string | null = null
-
-    if (reward.type === 'discount') {
-      // Generate a unique discount code
-      discountCode = `CAL${nanoid(8).toUpperCase()}`
-      
-      // Create a promotion for this discount
-      await db.promotion.create({
+    // Spend, issue and record in one transaction so a failure after the spend rolls it back
+    const redemption = await db.$transaction(async (tx) => {
+      // Conditional spend: parallel redemptions cannot take the balance below zero
+      const spent = await tx.loyaltyAccount.updateMany({
+        where: { customerId, points: { gte: reward.pointsCost } },
         data: {
-          code: discountCode,
-          name: `Points Redemption: ${reward.name}`,
-          description: `Discount code redeemed with ${reward.pointsCost} points`,
-          type: reward.discountPercent ? 'percentage' : 'fixed',
-          value: reward.discountPercent || reward.discountCents || 0,
-          minOrderCents: 0,
-          isActive: true,
-          startsAt: new Date(),
-          endsAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days
-          usageLimit: 1,
+          points: { decrement: reward.pointsCost },
+          totalUsed: { increment: reward.pointsCost },
         },
       })
-    } else if (reward.type === 'gift_card') {
-      // Generate a gift card
-      giftCardCode = nanoid(12).toUpperCase()
-      
-      await db.giftCard.create({
+      if (spent.count !== 1) throw new RedeemError('Not enough points')
+
+      // Conditional claim: parallel redemptions cannot exceed the available quantity
+      const claimed = await tx.pointsReward.updateMany({
+        where: {
+          id: rewardId,
+          ...(reward.quantityAvailable !== null && {
+            quantityClaimed: { lt: reward.quantityAvailable },
+          }),
+        },
+        data: { quantityClaimed: { increment: 1 } },
+      })
+      if (claimed.count !== 1) throw new RedeemError('Reward is sold out')
+
+      // Generate redemption code/value based on type
+      let discountCode: string | null = null
+      let giftCardCode: string | null = null
+
+      if (reward.type === 'discount') {
+        // Generate a unique discount code
+        discountCode = `CAL${nanoid(8).toUpperCase()}`
+
+        // Create a promotion for this discount
+        await tx.promotion.create({
+          data: {
+            code: discountCode,
+            name: `Points Redemption: ${reward.name}`,
+            description: `Discount code redeemed with ${reward.pointsCost} points`,
+            type: reward.discountPercent ? 'percentage' : 'fixed',
+            value: reward.discountPercent || reward.discountCents || 0,
+            minOrderCents: 0,
+            isActive: true,
+            startsAt: new Date(),
+            endsAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days
+            usageLimit: 1,
+          },
+        })
+      } else if (reward.type === 'gift_card') {
+        // Generate a gift card
+        giftCardCode = nanoid(12).toUpperCase()
+
+        await tx.giftCard.create({
+          data: {
+            code: giftCardCode,
+            initialValueCents: reward.giftCardValue || 0,
+            balanceCents: reward.giftCardValue || 0,
+            recipientEmail: '', // Will be filled by customer
+            orderId: null,
+          },
+        })
+      }
+
+      // Create loyalty transaction
+      await tx.loyaltyTransaction.create({
         data: {
-          code: giftCardCode,
-          initialValueCents: reward.giftCardValue || 0,
-          balanceCents: reward.giftCardValue || 0,
-          recipientEmail: '', // Will be filled by customer
-          orderId: null,
+          accountId: loyaltyAccount.id,
+          points: -reward.pointsCost,
+          type: 'redemption',
+          description: `Redeemed for: ${reward.name}`,
         },
       })
-    }
 
-    // Deduct points
-    await db.loyaltyAccount.update({
-      where: { customerId },
-      data: {
-        points: { decrement: reward.pointsCost },
-        totalUsed: { increment: reward.pointsCost },
-      },
-    })
-
-    // Create loyalty transaction
-    await db.loyaltyTransaction.create({
-      data: {
-        accountId: loyaltyAccount.id,
-        points: -reward.pointsCost,
-        type: 'redemption',
-        description: `Redeemed for: ${reward.name}`,
-      },
-    })
-
-    // Create redemption record
-    const redemption = await db.pointsRedemption.create({
-      data: {
-        customerId,
-        rewardId,
-        pointsUsed: reward.pointsCost,
-        discountCode,
-        giftCardCode,
-        expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days
-      },
-      include: {
-        reward: true,
-      },
-    })
-
-    // Update reward claim count
-    await db.pointsReward.update({
-      where: { id: rewardId },
-      data: { quantityClaimed: { increment: 1 } },
+      // Create redemption record
+      return tx.pointsRedemption.create({
+        data: {
+          customerId,
+          rewardId,
+          pointsUsed: reward.pointsCost,
+          discountCode,
+          giftCardCode,
+          expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days
+        },
+        include: {
+          reward: true,
+        },
+      })
     })
 
     return NextResponse.json({
@@ -197,6 +210,9 @@ export async function POST(request: NextRequest) {
       newPointsBalance: loyaltyAccount.points - reward.pointsCost,
     })
   } catch (error) {
+    if (error instanceof RedeemError) {
+      return NextResponse.json({ error: error.message }, { status: 400 })
+    }
     console.error('Error redeeming points:', error)
     return NextResponse.json(
       { error: 'Failed to redeem points' },
