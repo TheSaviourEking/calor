@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createCryptoCharge } from '@/lib/payments/coinbase'
+import { PaymentMethodLockedError } from '@/lib/payments/locked'
 import { getSession } from '@/lib/auth/session'
 import { db } from '@/lib/db'
 import { canAccessOrder } from '@/lib/orders/access'
@@ -37,6 +38,9 @@ export async function POST(request: NextRequest) {
       hostedUrl: result.hostedUrl,
     })
   } catch (error) {
+    if (error instanceof PaymentMethodLockedError) {
+      return NextResponse.json({ error: error.message }, { status: 409 })
+    }
     console.error('Crypto charge creation error:', error)
     return NextResponse.json(
       { error: 'Failed to create crypto charge' },

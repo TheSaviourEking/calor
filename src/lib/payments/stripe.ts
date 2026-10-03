@@ -1,6 +1,7 @@
 import Stripe from 'stripe'
 import { db } from '@/lib/db'
 import { markOrderPaid, cancelOrderAndRelease } from '@/lib/orders/lifecycle'
+import { PaymentMethodLockedError } from '@/lib/payments/locked'
 
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder')
 
@@ -9,6 +10,11 @@ export async function createPaymentIntent(orderId: string) {
 
   if (!order) throw new Error('Order not found')
   if (order.status !== 'PENDING') throw new Error('Order is not awaiting payment')
+
+  // Crypto or bank details were already issued: money may be on its way
+  if (order.paymentProvider === 'coinbase' || order.paymentProvider === 'bank_transfer') {
+    throw new PaymentMethodLockedError(order.paymentProvider)
+  }
 
   // Reuse the open intent when the buyer reloads or comes back to card payment
   if (order.paymentProvider === 'stripe' && order.paymentRef) {

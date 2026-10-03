@@ -369,7 +369,9 @@ export default function PaymentPage() {
         } catch (err) {
           console.error("Payment intent error:", err);
           setError(
-            "Failed to initialize card payment. Please try another method.",
+            err instanceof Error && err.message
+              ? err.message
+              : "Failed to initialize card payment. Please try another method.",
           );
         }
       } else if (method === "crypto") {
@@ -387,7 +389,9 @@ export default function PaymentPage() {
         } catch (err) {
           console.error("Crypto charge error:", err);
           setError(
-            "Failed to initialize crypto payment. Please try another method.",
+            err instanceof Error && err.message
+              ? err.message
+              : "Failed to initialize crypto payment. Please try another method.",
           );
         }
       } else if (method === "bank") {
@@ -408,7 +412,11 @@ export default function PaymentPage() {
           setBankDetails(data.bankDetails);
         } catch (err) {
           console.error("Bank transfer error:", err);
-          setError("Failed to setup bank transfer. Please try another method.");
+          setError(
+            err instanceof Error && err.message
+              ? err.message
+              : "Failed to setup bank transfer. Please try another method.",
+          );
         }
       }
 

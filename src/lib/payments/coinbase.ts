@@ -2,6 +2,7 @@ import crypto from 'crypto'
 import { db } from '@/lib/db'
 import { markOrderPaid, cancelOrderAndRelease } from '@/lib/orders/lifecycle'
 import { config } from '@/lib/config'
+import { PaymentMethodLockedError } from '@/lib/payments/locked'
 
 interface CoinbaseChargeResponse {
   data: {
@@ -23,6 +24,9 @@ export async function createCryptoCharge(orderId: string): Promise<{ chargeId: s
 
   if (!order) throw new Error('Order not found')
   if (order.status !== 'PENDING') throw new Error('Order is not awaiting payment')
+
+  // Bank details were already issued: money may be on its way
+  if (order.paymentProvider === 'bank_transfer') throw new PaymentMethodLockedError('bank_transfer')
 
   const response = await fetch('https://api.commerce.coinbase.com/charges', {
     method: 'POST',

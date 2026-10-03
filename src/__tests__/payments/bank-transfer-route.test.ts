@@ -85,6 +85,17 @@ describe('POST /api/payment/bank-transfer', () => {
     expect(res.status).toBe(409)
   })
 
+  it('returns 409 and writes nothing for a PENDING coinbase order', async () => {
+    db.order.findUnique.mockResolvedValue({ ...guestOrder, paymentProvider: 'coinbase', paymentRef: 'ch_1' })
+    const res = await post({ orderId: 'ord_1', guestEmail: 'guest@example.com' })
+    expect(res.status).toBe(409)
+    expect(await res.json()).toEqual({
+      error: 'This order is waiting for your crypto payment. To pay another way, go back and place the order again.',
+    })
+    expect(db.order.updateMany).not.toHaveBeenCalled()
+    expect(sendBankTransferInstructionsFor).not.toHaveBeenCalled()
+  })
+
   it('returns 503 when bank details are not configured', async () => {
     delete process.env.BANK_TRANSFER_DETAILS
     db.order.findUnique.mockResolvedValue(guestOrder)

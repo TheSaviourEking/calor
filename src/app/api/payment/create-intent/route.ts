@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createPaymentIntent } from '@/lib/payments/stripe'
+import { PaymentMethodLockedError } from '@/lib/payments/locked'
 import { getSession } from '@/lib/auth/session'
 import { db } from '@/lib/db'
 import { canAccessOrder } from '@/lib/orders/access'
@@ -33,6 +34,9 @@ export async function POST(request: NextRequest) {
       paymentIntentId: result.paymentIntentId,
     })
   } catch (error) {
+    if (error instanceof PaymentMethodLockedError) {
+      return NextResponse.json({ error: error.message }, { status: 409 })
+    }
     console.error('Payment intent creation error:', error)
     return NextResponse.json(
       { error: 'Failed to create payment intent' },

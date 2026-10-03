@@ -3,6 +3,7 @@ import { db } from '@/lib/db'
 import { getSession } from '@/lib/auth/session'
 import { canAccessOrder } from '@/lib/orders/access'
 import { getBankDetails } from '@/lib/payments/methods'
+import { PaymentMethodLockedError } from '@/lib/payments/locked'
 import { sendBankTransferInstructionsFor } from '@/lib/orders/lifecycle'
 
 export async function POST(request: NextRequest) {
@@ -25,6 +26,10 @@ export async function POST(request: NextRequest) {
 
     if (order.status !== 'PENDING') {
       return NextResponse.json({ error: 'This order can no longer be paid' }, { status: 409 })
+    }
+
+    if (order.paymentProvider === 'coinbase') {
+      return NextResponse.json({ error: new PaymentMethodLockedError('coinbase').message }, { status: 409 })
     }
 
     const bankDetails = getBankDetails(String(region))
