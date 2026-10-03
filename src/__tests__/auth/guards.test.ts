@@ -131,4 +131,14 @@ describe('isAuthorizedCron', () => {
     expect(isAuthorizedCron(request('Bearer wrong'))).toBe(false)
     expect(isAuthorizedCron(request())).toBe(false)
   })
+
+  it('refuses lowercase bearer prefix', () => {
+    process.env.CRON_SECRET = 's3cret'
+    expect(isAuthorizedCron(request('bearer s3cret'))).toBe(false)
+  })
+
+  it('refuses bearer secret with trailing space', () => {
+    process.env.CRON_SECRET = 's3cret'
+    expect(isAuthorizedCron(request('Bearer s3cret '))).toBe(false)
+  })
 })
