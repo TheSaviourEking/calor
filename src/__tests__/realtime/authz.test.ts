@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { isAdmin, canControlStream, cleanMessage } from '../../../mini-services/authz'
+import { isAdmin, canControlStream, cleanMessage, createRateLimiter } from '../../../mini-services/authz'
 
 const admin = { customerId: 'a', isAdmin: true, hostId: null }
 const host = { customerId: 'h', isAdmin: false, hostId: 'host_1' }
@@ -46,5 +46,48 @@ describe('cleanMessage', () => {
     expect(cleanMessage(undefined, 500)).toBeNull()
     expect(cleanMessage({ text: 'hi' }, 500)).toBeNull()
     expect(cleanMessage(42, 500)).toBeNull()
+  })
+})
+
+describe('createRateLimiter', () => {
+  function setup(capacity: number, refillPerSecond: number) {
+    let t = 0
+    const allow = createRateLimiter(capacity, refillPerSecond, () => t)
+    return { allow, advance: (ms: number) => { t += ms } }
+  }
+
+  it('allows capacity calls then refuses the next', () => {
+    const { allow } = setup(3, 1)
+    expect(allow('a')).toBe(true)
+    expect(allow('a')).toBe(true)
+    expect(allow('a')).toBe(true)
+    expect(allow('a')).toBe(false)
+  })
+
+  it('allows again after enough time has passed', () => {
+    const { allow, advance } = setup(2, 1)
+    allow('a')
+    allow('a')
+    expect(allow('a')).toBe(false)
+    advance(500)
+    expect(allow('a')).toBe(false)
+    advance(500)
+    expect(allow('a')).toBe(true)
+    expect(allow('a')).toBe(false)
+  })
+
+  it('never refills beyond capacity', () => {
+    const { allow, advance } = setup(2, 1)
+    advance(60_000)
+    expect(allow('a')).toBe(true)
+    expect(allow('a')).toBe(true)
+    expect(allow('a')).toBe(false)
+  })
+
+  it('keeps keys independent', () => {
+    const { allow } = setup(1, 1)
+    expect(allow('a')).toBe(true)
+    expect(allow('a')).toBe(false)
+    expect(allow('b')).toBe(true)
   })
 })

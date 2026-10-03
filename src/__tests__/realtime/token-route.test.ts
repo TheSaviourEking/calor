@@ -29,6 +29,7 @@ describe('GET /api/realtime/token', () => {
     const res = await GET()
     expect(res.status).toBe(200)
     expect(await res.json()).toEqual({ token: null })
+    expect(res.headers.get('Cache-Control')).toBe('private, no-store')
     expect(db.customer.findUnique).not.toHaveBeenCalled()
   })
 
@@ -42,7 +43,9 @@ describe('GET /api/realtime/token', () => {
     getSession.mockResolvedValue({ customerId: 'c1', email: 'a@b.co' })
     db.customer.findUnique.mockResolvedValue({ id: 'c1', isAdmin: true, hostProfile: { id: 'h1' } })
 
-    const { token } = await (await GET()).json()
+    const res = await GET()
+    expect(res.headers.get('Cache-Control')).toBe('private, no-store')
+    const { token } = await res.json()
     expect(await verifyRealtimeToken(token, secret)).toEqual({ customerId: 'c1', isAdmin: true, hostId: 'h1' })
   })
 

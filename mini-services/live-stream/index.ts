@@ -5,7 +5,7 @@ import { createClient } from 'redis'
 import { createAdapter } from '@socket.io/redis-adapter'
 import { createServiceLogger } from '../logger'
 import { verifyRealtimeToken, type RealtimeUser } from '../realtime-token'
-import { canControlStream, cleanMessage } from '../authz'
+import { canControlStream, cleanMessage, createRateLimiter } from '../authz'
 
 const log = createServiceLogger('live-stream')
 const db = new PrismaClient()
@@ -13,6 +13,10 @@ const db = new PrismaClient()
 const PORT = Number(process.env.PORT) || 3032
 const REALTIME_TOKEN_SECRET = process.env.REALTIME_TOKEN_SECRET
 const MAX_CHAT_LENGTH = 500
+
+// Per-socket rate limits: chat 5 burst then 1/s, reactions 10 burst then 3/s
+const chatLimiter = createRateLimiter(5, 1)
+const reactionLimiter = createRateLimiter(10, 3)
 
 if (!REALTIME_TOKEN_SECRET) {
   log.warn('REALTIME_TOKEN_SECRET is not set — every connection is anonymous and host controls are disabled')
@@ -226,6 +230,10 @@ io.on('connection', (socket) => {
 
   // ============ CHAT ============
   socket.on('send_message', async (data) => {
+    if (!chatLimiter(socket.id)) {
+      socket.emit('error', { message: 'Slow down a little' })
+      return
+    }
     try {
       const streamId = idOf(data?.streamId)
       const message = cleanMessage(data?.message, MAX_CHAT_LENGTH)
@@ -315,6 +323,7 @@ io.on('connection', (socket) => {
 
   // Reactions
   socket.on('add_reaction', async (data) => {
+    if (!reactionLimiter(socket.id)) return
     try {
       const streamId = idOf(data?.streamId)
       const messageId = idOf(data?.messageId)
@@ -410,7 +419,8 @@ io.on('connection', (socket) => {
       })
       if (activated.count !== 1) return
 
-      const offer = await db.streamOffer.findUnique({ where: { id: offerId } })
+      // Promo codes go only to a claimant, via offer_claimed
+      const offer = await db.streamOffer.findUnique({ where: { id: offerId }, omit: { promoCode: true } })
 
       io.to(`stream:${streamId}`).emit('offer_activated', {
         streamId,

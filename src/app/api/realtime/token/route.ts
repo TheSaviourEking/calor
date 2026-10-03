@@ -5,6 +5,8 @@ import { signRealtimeToken } from '../../../../../mini-services/realtime-token'
 
 export const dynamic = 'force-dynamic'
 
+const NO_STORE = { headers: { 'Cache-Control': 'private, no-store' } }
+
 // GET /api/realtime/token - short-lived identity token for the socket services.
 // Anonymous visitors get { token: null } and connect as guests.
 export async function GET() {
@@ -13,7 +15,7 @@ export async function GET() {
     const session = await getSession()
 
     if (!secret || !session?.customerId) {
-      return NextResponse.json({ token: null })
+      return NextResponse.json({ token: null }, NO_STORE)
     }
 
     const customer = await db.customer.findUnique({
@@ -21,7 +23,7 @@ export async function GET() {
       select: { id: true, isAdmin: true, hostProfile: { select: { id: true } } },
     })
     if (!customer) {
-      return NextResponse.json({ token: null })
+      return NextResponse.json({ token: null }, NO_STORE)
     }
 
     const token = await signRealtimeToken(
@@ -29,9 +31,9 @@ export async function GET() {
       secret
     )
 
-    return NextResponse.json({ token })
+    return NextResponse.json({ token }, NO_STORE)
   } catch (error) {
     console.error('Realtime token error:', error)
-    return NextResponse.json({ token: null })
+    return NextResponse.json({ token: null }, NO_STORE)
   }
 }

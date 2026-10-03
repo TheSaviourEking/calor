@@ -152,6 +152,10 @@ export default function GoLiveClient() {
       })
     })
 
+    socket.on('error', (data: { message?: string }) => {
+      if (data?.message) toast.error(data.message)
+    })
+
     socket.on('new_message', (data: { message: ChatMessage }) => {
       setMessages(prev => [...prev, data.message])
     })

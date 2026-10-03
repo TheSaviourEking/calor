@@ -44,7 +44,8 @@ export default function AdminChatClient() {
 
     socket.on('connect', () => {
       // The service reads who we are from the handshake token
-      socket.emit('admin_auth')
+      // The old service read data.adminId and threw on a missing payload; the new one ignores the payload
+      socket.emit('admin_auth', {})
     })
 
     socket.on('admin_authenticated', () => {
