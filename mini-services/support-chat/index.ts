@@ -75,6 +75,13 @@ io.on('connection', (socket) => {
 
   const user = socket.data.user as RealtimeUser | null
 
+  // The session id from a payload, or null unless it is a non-empty string.
+  // Prisma drops an undefined where-value, so a bad id must never reach a query.
+  const sessionIdOf = (data: unknown): string | null => {
+    const id = (data as { sessionId?: unknown } | null | undefined)?.sessionId
+    return typeof id === 'string' && id ? id : null
+  }
+
   // Admin events are refused unless the handshake token says admin
   const requireAdmin = (): boolean => {
     if (isAdmin(user)) return true
@@ -120,18 +127,20 @@ io.on('connection', (socket) => {
   // Admin joins a specific session
   socket.on('admin_join_session', async (data: { sessionId: string }) => {
     if (!requireAdmin()) return
+    const sessionId = sessionIdOf(data)
+    if (!sessionId) return
     try {
       const session = await db.supportChatSession.findUnique({
-        where: { sessionId: data?.sessionId },
+        where: { sessionId },
         include: {
           messages: { orderBy: { createdAt: 'asc' } },
           customer: { select: { id: true, firstName: true, lastName: true, email: true } },
         },
       })
       if (session) {
-        socket.join(data?.sessionId)
+        socket.join(sessionId)
         socket.emit('session_messages', {
-          sessionId: data?.sessionId,
+          sessionId,
           messages: session.messages.map(m => ({
             id: m.id,
             isFromCustomer: m.isFromCustomer,
@@ -140,19 +149,21 @@ io.on('connection', (socket) => {
           })),
           customer: session.customer,
         })
-        log.act('admin_join_session', { socketId: socket.id, sessionId: data?.sessionId })
+        log.act('admin_join_session', { socketId: socket.id, sessionId })
       }
     } catch (error) {
-      log.error({ err: error, socketId: socket.id, sessionId: data?.sessionId }, 'Error joining session')
+      log.error({ err: error, socketId: socket.id, sessionId }, 'Error joining session')
     }
   })
 
   // Admin sends a message to a session
   socket.on('admin_send_message', async (data: { sessionId: string; message: string }) => {
     if (!requireAdmin()) return
+    const sessionId = sessionIdOf(data)
+    if (!sessionId) return
     try {
       const session = await db.supportChatSession.findUnique({
-        where: { sessionId: data?.sessionId },
+        where: { sessionId },
       })
       const text = cleanMessage(data?.message, MAX_MESSAGE_LENGTH)
       if (!session || !text) return
@@ -165,7 +176,7 @@ io.on('connection', (socket) => {
         },
       })
 
-      io.to(data?.sessionId).emit('message', {
+      io.to(sessionId).emit('message', {
         id: message.id,
         isFromCustomer: false,
         message: message.message,
@@ -173,28 +184,30 @@ io.on('connection', (socket) => {
       })
       log.act('admin_send_message', {
         socketId: socket.id,
-        sessionId: data?.sessionId,
+        sessionId,
         messageId: message.id,
         message: data?.message, // Auto-redacted by Pino
       })
     } catch (error) {
-      log.error({ err: error, socketId: socket.id, sessionId: data?.sessionId }, 'Error sending admin message')
+      log.error({ err: error, socketId: socket.id, sessionId }, 'Error sending admin message')
     }
   })
 
   // Admin closes a session
   socket.on('admin_close_session', async (data: { sessionId: string }) => {
     if (!requireAdmin()) return
+    const sessionId = sessionIdOf(data)
+    if (!sessionId) return
     try {
       await db.supportChatSession.updateMany({
-        where: { sessionId: data?.sessionId },
+        where: { sessionId, status: { not: 'resolved' } },
         data: { status: 'resolved', closedAt: new Date() },
       })
-      io.to(data?.sessionId).emit('session_ended', { sessionId: data?.sessionId })
-      socket.leave(data?.sessionId)
-      log.act('admin_close_session', { socketId: socket.id, sessionId: data?.sessionId })
+      io.to(sessionId).emit('session_ended', { sessionId })
+      socket.leave(sessionId)
+      log.act('admin_close_session', { socketId: socket.id, sessionId })
     } catch (error) {
-      log.error({ err: error, socketId: socket.id, sessionId: data?.sessionId }, 'Error closing session')
+      log.error({ err: error, socketId: socket.id, sessionId }, 'Error closing session')
     }
   })
 
@@ -247,9 +260,14 @@ io.on('connection', (socket) => {
 
   // Customer rejoins existing session
   socket.on('rejoin_session', async (data: { sessionId: string }) => {
+    const sessionId = sessionIdOf(data)
+    if (!sessionId) {
+      socket.emit('error', { message: 'Session not found' })
+      return
+    }
     try {
       const session = await db.supportChatSession.findUnique({
-        where: { sessionId: data?.sessionId },
+        where: { sessionId },
         include: {
           messages: {
             orderBy: { createdAt: 'asc' },
@@ -258,9 +276,9 @@ io.on('connection', (socket) => {
       })
 
       if (session) {
-        socket.join(data?.sessionId)
+        socket.join(sessionId)
         socket.emit('session_rejoined', {
-          sessionId: data?.sessionId,
+          sessionId,
           messages: session.messages.map((m) => ({
             id: m.id,
             isFromCustomer: m.isFromCustomer,
@@ -268,27 +286,28 @@ io.on('connection', (socket) => {
             timestamp: m.createdAt,
           })),
         })
-        log.act('rejoin_session', { socketId: socket.id, sessionId: data?.sessionId })
+        log.act('rejoin_session', { socketId: socket.id, sessionId })
       } else {
         socket.emit('error', { message: 'Session not found' })
       }
     } catch (error) {
-      log.error({ err: error, socketId: socket.id, sessionId: data?.sessionId }, 'Error rejoining session')
+      log.error({ err: error, socketId: socket.id, sessionId }, 'Error rejoining session')
       socket.emit('error', { message: 'Failed to rejoin session' })
     }
   })
 
   // Customer sends message
   socket.on('send_message', async (data: { sessionId: string; message: string }) => {
+    const sessionId = sessionIdOf(data)
     try {
       const text = cleanMessage(data?.message, MAX_MESSAGE_LENGTH)
-      if (!inSession(data?.sessionId) || !text) {
+      if (!sessionId || !inSession(sessionId) || !text) {
         socket.emit('error', { message: 'Session not found' })
         return
       }
 
       const session = await db.supportChatSession.findUnique({
-        where: { sessionId: data?.sessionId },
+        where: { sessionId },
       })
 
       if (!session || session.status !== 'active') {
@@ -305,7 +324,7 @@ io.on('connection', (socket) => {
       })
 
       // Broadcast to the session room
-      io.to(data?.sessionId).emit('message', {
+      io.to(sessionId).emit('message', {
         id: message.id,
         isFromCustomer: true,
         message: message.message,
@@ -314,20 +333,20 @@ io.on('connection', (socket) => {
 
       // Notify admin dashboard of new message
       io.to('admin_dashboard').emit('new_session_message', {
-        sessionId: data?.sessionId,
+        sessionId,
         message: message.message,
         timestamp: message.createdAt,
       })
 
       log.act('send_message', {
         socketId: socket.id,
-        sessionId: data?.sessionId,
+        sessionId,
         messageId: message.id,
         message: data?.message, // Auto-redacted by Pino
       })
 
       // Check if an admin is in this session room
-      const room = io.sockets.adapter.rooms.get(data?.sessionId)
+      const room = io.sockets.adapter.rooms.get(sessionId)
       const adminInRoom = room ? [...room].some(sid => adminSockets.has(sid)) : false
 
       if (!adminInRoom) {
@@ -349,38 +368,39 @@ io.on('connection', (socket) => {
             },
           })
 
-          io.to(data?.sessionId).emit('message', {
+          io.to(sessionId).emit('message', {
             id: response.id,
             isFromCustomer: false,
             message: response.message,
             timestamp: response.createdAt,
           })
-          log.act('auto_response', { sessionId: data?.sessionId, responseId: response.id })
+          log.act('auto_response', { sessionId, responseId: response.id })
         }, 1500)
       }
     } catch (error) {
-      log.error({ err: error, socketId: socket.id, sessionId: data?.sessionId }, 'Error sending message')
+      log.error({ err: error, socketId: socket.id, sessionId }, 'Error sending message')
       socket.emit('error', { message: 'Failed to send message' })
     }
   })
 
   // End session
   socket.on('end_session', async (data: { sessionId: string }) => {
-    if (!inSession(data?.sessionId)) return
+    const sessionId = sessionIdOf(data)
+    if (!sessionId || !inSession(sessionId)) return
     try {
       await db.supportChatSession.updateMany({
-        where: { sessionId: data?.sessionId, status: 'active' },
+        where: { sessionId, status: 'active' },
         data: {
           status: 'closed',
           closedAt: new Date(),
         },
       })
 
-      socket.leave(data?.sessionId)
-      socket.emit('session_ended', { sessionId: data?.sessionId })
-      log.act('end_session', { socketId: socket.id, sessionId: data?.sessionId })
+      socket.leave(sessionId)
+      socket.emit('session_ended', { sessionId })
+      log.act('end_session', { socketId: socket.id, sessionId })
     } catch (error) {
-      log.error({ err: error, socketId: socket.id, sessionId: data?.sessionId }, 'Error ending session')
+      log.error({ err: error, socketId: socket.id, sessionId }, 'Error ending session')
     }
   })
 
