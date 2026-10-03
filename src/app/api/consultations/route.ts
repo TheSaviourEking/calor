@@ -1,28 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { verifyToken } from '@/lib/auth'
-import { cookies } from 'next/headers'
+import { getSession } from '@/lib/auth/session'
 
 export async function GET(request: NextRequest) {
   try {
-    const cookieStore = await cookies()
-    const token = cookieStore.get('token')?.value
     const { searchParams } = new URL(request.url)
-    const customerId = searchParams.get('customerId')
+    const userId = (await getSession())?.customerId ?? null
 
-    let userId: string | null = null
-    
-    if (token) {
-      const decoded = await verifyToken(token)
-      if (decoded) {
-        userId = decoded.customerId
-      }
-    }
-
-    // Get user's bookings
-    if (customerId && userId === customerId) {
+    // Get the caller's own bookings (the customerId parameter only signals intent)
+    if (searchParams.get('customerId') && userId) {
       const bookings = await db.consultationBooking.findMany({ take: 50,
-        where: { customerId },
+        where: { customerId: userId },
         include: {
           consultant: true,
           review: true
@@ -110,16 +98,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const cookieStore = await cookies()
-    const token = cookieStore.get('token')?.value
-
-    if (!token) {
+    const session = await getSession()
+    if (!session?.customerId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const decoded = await verifyToken(token)
-    if (!decoded) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
     }
 
     const { consultantId, scheduledAt, duration, type, notes } = await request.json()
@@ -144,7 +125,7 @@ export async function POST(request: NextRequest) {
     const booking = await db.consultationBooking.create({
       data: {
         consultantId,
-        customerId: decoded.customerId,
+        customerId: session.customerId,
         scheduledAt: new Date(scheduledAt),
         duration,
         type,
@@ -170,16 +151,9 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const cookieStore = await cookies()
-    const token = cookieStore.get('token')?.value
-
-    if (!token) {
+    const session = await getSession()
+    if (!session?.customerId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const decoded = await verifyToken(token)
-    if (!decoded) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
     }
 
     const { bookingId, status } = await request.json()
@@ -190,7 +164,7 @@ export async function PUT(request: NextRequest) {
 
     // Verify booking belongs to user
     const existingBooking = await db.consultationBooking.findFirst({
-      where: { id: bookingId, customerId: decoded.customerId }
+      where: { id: bookingId, customerId: session.customerId }
     })
 
     if (!existingBooking) {

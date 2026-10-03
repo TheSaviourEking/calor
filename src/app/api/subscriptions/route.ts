@@ -1,28 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { verifyToken } from '@/lib/auth'
-import { cookies } from 'next/headers'
+import { getSession } from '@/lib/auth/session'
 import { stripe } from '@/lib/payments/stripe'
 import { createSubscriptionCheckout } from '@/lib/payments/stripe-subscriptions'
 import { config } from '@/lib/config'
 
 export async function GET(request: NextRequest) {
   try {
-    const cookieStore = await cookies()
-    const token = cookieStore.get('token')?.value
-
-    if (!token) {
+    const session = await getSession()
+    if (!session?.customerId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const decoded = await verifyToken(token)
-    if (!decoded) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
     }
 
     // Get user's subscriptions
     const subscriptions = await db.subscription.findMany({ /* take: handled */
-      where: { customerId: decoded.customerId },
+      where: { customerId: session.customerId },
       include: {
         plan: true,
         shippingAddress: true,
@@ -43,16 +35,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const cookieStore = await cookies()
-    const token = cookieStore.get('token')?.value
-
-    if (!token) {
+    const session = await getSession()
+    if (!session?.customerId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const decoded = await verifyToken(token)
-    if (!decoded) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
     }
 
     const { planId } = await request.json()
@@ -65,7 +50,7 @@ export async function POST(request: NextRequest) {
     const cancelUrl = `${config.app.baseUrl}/subscriptions`
 
     const checkoutUrl = await createSubscriptionCheckout(
-      decoded.customerId,
+      session.customerId,
       planId,
       successUrl,
       cancelUrl
@@ -80,16 +65,9 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const cookieStore = await cookies()
-    const token = cookieStore.get('token')?.value
-
-    if (!token) {
+    const session = await getSession()
+    if (!session?.customerId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const decoded = await verifyToken(token)
-    if (!decoded) {
-      return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
     }
 
     const { subscriptionId, action, reason } = await request.json()
@@ -100,7 +78,7 @@ export async function PUT(request: NextRequest) {
 
     // Verify subscription belongs to user
     const existingSub = await db.subscription.findFirst({
-      where: { id: subscriptionId, customerId: decoded.customerId }
+      where: { id: subscriptionId, customerId: session.customerId }
     })
 
     if (!existingSub) {
