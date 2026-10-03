@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { requireCustomer, requireAdminUser } from '@/lib/auth/guards'
+import { getSession } from '@/lib/auth/session'
 
 // GET /api/wellness/patterns - Get vibration patterns
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const customerId = searchParams.get('customerId')
+    const customerId = (await getSession())?.customerId ?? null
     const category = searchParams.get('category')
     const publicOnly = searchParams.get('public') === 'true'
 
@@ -58,9 +60,10 @@ export async function GET(request: NextRequest) {
 // POST /api/wellness/patterns - Create a new pattern
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireCustomer()
+    if (!auth.ok) return auth.response
     const body = await request.json()
     const {
-      creatorId,
       name,
       description,
       patternData,
@@ -69,6 +72,7 @@ export async function POST(request: NextRequest) {
       intensity,
       isPublic,
     } = body
+    const creatorId = auth.customerId
 
     if (!name || !patternData || !duration) {
       return NextResponse.json(
@@ -120,6 +124,8 @@ export async function POST(request: NextRequest) {
 // PUT /api/wellness/patterns - Update pattern (like, feature, etc.)
 export async function PUT(request: NextRequest) {
   try {
+    const auth = await requireCustomer()
+    if (!auth.ok) return auth.response
     const body = await request.json()
     const { patternId, action } = body
 
@@ -128,6 +134,21 @@ export async function PUT(request: NextRequest) {
         { error: 'patternId and action are required' },
         { status: 400 }
       )
+    }
+
+    // Featuring is an editorial action; publishing is the creator's choice
+    if (action === 'feature' || action === 'unfeature') {
+      const admin = await requireAdminUser()
+      if (!admin.ok) return admin.response
+    }
+    if (action === 'publish' || action === 'unpublish') {
+      const own = await db.vibrationPattern.findFirst({
+        where: { id: patternId, creatorId: auth.customerId },
+        select: { id: true },
+      })
+      if (!own) {
+        return NextResponse.json({ error: 'Not authorized to change this pattern' }, { status: 403 })
+      }
     }
 
     const updateData: Record<string, unknown> = {}
@@ -176,9 +197,10 @@ export async function PUT(request: NextRequest) {
 // DELETE /api/wellness/patterns - Delete a pattern
 export async function DELETE(request: NextRequest) {
   try {
+    const auth = await requireCustomer()
+    if (!auth.ok) return auth.response
     const { searchParams } = new URL(request.url)
     const patternId = searchParams.get('patternId')
-    const customerId = searchParams.get('customerId')
 
     if (!patternId) {
       return NextResponse.json(
@@ -187,23 +209,16 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    // Verify ownership if customerId provided
-    if (customerId) {
-      const pattern = await db.vibrationPattern.findUnique({
-        where: { id: patternId },
-      })
-
-      if (pattern?.creatorId !== customerId) {
-        return NextResponse.json(
-          { error: 'Not authorized to delete this pattern' },
-          { status: 403 }
-        )
-      }
-    }
-
-    await db.vibrationPattern.delete({
-      where: { id: patternId },
+    // Only the creator can delete a pattern
+    const deleted = await db.vibrationPattern.deleteMany({
+      where: { id: patternId, creatorId: auth.customerId },
     })
+    if (deleted.count !== 1) {
+      return NextResponse.json(
+        { error: 'Not authorized to delete this pattern' },
+        { status: 403 }
+      )
+    }
 
     return NextResponse.json({ success: true })
   } catch (error) {

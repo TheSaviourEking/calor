@@ -1,20 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { requireCustomer } from '@/lib/auth/guards'
 
 // GET /api/wellness/sessions - Get toy sessions
 export async function GET(request: NextRequest) {
   try {
+    const auth = await requireCustomer()
+    if (!auth.ok) return auth.response
+    const customerId = auth.customerId
     const { searchParams } = new URL(request.url)
-    const customerId = searchParams.get('customerId')
     const limit = parseInt(searchParams.get('limit') || '20')
     const offset = parseInt(searchParams.get('offset') || '0')
-
-    if (!customerId) {
-      return NextResponse.json(
-        { error: 'customerId is required' },
-        { status: 400 }
-      )
-    }
 
     const sessions = await db.toySession.findMany({ /* take: handled */
       where: { customerId },
@@ -81,9 +77,11 @@ export async function GET(request: NextRequest) {
 // POST /api/wellness/sessions - Start a new session
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireCustomer()
+    if (!auth.ok) return auth.response
+    const customerId = auth.customerId
     const body = await request.json()
     const {
-      customerId,
       smartToyId,
       patternId,
       partnerId,
@@ -175,10 +173,13 @@ export async function POST(request: NextRequest) {
 // PUT /api/wellness/sessions - End/update session
 export async function PUT(request: NextRequest) {
   try {
+    const auth = await requireCustomer()
+    if (!auth.ok) return auth.response
+
     const body = await request.json()
     const {
       sessionId,
-      duration,
+      duration: reportedDuration,
       avgIntensity,
       peakIntensity,
       patternChanges,
@@ -190,6 +191,22 @@ export async function PUT(request: NextRequest) {
         { status: 400 }
       )
     }
+
+    // Only the owner can end a session, and only once — ending it awards points
+    const open = await db.toySession.findFirst({
+      where: { id: sessionId, customerId: auth.customerId, endedAt: null },
+      select: { id: true, startedAt: true },
+    })
+    if (!open) {
+      return NextResponse.json({ error: 'Session not found or already ended' }, { status: 404 })
+    }
+
+    // The client reports the duration, but it can never exceed the real elapsed time
+    const elapsedSeconds = Math.floor((Date.now() - open.startedAt.getTime()) / 1000)
+    const duration =
+      reportedDuration === undefined
+        ? undefined
+        : Math.max(0, Math.min(Math.floor(Number(reportedDuration) || 0), elapsedSeconds))
 
     const updateData: Record<string, unknown> = {
       endedAt: new Date(),

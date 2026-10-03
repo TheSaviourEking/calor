@@ -1,18 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { requireCustomer } from '@/lib/auth/guards'
 
 // GET /api/wellness/toys - Get user's connected toys
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const customerId = searchParams.get('customerId')
-
-    if (!customerId) {
-      return NextResponse.json(
-        { error: 'customerId is required' },
-        { status: 400 }
-      )
-    }
+    const auth = await requireCustomer()
+    if (!auth.ok) return auth.response
+    const customerId = auth.customerId
 
     const toys = await db.customerSmartToy.findMany({
       where: {
@@ -57,8 +52,11 @@ export async function GET(request: NextRequest) {
 // POST /api/wellness/toys - Connect a new toy
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireCustomer()
+    if (!auth.ok) return auth.response
+    const customerId = auth.customerId
     const body = await request.json()
-    const { customerId, toyModelId, nickname, deviceId, shareWithPartner } = body
+    const { toyModelId, nickname, deviceId, shareWithPartner } = body
 
     if (!customerId || !toyModelId) {
       return NextResponse.json(
@@ -123,6 +121,8 @@ export async function POST(request: NextRequest) {
 // PUT /api/wellness/toys - Update toy settings
 export async function PUT(request: NextRequest) {
   try {
+    const auth = await requireCustomer()
+    if (!auth.ok) return auth.response
     const body = await request.json()
     const { toyId, nickname, defaultIntensity, shareWithPartner, isActive } = body
 
@@ -138,6 +138,14 @@ export async function PUT(request: NextRequest) {
     if (defaultIntensity !== undefined) updateData.defaultIntensity = defaultIntensity
     if (shareWithPartner !== undefined) updateData.shareWithPartner = shareWithPartner
     if (isActive !== undefined) updateData.isActive = isActive
+
+    const owned = await db.customerSmartToy.findFirst({
+      where: { id: toyId, customerId: auth.customerId },
+      select: { id: true },
+    })
+    if (!owned) {
+      return NextResponse.json({ error: 'Toy not found' }, { status: 404 })
+    }
 
     const toy = await db.customerSmartToy.update({
       where: { id: toyId },
@@ -162,6 +170,8 @@ export async function PUT(request: NextRequest) {
 // DELETE /api/wellness/toys - Disconnect a toy
 export async function DELETE(request: NextRequest) {
   try {
+    const auth = await requireCustomer()
+    if (!auth.ok) return auth.response
     const { searchParams } = new URL(request.url)
     const toyId = searchParams.get('toyId')
 
@@ -172,10 +182,13 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    await db.customerSmartToy.update({
-      where: { id: toyId },
+    const disconnected = await db.customerSmartToy.updateMany({
+      where: { id: toyId, customerId: auth.customerId },
       data: { isActive: false },
     })
+    if (disconnected.count !== 1) {
+      return NextResponse.json({ error: 'Toy not found' }, { status: 404 })
+    }
 
     return NextResponse.json({ success: true })
   } catch (error) {

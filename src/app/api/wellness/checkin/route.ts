@@ -1,18 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { requireCustomer } from '@/lib/auth/guards'
 
 // GET /api/wellness/checkin - Get today's check-in status
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const customerId = searchParams.get('customerId')
-
-    if (!customerId) {
-      return NextResponse.json(
-        { error: 'customerId is required' },
-        { status: 400 }
-      )
-    }
+    const auth = await requireCustomer()
+    if (!auth.ok) return auth.response
+    const customerId = auth.customerId
 
     const today = new Date()
     const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate())
@@ -55,10 +50,11 @@ export async function GET(request: NextRequest) {
 }
 
 // POST /api/wellness/checkin - Daily check-in
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
-    const body = await request.json()
-    const { customerId } = body
+    const auth = await requireCustomer()
+    if (!auth.ok) return auth.response
+    const customerId = auth.customerId
 
     if (!customerId) {
       return NextResponse.json(

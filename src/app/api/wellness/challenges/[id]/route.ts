@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { requireCustomer } from '@/lib/auth/guards'
+import { getSession } from '@/lib/auth/session'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -9,8 +11,7 @@ interface RouteParams {
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params
-    const { searchParams } = new URL(request.url)
-    const customerId = searchParams.get('customerId')
+    const customerId = (await getSession())?.customerId ?? null
 
     const challenge = await db.challenge.findUnique({
       where: { id },
@@ -40,9 +41,12 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 // POST /api/wellness/challenges/[id] - Complete/progress challenge
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
+    const auth = await requireCustomer()
+    if (!auth.ok) return auth.response
+    const customerId = auth.customerId
     const { id } = await params
     const body = await request.json()
-    const { customerId, progress } = body
+    const { progress } = body
 
     if (!customerId) {
       return NextResponse.json(

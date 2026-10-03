@@ -1,19 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { requireAdminUser } from '@/lib/auth/guards'
+import { requireCustomer, requireAdminUser } from '@/lib/auth/guards'
 
 // GET /api/vip/progress - Get customer's VIP progress
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const customerId = searchParams.get('customerId')
-
-    if (!customerId) {
-      return NextResponse.json(
-        { error: 'customerId is required' },
-        { status: 400 }
-      )
-    }
+    const auth = await requireCustomer()
+    if (!auth.ok) return auth.response
+    const customerId = auth.customerId
 
     // Get or create VIP progress
     let progress = await db.customerVIPProgress.findUnique({

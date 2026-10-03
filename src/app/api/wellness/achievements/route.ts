@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { requireAdminUser } from '@/lib/auth/guards'
+import { getSession } from '@/lib/auth/session'
 
 // GET /api/wellness/achievements - List achievements
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const customerId = searchParams.get('customerId')
+    const customerId = (await getSession())?.customerId ?? null
     const category = searchParams.get('category')
 
     const where: Record<string, unknown> = {}

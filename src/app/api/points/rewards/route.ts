@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { requireAdminUser } from '@/lib/auth/guards'
+import { getSession } from '@/lib/auth/session'
 
 // GET /api/points/rewards - Get available rewards for redemption
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const customerId = searchParams.get('customerId')
+    const customerId = (await getSession())?.customerId ?? null
     const featured = searchParams.get('featured')
 
     const now = new Date()

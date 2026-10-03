@@ -1,19 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { nanoid } from 'nanoid'
+import { requireCustomer } from '@/lib/auth/guards'
 
 // GET /api/points/redeem - Get customer's redemption history
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const customerId = searchParams.get('customerId')
-
-    if (!customerId) {
-      return NextResponse.json(
-        { error: 'customerId is required' },
-        { status: 400 }
-      )
-    }
+    const auth = await requireCustomer()
+    if (!auth.ok) return auth.response
+    const customerId = auth.customerId
 
     const redemptions = await db.pointsRedemption.findMany({ take: 50,
       where: { customerId },
@@ -36,8 +31,11 @@ export async function GET(request: NextRequest) {
 // POST /api/points/redeem - Redeem points for a reward
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireCustomer()
+    if (!auth.ok) return auth.response
+    const customerId = auth.customerId
     const body = await request.json()
-    const { customerId, rewardId } = body
+    const { rewardId } = body
 
     if (!customerId || !rewardId) {
       return NextResponse.json(

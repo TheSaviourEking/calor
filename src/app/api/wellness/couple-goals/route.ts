@@ -1,26 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { requireCustomer } from '@/lib/auth/guards'
+
+// Upper bound on the loyalty points a couple can assign to their own goal
+const MAX_COUPLE_GOAL_POINTS = 50
 
 // GET /api/wellness/couple-goals - Get couple goals
 export async function GET(request: NextRequest) {
   try {
+    const auth = await requireCustomer()
+    if (!auth.ok) return auth.response
+    const customerId = auth.customerId
     const { searchParams } = new URL(request.url)
-    const couplesLinkId = searchParams.get('couplesLinkId')
-    const customerId = searchParams.get('customerId')
 
-    // If customerId provided, find their couples link
-    let coupleLink: Awaited<ReturnType<typeof db.couplesLink.findFirst>> = null
-    if (customerId && !couplesLinkId) {
-      coupleLink = await db.couplesLink.findFirst({
-        where: {
-          OR: [
-            { customer1Id: customerId },
-            { customer2Id: customerId },
-          ],
-          status: 'active',
-        },
-      })
-    }
+    // Only a link the caller belongs to is ever used, whatever id was asked for
+    const requestedLinkId = searchParams.get('couplesLinkId')
+    const coupleLink = await db.couplesLink.findFirst({
+      where: {
+        ...(requestedLinkId && { id: requestedLinkId }),
+        OR: [
+          { customer1Id: customerId },
+          { customer2Id: customerId },
+        ],
+        status: 'active',
+      },
+    })
+    const couplesLinkId = coupleLink?.id ?? null
 
     const where: Record<string, unknown> = {}
     if (couplesLinkId) {
@@ -58,10 +63,11 @@ export async function GET(request: NextRequest) {
 // POST /api/wellness/couple-goals - Create a couple goal
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireCustomer()
+    if (!auth.ok) return auth.response
     const body = await request.json()
     const {
       couplesLinkId,
-      customerId,
       title,
       description,
       icon,
@@ -79,33 +85,24 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Find couples link if only customerId provided
-    let actualCouplesLinkId = couplesLinkId
-    if (!actualCouplesLinkId && customerId) {
-      const coupleLink = await db.couplesLink.findFirst({
-        where: {
-          OR: [
-            { customer1Id: customerId },
-            { customer2Id: customerId },
-          ],
-          status: 'active',
-        },
-      })
-      if (!coupleLink) {
-        return NextResponse.json(
-          { error: 'No active couple link found' },
-          { status: 400 }
-        )
-      }
-      actualCouplesLinkId = coupleLink.id
-    }
-
-    if (!actualCouplesLinkId) {
+    // The goal always goes on a link the caller belongs to
+    const coupleLink = await db.couplesLink.findFirst({
+      where: {
+        ...(couplesLinkId && { id: couplesLinkId }),
+        OR: [
+          { customer1Id: auth.customerId },
+          { customer2Id: auth.customerId },
+        ],
+        status: 'active',
+      },
+    })
+    if (!coupleLink) {
       return NextResponse.json(
-        { error: 'couplesLinkId or customerId is required' },
+        { error: 'No active couple link found' },
         { status: 400 }
       )
     }
+    const actualCouplesLinkId = coupleLink.id
 
     const goal = await db.coupleGoal.create({
       data: {
@@ -117,8 +114,8 @@ export async function POST(request: NextRequest) {
         targetDate: targetDate ? new Date(targetDate) : null,
         isRecurring: isRecurring || false,
         recurrence,
-        pointsReward: pointsReward || 0,
-        createdBy: customerId || '',
+        pointsReward: Math.min(Math.max(0, Math.floor(Number(pointsReward) || 0)), MAX_COUPLE_GOAL_POINTS),
+        createdBy: auth.customerId,
       },
     })
 
@@ -135,6 +132,8 @@ export async function POST(request: NextRequest) {
 // PUT /api/wellness/couple-goals - Update goal progress
 export async function PUT(request: NextRequest) {
   try {
+    const auth = await requireCustomer()
+    if (!auth.ok) return auth.response
     const body = await request.json()
     const { goalId, progress, completed } = body
 
@@ -156,13 +155,29 @@ export async function PUT(request: NextRequest) {
       }
     }
 
+    const existing = await db.coupleGoal.findFirst({
+      where: {
+        id: goalId,
+        couplesLink: {
+          OR: [
+            { customer1Id: auth.customerId },
+            { customer2Id: auth.customerId },
+          ],
+        },
+      },
+      select: { id: true, completed: true },
+    })
+    if (!existing) {
+      return NextResponse.json({ error: 'Goal not found' }, { status: 404 })
+    }
+
     const goal = await db.coupleGoal.update({
       where: { id: goalId },
       data: updateData,
     })
 
-    // Award points if goal completed
-    if (completed && goal.pointsReward > 0) {
+    // Award points only the first time the goal is completed
+    if (completed && !existing.completed && goal.pointsReward > 0) {
       const coupleLink = await db.couplesLink.findUnique({
         where: { id: goal.couplesLinkId },
       })

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { requireAdminUser } from '@/lib/auth/guards'
+import { getSession } from '@/lib/auth/session'
 
 // GET /api/wellness/challenges - List all active challenges
 export async function GET(request: NextRequest) {
@@ -8,7 +9,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const type = searchParams.get('type')
     const category = searchParams.get('category')
-    const customerId = searchParams.get('customerId')
+    const customerId = (await getSession())?.customerId ?? null
 
     const where: Record<string, unknown> = {
       isActive: true,
