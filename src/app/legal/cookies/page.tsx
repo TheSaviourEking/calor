@@ -167,7 +167,7 @@ export default function CookiesPage() {
                 Contact
               </h2>
               <p className="font-body text-warm-gray text-base leading-relaxed">
-                For questions about our use of cookies, contact us at privacy@calorco.com.
+                For questions about our use of cookies, contact us at privacy@calo.one.
               </p>
             </section>
           </div>

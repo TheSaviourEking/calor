@@ -48,7 +48,7 @@ export default function ReturnsPage() {
                 How to Return
               </h2>
               <p className="font-body text-warm-gray text-base leading-relaxed mb-4">
-                Email returns@calorco.com with your order number and reason for return. We will provide a prepaid shipping label for defective or incorrect items. For other returns, shipping costs are your responsibility.
+                Email returns@calo.one with your order number and reason for return. We will provide a prepaid shipping label for defective or incorrect items. For other returns, shipping costs are your responsibility.
               </p>
             </section>
 
@@ -66,7 +66,7 @@ export default function ReturnsPage() {
                 Questions?
               </h2>
               <p className="font-body text-warm-gray text-base leading-relaxed">
-                Contact us at returns@calorco.com for any questions about returns.
+                Contact us at returns@calo.one for any questions about returns.
               </p>
             </section>
           </div>
