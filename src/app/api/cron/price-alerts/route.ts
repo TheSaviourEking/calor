@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { isAuthorizedCron } from '@/lib/cron'
 import { sendPriceDropAlert } from '@/lib/email'
 
 // This endpoint should be called by a cron job to check for price drops
@@ -7,9 +8,7 @@ import { sendPriceDropAlert } from '@/lib/email'
 
 export async function POST(request: NextRequest) {
   try {
-    // Verify cron secret
-    const authHeader = request.headers.get('authorization')
-    if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    if (!isAuthorizedCron(request)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -88,7 +87,11 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  if (!isAuthorizedCron(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   // Get stats about price alerts
   const stats = await db.priceDropAlert.groupBy({
     by: ['isActive', 'isNotified'],

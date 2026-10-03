@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { isAuthorizedCron } from '@/lib/cron'
 import { sendGiftCardEmail } from '@/lib/email'
 
 // POST /api/cron/gift-cards - Send scheduled gift cards
@@ -7,9 +8,7 @@ import { sendGiftCardEmail } from '@/lib/email'
 // Authorization: X-Cron-Key header
 export async function POST(request: NextRequest) {
   try {
-    // Verify cron secret
-    const authHeader = request.headers.get('authorization')
-    if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    if (!isAuthorizedCron(request)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

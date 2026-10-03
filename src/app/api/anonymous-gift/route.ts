@@ -1,16 +1,52 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
+import { db } from '@/lib/db'
+import { config } from '@/lib/config'
+import { rateLimitByIp } from '@/lib/rate-limit'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+const resend = new Resend(config.resend.apiKey)
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
 
 // POST - Send anonymous gift notification
 export async function POST(request: NextRequest) {
   try {
-    const { recipientEmail, orderReference, giftMessage, senderName } = await request.json()
+    const rl = await rateLimitByIp(request, 'anonymous-gift', { windowMs: 60_000, maxRequests: 5 })
+    if (!rl.allowed) {
+      return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 })
+    }
+
+    const body = await request.json()
+    const recipientEmail = typeof body.recipientEmail === 'string' ? body.recipientEmail.trim() : ''
+    const orderReference = typeof body.orderReference === 'string' ? body.orderReference.trim() : ''
+    const senderName = typeof body.senderName === 'string' ? escapeHtml(body.senderName.slice(0, 100)) : ''
 
     if (!recipientEmail || !orderReference) {
       return NextResponse.json({ error: 'Recipient email and order reference are required' }, { status: 400 })
     }
+
+    // The notification is only sent for an order that really is an anonymous
+    // gift to this recipient, and the message comes from the order, not the caller
+    const order = await db.order.findUnique({
+      where: { reference: orderReference },
+      select: { isAnonymousGift: true, recipientEmail: true, giftMessage: true },
+    })
+    if (
+      !order ||
+      !order.isAnonymousGift ||
+      order.recipientEmail?.toLowerCase() !== recipientEmail.toLowerCase()
+    ) {
+      return NextResponse.json({ error: 'Gift order not found' }, { status: 404 })
+    }
+
+    const giftMessage = order.giftMessage ? escapeHtml(order.giftMessage) : ''
 
     // Send anonymous gift notification email
     await resend.emails.send({
@@ -45,7 +81,7 @@ export async function POST(request: NextRequest) {
             
             ${senderName ? `<p>A message from: ${senderName}</p>` : ''}
             
-            <p class="order-ref">Order #${orderReference}</p>
+            <p class="order-ref">Order #${escapeHtml(orderReference)}</p>
             
             <p>Your gift is on its way! You'll receive tracking information once it ships.</p>
             

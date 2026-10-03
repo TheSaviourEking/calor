@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { isAuthorizedCron } from '@/lib/cron'
 import { sendAbandonedCartEmail } from '@/lib/email'
 
 // This endpoint should be called by a cron service (e.g., Vercel Cron, GitHub Actions, etc.)
@@ -7,9 +8,7 @@ import { sendAbandonedCartEmail } from '@/lib/email'
 
 export async function POST(request: NextRequest) {
   try {
-    // Verify cron secret
-    const authHeader = request.headers.get('authorization')
-    if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    if (!isAuthorizedCron(request)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 

@@ -15,10 +15,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Session ID required' }, { status: 400 })
     }
 
-    // Delete the session
-    await db.session.delete({
-      where: { id: sessionId },
+    // Only a session that belongs to the caller can be revoked
+    const revoked = await db.session.deleteMany({
+      where: { id: sessionId, customerId: session.customerId },
     })
+    if (revoked.count !== 1) {
+      return NextResponse.json({ error: 'Session not found' }, { status: 404 })
+    }
 
     return NextResponse.json({ success: true })
   } catch (error) {
