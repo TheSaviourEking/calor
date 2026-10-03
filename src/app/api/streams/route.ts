@@ -4,6 +4,7 @@ import { nanoid } from 'nanoid'
 import { randomBytes } from 'crypto'
 import bcrypt from 'bcryptjs'
 import { requireHostProfile } from '@/lib/auth/guards'
+import { getSession } from '@/lib/auth/session'
 
 async function hashStreamPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 10)
@@ -36,6 +37,22 @@ export async function GET(request: NextRequest) {
     // For public view, only show scheduled, live, or ended streams
     if (!status) {
       where.status = { in: ['scheduled', 'live', 'ended'] }
+    }
+
+    // Private streams are hidden from the public list; only an admin
+    // filtering by ?status= sees them
+    let isAdmin = false
+    if (status) {
+      const session = await getSession()
+      if (session?.customerId) {
+        const customer = await db.customer.findUnique({
+          where: { id: session.customerId },
+          select: { isAdmin: true },
+        })
+        isAdmin = customer?.isAdmin ?? false
+      }
+    }
+    if (!isAdmin) {
       where.isPrivate = false
     }
 

@@ -153,8 +153,9 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const existingReturn = await db.returnRequest.findUnique({
-      where: { id: returnId }
+    // Customers may only update their own returns
+    const existingReturn = await db.returnRequest.findFirst({
+      where: { id: returnId, customerId: session.customerId }
     })
 
     if (!existingReturn) {
