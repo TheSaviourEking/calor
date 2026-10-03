@@ -99,18 +99,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // One open session at a time, so parallel sessions cannot each earn a reward
-    const openSession = await db.toySession.findFirst({
-      where: { customerId, endedAt: null },
-      select: { id: true },
-    })
-    if (openSession) {
-      return NextResponse.json(
-        { error: 'You already have an active session' },
-        { status: 409 }
-      )
-    }
-
     // Verify toy belongs to user if provided
     if (smartToyId) {
       const toy = await db.customerSmartToy.findFirst({
@@ -154,25 +142,37 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const session = await db.toySession.create({
-      data: {
-        customerId,
-        smartToyId,
-        patternId,
-        partnerId,
-        isRemoteControl: isRemoteControl || false,
-        challengeCompletionId,
-      },
-      include: {
-        smartToy: {
-          include: {
-            toyModel: {
-              include: { brand: true },
+    // Serialize per customer. Any session left open (for example a closed tab) is ended
+    // without a reward, so only one session is ever open and rewards are credited in PUT only.
+    const lockKey = 'wellness-session:' + customerId
+    const session = await db.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${lockKey}))`
+
+      await tx.toySession.updateMany({
+        where: { customerId, endedAt: null },
+        data: { endedAt: new Date() },
+      })
+
+      return tx.toySession.create({
+        data: {
+          customerId,
+          smartToyId,
+          patternId,
+          partnerId,
+          isRemoteControl: isRemoteControl || false,
+          challengeCompletionId,
+        },
+        include: {
+          smartToy: {
+            include: {
+              toyModel: {
+                include: { brand: true },
+              },
             },
           },
+          pattern: true,
         },
-        pattern: true,
-      },
+      })
     })
 
     return NextResponse.json({ session }, { status: 201 })
@@ -232,72 +232,79 @@ export async function PUT(request: NextRequest) {
     if (peakIntensity !== undefined) updateData.peakIntensity = peakIntensity
     if (patternChanges !== undefined) updateData.patternChanges = patternChanges
 
-    // End the session atomically; only the request that ends it can earn points
-    const ended = await db.toySession.updateMany({
-      where: { id: sessionId, customerId: auth.customerId, endedAt: null },
-      data: updateData,
-    })
-    if (ended.count !== 1) {
-      return NextResponse.json({ error: 'Session not found or already ended' }, { status: 404 })
-    }
+    // Serialize per customer so parallel requests cannot each read the daily total before
+    // any of them credits. Ending the session is atomic; only the request that ends it earns points.
+    const lockKey = 'wellness-session:' + auth.customerId
+    const session = await db.$transaction(async (tx) => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${lockKey}))`
 
-    const session = await db.toySession.findUnique({ where: { id: sessionId } })
-    if (!session) {
-      return NextResponse.json({ error: 'Session not found or already ended' }, { status: 404 })
-    }
-
-    // Update toy's total session time
-    if (session.smartToyId && duration) {
-      await db.customerSmartToy.update({
-        where: { id: session.smartToyId },
-        data: {
-          totalSessionTime: { increment: Math.floor(duration / 60) }, // Convert to minutes
-        },
+      const ended = await tx.toySession.updateMany({
+        where: { id: sessionId, customerId: auth.customerId, endedAt: null },
+        data: updateData,
       })
-    }
+      if (ended.count !== 1) return null
 
-    // Award points for session completion, within the daily cap
-    if (session.customerId && duration && duration >= 60) {
-      const startOfToday = new Date()
-      startOfToday.setHours(0, 0, 0, 0)
-      const today = await db.loyaltyTransaction.aggregate({
-        where: {
-          account: { customerId: session.customerId },
-          type: 'bonus',
-          description: 'Wellness session completed',
-          createdAt: { gte: startOfToday },
-        },
-        _sum: { points: true },
-      })
-      const alreadyToday = today._sum.points ?? 0
-      const pointsEarned = Math.min(
-        Math.min(50, Math.floor(duration / 60) * 5), // 5 points per minute, max 50
-        SESSION_POINTS_DAILY_CAP - alreadyToday
-      )
+      const row = await tx.toySession.findUnique({ where: { id: sessionId } })
+      if (!row) return null
 
-      if (pointsEarned > 0) {
-        const loyaltyAccount = await db.loyaltyAccount.upsert({
-          where: { customerId: session.customerId },
-          create: {
-            customerId: session.customerId,
-            points: pointsEarned,
-            totalEarned: pointsEarned,
-          },
-          update: {
-            points: { increment: pointsEarned },
-            totalEarned: { increment: pointsEarned },
-          },
-        })
-
-        await db.loyaltyTransaction.create({
+      // Update toy's total session time
+      if (row.smartToyId && duration) {
+        await tx.customerSmartToy.update({
+          where: { id: row.smartToyId },
           data: {
-            accountId: loyaltyAccount.id,
-            points: pointsEarned,
-            type: 'bonus',
-            description: 'Wellness session completed',
+            totalSessionTime: { increment: Math.floor(duration / 60) }, // Convert to minutes
           },
         })
       }
+
+      // Award points for session completion, within the daily cap
+      if (row.customerId && duration && duration >= 60) {
+        const startOfToday = new Date()
+        startOfToday.setHours(0, 0, 0, 0)
+        const today = await tx.loyaltyTransaction.aggregate({
+          where: {
+            account: { customerId: row.customerId },
+            type: 'bonus',
+            description: 'Wellness session completed',
+            createdAt: { gte: startOfToday },
+          },
+          _sum: { points: true },
+        })
+        const alreadyToday = today._sum.points ?? 0
+        const pointsEarned = Math.min(
+          Math.min(50, Math.floor(duration / 60) * 5), // 5 points per minute, max 50
+          SESSION_POINTS_DAILY_CAP - alreadyToday
+        )
+
+        if (pointsEarned > 0) {
+          const loyaltyAccount = await tx.loyaltyAccount.upsert({
+            where: { customerId: row.customerId },
+            create: {
+              customerId: row.customerId,
+              points: pointsEarned,
+              totalEarned: pointsEarned,
+            },
+            update: {
+              points: { increment: pointsEarned },
+              totalEarned: { increment: pointsEarned },
+            },
+          })
+
+          await tx.loyaltyTransaction.create({
+            data: {
+              accountId: loyaltyAccount.id,
+              points: pointsEarned,
+              type: 'bonus',
+              description: 'Wellness session completed',
+            },
+          })
+        }
+      }
+
+      return row
+    })
+    if (!session) {
+      return NextResponse.json({ error: 'Session not found or already ended' }, { status: 404 })
     }
 
     return NextResponse.json({ session })

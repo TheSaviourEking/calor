@@ -21,6 +21,7 @@ const { db, getSession } = vi.hoisted(() => {
     challenge: { findUnique: vi.fn(), update: vi.fn() },
     challengeCompletion: { findUnique: vi.fn(), upsert: vi.fn(), updateMany: vi.fn() },
     $transaction: vi.fn(),
+    $executeRaw: vi.fn(),
   }
   db.$transaction.mockImplementation(async (fn: (tx: typeof db) => unknown) => fn(db))
   return { db, getSession: vi.fn() }
@@ -151,11 +152,37 @@ describe('toy sessions', () => {
     expect(db.loyaltyAccount.upsert.mock.calls[0][0].create.points).toBe(10)
   })
 
-  it('refuses to start a second session while one is open', async () => {
-    db.toySession.findFirst.mockResolvedValue({ id: 'open' })
+  it('closes abandoned open sessions without a reward, then starts a new one', async () => {
+    db.toySession.updateMany.mockResolvedValue({ count: 1 })
+    db.toySession.create.mockResolvedValue({ id: 'new' })
     const res = await toySessions.POST(json('POST', {}))
-    expect(res.status).toBe(409)
-    expect(db.toySession.create).not.toHaveBeenCalled()
+    expect(res.status).toBe(201)
+    expect(db.toySession.updateMany).toHaveBeenCalledWith({
+      where: { customerId: 'me', endedAt: null },
+      data: { endedAt: expect.any(Date) },
+    })
+    expect(db.toySession.create).toHaveBeenCalled()
+    expect(db.toySession.updateMany.mock.invocationCallOrder[0]).toBeLessThan(
+      db.toySession.create.mock.invocationCallOrder[0]
+    )
+    expect(db.loyaltyAccount.upsert).not.toHaveBeenCalled()
+  })
+
+  it('takes the per-customer advisory lock before any other query in POST and PUT', async () => {
+    db.toySession.updateMany.mockResolvedValue({ count: 1 })
+    db.toySession.create.mockResolvedValue({ id: 'new' })
+    await toySessions.POST(json('POST', {}))
+    expect(db.$executeRaw).toHaveBeenCalledTimes(1)
+    expect(db.$executeRaw.mock.invocationCallOrder[0]).toBeLessThan(db.toySession.updateMany.mock.invocationCallOrder[0])
+
+    vi.clearAllMocks()
+    db.$transaction.mockImplementation(async (fn: (tx: typeof db) => unknown) => fn(db))
+    db.loyaltyTransaction.aggregate.mockResolvedValue({ _sum: { points: 0 } })
+    openSession()
+    await toySessions.PUT(json('PUT', { sessionId: 's1', duration: 600 }))
+    expect(db.$executeRaw).toHaveBeenCalledTimes(1)
+    expect(db.$executeRaw.mock.invocationCallOrder[0]).toBeLessThan(db.toySession.updateMany.mock.invocationCallOrder[0])
+    expect(db.$executeRaw.mock.invocationCallOrder[0]).toBeLessThan(db.loyaltyTransaction.aggregate.mock.invocationCallOrder[0])
   })
 
   it('credits nothing when the atomic end loses the race', async () => {
