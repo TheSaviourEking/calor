@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { requireAdmin } from '@/lib/admin/middleware'
 import { sendShippingNotification } from '@/lib/email'
+import { markOrderPaid, cancelOrderAndRelease } from '@/lib/orders/lifecycle'
 
 export async function PATCH(
   request: NextRequest,
@@ -17,8 +18,34 @@ export async function PATCH(
     const body = await request.json()
     
     const updateData: Record<string, unknown> = {}
-    
+
+    // Cancelling and confirming an unpaid order go through the lifecycle
+    // module, so reservations are released and the buyer is emailed exactly
+    // as when a payment provider does it.
+    let statusHandled = false
     if (body.status) {
+      const current = await db.order.findUnique({ where: { id }, select: { status: true } })
+
+      if (current && current.status !== body.status) {
+        if (current.status === 'CANCELLED' || current.status === 'REFUNDED') {
+          return NextResponse.json(
+            { error: 'A cancelled or refunded order cannot change status' },
+            { status: 400 }
+          )
+        }
+
+        if (current.status === 'PENDING' && (body.status === 'CANCELLED' || body.status === 'PAYMENT_RECEIVED')) {
+          const changed =
+            body.status === 'CANCELLED' ? await cancelOrderAndRelease(id) : await markOrderPaid(id)
+          if (!changed) {
+            return NextResponse.json({ error: 'Order status changed, please reload' }, { status: 409 })
+          }
+          statusHandled = true
+        }
+      }
+    }
+
+    if (body.status && !statusHandled) {
       updateData.status = body.status
     }
     
@@ -33,15 +60,21 @@ export async function PATCH(
       updateData.estimatedDelivery = estimatedDelivery
     }
 
-    const order = await db.order.update({
-      where: { id },
-      data: updateData,
-      include: {
-        customer: true,
-        items: { include: { product: true } },
-        address: true,
-      },
-    })
+    const include = {
+      customer: true,
+      items: { include: { product: true } },
+      address: true,
+    }
+
+    // Nothing left to write after a lifecycle transition: return the fresh order
+    const order =
+      Object.keys(updateData).length > 0
+        ? await db.order.update({ where: { id }, data: updateData, include })
+        : await db.order.findUnique({ where: { id }, include })
+
+    if (!order) {
+      return NextResponse.json({ error: 'Order not found' }, { status: 404 })
+    }
 
     // Send shipping notification email when order is shipped
     if (body.status === 'SHIPPED') {
