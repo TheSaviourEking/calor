@@ -14,6 +14,7 @@ import { Track } from 'livekit-client'
 import '@livekit/components-styles'
 import ClientWrapper from '@/components/layout/ClientWrapper'
 import { useCartStore, useLocaleStore } from '@/stores'
+import { realtimeAuth } from '@/lib/realtime-client'
 
 function StreamVideo() {
   const tracks = useTracks([Track.Source.Camera, Track.Source.ScreenShare])
@@ -75,7 +76,6 @@ interface ChatMessage {
   createdAt: string
   customer?: {
     firstName: string
-    lastName: string
   }
 }
 
@@ -177,6 +177,7 @@ export default function StreamViewerClient() {
     const url = process.env.NEXT_PUBLIC_LIVE_STREAM_URL || '/?XTransformPort=3032'
     socketRef.current = io(url, {
       transports: ['websocket'],
+      auth: realtimeAuth,
     })
 
     const socket = socketRef.current
@@ -212,6 +213,10 @@ export default function StreamViewerClient() {
     socket.on('offer_activated', (data: { offer: Offer }) => {
       setActiveOffer(data.offer)
       toast.success(`Flash Offer: ${data.offer.title}`)
+    })
+
+    socket.on('error', (data: { message?: string }) => {
+      if (data?.message) toast.error(data.message)
     })
 
     socket.on('offer_claimed', (data: { promoCode: string }) => {
@@ -644,7 +649,7 @@ export default function StreamViewerClient() {
                     <div className="flex-1">
                       <span className="font-body text-warm-gray text-xs">
                         {msg.customer
-                          ? `${msg.customer.firstName} ${msg.customer.lastName}`
+                          ? `${msg.customer.firstName}`
                           : msg.guestName || 'Guest'
                         }
                       </span>

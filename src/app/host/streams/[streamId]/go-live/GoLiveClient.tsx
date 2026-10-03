@@ -14,6 +14,7 @@ import { LiveKitRoom, useTracks, VideoTrack, RoomAudioRenderer } from '@livekit/
 import { Track } from 'livekit-client'
 import '@livekit/components-styles'
 import ClientWrapper from '@/components/layout/ClientWrapper'
+import { realtimeAuth } from '@/lib/realtime-client'
 
 function HostVideo() {
   const tracks = useTracks([Track.Source.Camera, Track.Source.ScreenShare])
@@ -60,7 +61,6 @@ interface ChatMessage {
   createdAt: string
   customer?: {
     firstName: string
-    lastName: string
   }
 }
 
@@ -140,6 +140,7 @@ export default function GoLiveClient() {
     const url = process.env.NEXT_PUBLIC_LIVE_STREAM_URL || '/?XTransformPort=3032'
     socketRef.current = io(url, {
       transports: ['websocket'],
+      auth: realtimeAuth,
     })
 
     const socket = socketRef.current
@@ -149,6 +150,10 @@ export default function GoLiveClient() {
         streamId,
         hostId: stream.host.id,
       })
+    })
+
+    socket.on('error', (data: { message?: string }) => {
+      if (data?.message) toast.error(data.message)
     })
 
     socket.on('new_message', (data: { message: ChatMessage }) => {
@@ -490,7 +495,7 @@ export default function GoLiveClient() {
                       <div>
                         <span className="font-body text-warm-gray text-xs">
                           {msg.customer
-                            ? `${msg.customer.firstName} ${msg.customer.lastName}`
+                            ? `${msg.customer.firstName}`
                             : msg.guestName || 'Guest'
                           }
                         </span>

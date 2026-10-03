@@ -4,11 +4,40 @@ import { PrismaClient } from '@prisma/client'
 import { createClient } from 'redis'
 import { createAdapter } from '@socket.io/redis-adapter'
 import { createServiceLogger } from '../logger'
+import { verifyRealtimeToken, type RealtimeUser } from '../realtime-token'
+import { canControlStream, cleanMessage, createRateLimiter } from '../authz'
 
 const log = createServiceLogger('live-stream')
 const db = new PrismaClient()
 
 const PORT = Number(process.env.PORT) || 3032
+const REALTIME_TOKEN_SECRET = process.env.REALTIME_TOKEN_SECRET
+const MAX_CHAT_LENGTH = 500
+
+// Per-socket rate limits: chat 5 burst then 1/s, reactions 10 burst then 3/s
+const chatLimiter = createRateLimiter(5, 1)
+const reactionLimiter = createRateLimiter(10, 3)
+
+if (!REALTIME_TOKEN_SECRET) {
+  log.warn('REALTIME_TOKEN_SECRET is not set — every connection is anonymous and host controls are disabled')
+}
+
+// Last-resort safety net: log a stray rejection instead of letting it end the process
+process.on('unhandledRejection', (err) => log.error({ err }, '[Live Stream] Unhandled rejection'))
+
+// Reaction types the viewer UI sends
+const ALLOWED_REACTIONS = new Set(['heart'])
+
+// offerId -> customerIds that have claimed it. Per-instance memory: it holds one
+// claim per customer per offer, which also satisfies any perCustomerLimit.
+const claimedBy = new Map<string, Set<string>>()
+// offerId -> customerIds with a claim in flight, reserved before any await so a
+// burst of claim events from one customer cannot all pass the check
+const claimPending = new Map<string, Set<string>>()
+
+// An id from a payload, or null unless it is a non-empty string.
+// Prisma drops an undefined where-value, so a bad id must never reach a query.
+const idOf = (v: unknown): string | null => (typeof v === 'string' && v ? v : null)
 
 // In-memory state for active streams
 const streamViewers = new Map<string, Set<string>>() // streamId -> Set of socketIds
@@ -58,13 +87,41 @@ async function getRoomViewerCount(streamId: string): Promise<number> {
   }
 }
 
+// Identify the connection from the handshake token. Viewers may be anonymous.
+io.use(async (socket, next) => {
+  socket.data.user = await verifyRealtimeToken(socket.handshake.auth?.token, REALTIME_TOKEN_SECRET)
+  next()
+})
+
 io.on('connection', (socket) => {
   log.act('client_connected', { socketId: socket.id })
+
+  const user = socket.data.user as RealtimeUser | null
+
+  const inStream = (streamId: unknown): streamId is string =>
+    typeof streamId === 'string' && socket.rooms.has(`stream:${streamId}`)
+
+  // Host controls: the stream's own host or an admin
+  const mayControl = async (streamId: unknown): Promise<boolean> => {
+    if (typeof streamId === 'string' && user) {
+      const stream = await db.liveStream.findUnique({ where: { id: streamId }, select: { hostId: true } })
+      if (canControlStream(user, stream)) return true
+    }
+    socket.emit('error', { message: 'Not allowed' })
+    return false
+  }
 
   // ============ STREAM JOIN/LEAVE ============
   socket.on('join_stream', async (data) => {
     try {
-      const { streamId, customerId, guestId } = data
+      const streamId = idOf(data?.streamId)
+      if (!streamId) {
+        socket.emit('error', { message: 'Stream not found' })
+        return
+      }
+      // A customer id is only recorded when the handshake token proves it
+      const customerId = user?.customerId
+      const guestId = customerId ? undefined : typeof data?.guestId === 'string' ? data.guestId.slice(0, 64) : undefined
 
       // Verify stream exists and is accessible
       const stream = await db.liveStream.findUnique({
@@ -162,7 +219,8 @@ io.on('connection', (socket) => {
 
   socket.on('leave_stream', async (data) => {
     try {
-      const { streamId } = data
+      const streamId = idOf(data?.streamId)
+      if (!streamId) return
       await handleLeaveStream(socket, streamId)
       log.act('leave_stream', { socketId: socket.id, streamId })
     } catch (error) {
@@ -172,18 +230,28 @@ io.on('connection', (socket) => {
 
   // ============ CHAT ============
   socket.on('send_message', async (data) => {
+    if (!chatLimiter(socket.id)) {
+      socket.emit('error', { message: 'Slow down a little' })
+      return
+    }
     try {
-      const { streamId, message, type, customerId, guestName, guestId } = data
+      const streamId = idOf(data?.streamId)
+      const message = cleanMessage(data?.message, MAX_CHAT_LENGTH)
+      if (!inStream(streamId) || !message) {
+        socket.emit('error', { message: 'Join the stream before chatting' })
+        return
+      }
+      const type = data?.type === 'question' ? 'question' : 'chat'
+      const customerId = user?.customerId
+      const guestId = customerId ? undefined : viewerSessions.get(socket.id)?.guestId
+      const guestName = customerId ? undefined : cleanMessage(data?.guestName, 40) ?? 'Guest'
 
       // Rate limit check (basic - in production use proper rate limiting)
       const recentMessages = await db.streamChatMessage.count({
         where: {
           streamId,
           createdAt: { gte: new Date(Date.now() - 1000) }, // Last second
-          OR: [
-            { customerId },
-            { guestId },
-          ],
+          ...(customerId ? { customerId } : { guestId: guestId ?? '__none__' }),
         },
       })
 
@@ -208,7 +276,7 @@ io.on('connection', (socket) => {
         data: {
           streamId,
           message,
-          type: type || 'chat',
+          type,
           customerId: customerId || null,
           guestName: guestName || null,
           guestId: guestId || null,
@@ -216,7 +284,7 @@ io.on('connection', (socket) => {
         },
         include: {
           customer: {
-            select: { firstName: true, lastName: true },
+            select: { firstName: true },
           },
         },
       })
@@ -255,16 +323,27 @@ io.on('connection', (socket) => {
 
   // Reactions
   socket.on('add_reaction', async (data) => {
+    if (!reactionLimiter(socket.id)) return
     try {
-      const { streamId, messageId, reactionType } = data
+      const streamId = idOf(data?.streamId)
+      const messageId = idOf(data?.messageId)
+      const reactionType = cleanMessage(data?.reactionType, 20)
+      if (!inStream(streamId) || !messageId || !reactionType || !ALLOWED_REACTIONS.has(reactionType)) return
 
-      const message = await db.streamChatMessage.findUnique({
-        where: { id: messageId },
+      const message = await db.streamChatMessage.findFirst({
+        where: { id: messageId, streamId },
       })
 
       if (!message) return
 
-      const reactions = message.reactionCounts ? JSON.parse(message.reactionCounts) : {}
+      // No prototype, so a stored key like __proto__ can never be read back
+      const reactions: Record<string, number> = Object.create(null)
+      if (message.reactionCounts) {
+        const parsed = JSON.parse(message.reactionCounts)
+        for (const key of Object.keys(parsed ?? {})) {
+          if (typeof parsed[key] === 'number') reactions[key] = parsed[key]
+        }
+      }
       reactions[reactionType] = (reactions[reactionType] || 0) + 1
 
       await db.streamChatMessage.update({
@@ -287,7 +366,11 @@ io.on('connection', (socket) => {
   // ============ PRODUCTS ============
   socket.on('feature_product', async (data) => {
     try {
-      const { streamId, productId, hostNotes } = data
+      const streamId = idOf(data?.streamId)
+      const productId = idOf(data?.productId)
+      const hostNotes = typeof data?.hostNotes === 'string' ? data.hostNotes : undefined
+      if (!streamId || !productId) return
+      if (!(await mayControl(streamId))) return
 
       await db.streamProduct.updateMany({
         where: { streamId },
@@ -324,12 +407,20 @@ io.on('connection', (socket) => {
   // ============ OFFERS ============
   socket.on('activate_offer', async (data) => {
     try {
-      const { streamId, offerId } = data
+      const streamId = idOf(data?.streamId)
+      const offerId = idOf(data?.offerId)
+      if (!streamId || !offerId) return
+      if (!(await mayControl(streamId))) return
 
-      const offer = await db.streamOffer.update({
-        where: { id: offerId },
+      // The offer must belong to this stream
+      const activated = await db.streamOffer.updateMany({
+        where: { id: offerId, streamId },
         data: { isActive: true },
       })
+      if (activated.count !== 1) return
+
+      // Promo codes go only to a claimant, via offer_claimed
+      const offer = await db.streamOffer.findUnique({ where: { id: offerId }, omit: { promoCode: true } })
 
       io.to(`stream:${streamId}`).emit('offer_activated', {
         streamId,
@@ -342,11 +433,26 @@ io.on('connection', (socket) => {
   })
 
   socket.on('claim_offer', async (data) => {
-    try {
-      const { streamId, offerId, customerId: _customerId } = data
+    const streamId = idOf(data?.streamId)
+    const offerId = idOf(data?.offerId)
+    if (!inStream(streamId) || !offerId) return
+    const claimantId = user?.customerId
+    if (!claimantId) {
+      socket.emit('error', { message: 'Sign in to claim offers' })
+      return
+    }
 
-      const offer = await db.streamOffer.findUnique({
-        where: { id: offerId },
+    // Check and reserve synchronously, before any await
+    if (claimPending.get(offerId)?.has(claimantId)) return // a claim is already in flight
+    const repeat = !!claimedBy.get(offerId)?.has(claimantId)
+    if (!repeat) {
+      if (!claimPending.has(offerId)) claimPending.set(offerId, new Set())
+      claimPending.get(offerId)!.add(claimantId)
+    }
+
+    try {
+      const offer = await db.streamOffer.findFirst({
+        where: { id: offerId, streamId, isActive: true },
       })
 
       if (!offer) {
@@ -354,20 +460,35 @@ io.on('connection', (socket) => {
         return
       }
 
-      // Check quantity
-      if (offer.quantityLimit !== null && offer.claimedCount >= offer.quantityLimit) {
-        socket.emit('offer_exhausted', { streamId, offerId })
+      // One claim per customer per offer: repeat the answer, do not increment
+      if (repeat) {
+        socket.emit('offer_claimed', { streamId, offerId, promoCode: offer.promoCode })
         return
       }
 
-      // Increment claim count atomically
-      const updatedOffer = await db.streamOffer.update({
-        where: { id: offerId },
+      // Claim in one conditional update so a limited offer cannot be over-claimed
+      const claimed = await db.streamOffer.updateMany({
+        where: {
+          id: offerId,
+          streamId,
+          isActive: true,
+          ...(offer.quantityLimit !== null && { claimedCount: { lt: offer.quantityLimit } }),
+        },
         data: {
           claimedCount: { increment: 1 },
           claimCount: { increment: 1 },
         },
       })
+
+      if (claimed.count !== 1) {
+        socket.emit('offer_exhausted', { streamId, offerId })
+        return
+      }
+
+      if (!claimedBy.has(offerId)) claimedBy.set(offerId, new Set())
+      claimedBy.get(offerId)!.add(claimantId)
+
+      const updatedOffer = await db.streamOffer.findUniqueOrThrow({ where: { id: offerId } })
 
       socket.emit('offer_claimed', {
         streamId,
@@ -382,17 +503,24 @@ io.on('connection', (socket) => {
         claimedCount: updatedOffer.claimedCount,
         remaining: offer.quantityLimit ? offer.quantityLimit - updatedOffer.claimedCount : null,
       })
-      log.act('claim_offer', { socketId: socket.id, streamId, offerId, customerId: _customerId })
+      log.act('claim_offer', { socketId: socket.id, streamId, offerId, customerId: user?.customerId })
     } catch (error) {
       log.error({ err: error, socketId: socket.id }, 'Error claiming offer')
       socket.emit('error', { message: 'Failed to claim offer' })
+    } finally {
+      if (!repeat) {
+        claimPending.get(offerId)?.delete(claimantId)
+        if (claimPending.get(offerId)?.size === 0) claimPending.delete(offerId)
+      }
     }
   })
 
   // ============ ANALYTICS ============
   socket.on('product_click', async (data) => {
     try {
-      const { streamId, productId } = data
+      const streamId = idOf(data?.streamId)
+      const productId = idOf(data?.productId)
+      if (!inStream(streamId) || !productId) return
 
       await Promise.all([
         db.streamProduct.update({
@@ -412,7 +540,9 @@ io.on('connection', (socket) => {
 
   socket.on('cart_add', async (data) => {
     try {
-      const { streamId, productId } = data
+      const streamId = idOf(data?.streamId)
+      const productId = idOf(data?.productId)
+      if (!inStream(streamId) || !productId) return
 
       await Promise.all([
         db.streamProduct.update({
@@ -433,7 +563,10 @@ io.on('connection', (socket) => {
   // ============ HOST CONTROLS ============
   socket.on('pin_message', async (data) => {
     try {
-      const { streamId, messageId } = data
+      const streamId = idOf(data?.streamId)
+      const messageId = idOf(data?.messageId)
+      if (!streamId || !messageId) return
+      if (!(await mayControl(streamId))) return
 
       // Unpin all other messages
       await db.streamChatMessage.updateMany({
@@ -441,10 +574,11 @@ io.on('connection', (socket) => {
         data: { isPinned: false },
       })
 
-      await db.streamChatMessage.update({
-        where: { id: messageId },
+      const pinned = await db.streamChatMessage.updateMany({
+        where: { id: messageId, streamId },
         data: { isPinned: true },
       })
+      if (pinned.count !== 1) return
 
       io.to(`stream:${streamId}`).emit('message_pinned', {
         streamId,
@@ -458,12 +592,16 @@ io.on('connection', (socket) => {
 
   socket.on('highlight_message', async (data) => {
     try {
-      const { streamId, messageId } = data
+      const streamId = idOf(data?.streamId)
+      const messageId = idOf(data?.messageId)
+      if (!streamId || !messageId) return
+      if (!(await mayControl(streamId))) return
 
-      await db.streamChatMessage.update({
-        where: { id: messageId },
+      const highlighted = await db.streamChatMessage.updateMany({
+        where: { id: messageId, streamId },
         data: { isHighlighted: true },
       })
+      if (highlighted.count !== 1) return
 
       io.to(`stream:${streamId}`).emit('message_highlighted', {
         streamId,
