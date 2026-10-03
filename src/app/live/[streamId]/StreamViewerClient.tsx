@@ -75,7 +75,6 @@ interface ChatMessage {
   createdAt: string
   customer?: {
     firstName: string
-    lastName: string
   }
 }
 
@@ -212,6 +211,10 @@ export default function StreamViewerClient() {
     socket.on('offer_activated', (data: { offer: Offer }) => {
       setActiveOffer(data.offer)
       toast.success(`Flash Offer: ${data.offer.title}`)
+    })
+
+    socket.on('error', (data: { message?: string }) => {
+      if (data?.message) toast.error(data.message)
     })
 
     socket.on('offer_claimed', (data: { promoCode: string }) => {
@@ -644,7 +647,7 @@ export default function StreamViewerClient() {
                     <div className="flex-1">
                       <span className="font-body text-warm-gray text-xs">
                         {msg.customer
-                          ? `${msg.customer.firstName} ${msg.customer.lastName}`
+                          ? `${msg.customer.firstName}`
                           : msg.guestName || 'Guest'
                         }
                       </span>

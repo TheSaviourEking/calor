@@ -60,7 +60,6 @@ interface ChatMessage {
   createdAt: string
   customer?: {
     firstName: string
-    lastName: string
   }
 }
 
@@ -490,7 +489,7 @@ export default function GoLiveClient() {
                       <div>
                         <span className="font-body text-warm-gray text-xs">
                           {msg.customer
-                            ? `${msg.customer.firstName} ${msg.customer.lastName}`
+                            ? `${msg.customer.firstName}`
                             : msg.guestName || 'Guest'
                           }
                         </span>

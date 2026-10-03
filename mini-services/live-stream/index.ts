@@ -23,6 +23,13 @@ process.on('unhandledRejection', (err) => log.error({ err }, '[Live Stream] Unha
 
 // An id from a payload, or null unless it is a non-empty string.
 // Prisma drops an undefined where-value, so a bad id must never reach a query.
+// Reaction types the viewer UI sends
+const ALLOWED_REACTIONS = new Set(['heart'])
+
+// offerId -> customerIds that have claimed it. Per-instance memory: it holds one
+// claim per customer per offer, which also satisfies any perCustomerLimit.
+const claimedBy = new Map<string, Set<string>>()
+
 const idOf = (v: unknown): string | null => (typeof v === 'string' && v ? v : null)
 
 // In-memory state for active streams
@@ -309,7 +316,7 @@ io.on('connection', (socket) => {
       const streamId = idOf(data?.streamId)
       const messageId = idOf(data?.messageId)
       const reactionType = cleanMessage(data?.reactionType, 20)
-      if (!inStream(streamId) || !messageId || !reactionType) return
+      if (!inStream(streamId) || !messageId || !reactionType || !ALLOWED_REACTIONS.has(reactionType)) return
 
       const message = await db.streamChatMessage.findFirst({
         where: { id: messageId, streamId },
@@ -317,7 +324,14 @@ io.on('connection', (socket) => {
 
       if (!message) return
 
-      const reactions = message.reactionCounts ? JSON.parse(message.reactionCounts) : {}
+      // No prototype, so a stored key like __proto__ can never be read back
+      const reactions: Record<string, number> = Object.create(null)
+      if (message.reactionCounts) {
+        const parsed = JSON.parse(message.reactionCounts)
+        for (const key of Object.keys(parsed ?? {})) {
+          if (typeof parsed[key] === 'number') reactions[key] = parsed[key]
+        }
+      }
       reactions[reactionType] = (reactions[reactionType] || 0) + 1
 
       await db.streamChatMessage.update({
@@ -410,6 +424,11 @@ io.on('connection', (socket) => {
       const streamId = idOf(data?.streamId)
       const offerId = idOf(data?.offerId)
       if (!inStream(streamId) || !offerId) return
+      const claimantId = user?.customerId
+      if (!claimantId) {
+        socket.emit('error', { message: 'Sign in to claim offers' })
+        return
+      }
 
       const offer = await db.streamOffer.findFirst({
         where: { id: offerId, streamId, isActive: true },
@@ -420,10 +439,18 @@ io.on('connection', (socket) => {
         return
       }
 
+      // One claim per customer per offer: repeat the answer, do not increment
+      if (claimedBy.get(offerId)?.has(claimantId)) {
+        socket.emit('offer_claimed', { streamId, offerId, promoCode: offer.promoCode })
+        return
+      }
+
       // Claim in one conditional update so a limited offer cannot be over-claimed
       const claimed = await db.streamOffer.updateMany({
         where: {
           id: offerId,
+          streamId,
+          isActive: true,
           ...(offer.quantityLimit !== null && { claimedCount: { lt: offer.quantityLimit } }),
         },
         data: {
@@ -436,6 +463,9 @@ io.on('connection', (socket) => {
         socket.emit('offer_exhausted', { streamId, offerId })
         return
       }
+
+      if (!claimedBy.has(offerId)) claimedBy.set(offerId, new Set())
+      claimedBy.get(offerId)!.add(claimantId)
 
       const updatedOffer = await db.streamOffer.findUniqueOrThrow({ where: { id: offerId } })
 
