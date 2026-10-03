@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { requireAdmin } from '@/lib/admin/middleware'
+import { requireAdminUser } from '@/lib/auth/guards'
 
+// Lists every promotion code, including single-use recovery codes: admins only
 export async function GET(request: NextRequest) {
   try {
+    const auth = await requireAdminUser()
+    if (!auth.ok) return auth.response
+
     const { searchParams } = new URL(request.url)
     const active = searchParams.get('active')
     const type = searchParams.get('type')

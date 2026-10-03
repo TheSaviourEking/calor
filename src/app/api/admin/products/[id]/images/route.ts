@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { requireAdmin } from '@/lib/admin/middleware'
+import { requireAdminUser } from '@/lib/auth/guards'
 
 // Upload image for a product
 export async function POST(
@@ -80,8 +81,11 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const auth = await requireAdminUser()
+    if (!auth.ok) return auth.response
+
     const { id } = await params
-    
+
     const images = await db.productImage.findMany({ take: 50,
       where: { productId: id },
       orderBy: { sortOrder: 'asc' },
