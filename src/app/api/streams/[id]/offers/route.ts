@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { requireStreamOwner } from '@/lib/auth/guards'
 
 // GET /api/streams/[id]/offers - Get offers for a stream
 export async function GET(
@@ -42,6 +43,8 @@ export async function POST(
 ) {
   try {
     const { id } = await params
+    const auth = await requireStreamOwner(id)
+    if (!auth.ok) return auth.response
     const body = await request.json()
     const {
       title,

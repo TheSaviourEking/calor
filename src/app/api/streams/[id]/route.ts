@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import bcrypt from 'bcryptjs'
+import { requireStreamOwner } from '@/lib/auth/guards'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -13,6 +14,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     const stream = await db.liveStream.findUnique({
       where: { id },
+      // Never send the RTMP key or the private-stream password hash to viewers
+      omit: { streamKey: true, password: true },
       include: {
         host: {
           select: {
@@ -81,6 +84,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params
+    const auth = await requireStreamOwner(id)
+    if (!auth.ok) return auth.response
     const body = await request.json()
 
     const {
@@ -134,6 +139,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params
+    const auth = await requireStreamOwner(id)
+    if (!auth.ok) return auth.response
 
     // Check if stream exists
     const stream = await db.liveStream.findUnique({

@@ -3,6 +3,7 @@ import { db } from '@/lib/db'
 import { nanoid } from 'nanoid'
 import { randomBytes } from 'crypto'
 import bcrypt from 'bcryptjs'
+import { requireHostProfile } from '@/lib/auth/guards'
 
 async function hashStreamPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 10)
@@ -41,6 +42,7 @@ export async function GET(request: NextRequest) {
     const [streams, total] = await Promise.all([
       db.liveStream.findMany({ /* take: handled */
         where,
+        omit: { streamKey: true, password: true },
         include: {
           host: {
             select: {
@@ -99,9 +101,13 @@ export async function GET(request: NextRequest) {
 // POST /api/streams - Create a new stream (host/admin only)
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireHostProfile()
+    if (!auth.ok) return auth.response
+
     const body = await request.json()
+    // Hosts always create under their own profile; only an admin may name another host
+    const hostId: string | null = auth.isAdmin && body.hostId ? body.hostId : auth.hostId
     const {
-      hostId,
       title,
       description,
       thumbnailUrl,
