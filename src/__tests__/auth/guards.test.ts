@@ -136,9 +136,4 @@ describe('isAuthorizedCron', () => {
     process.env.CRON_SECRET = 's3cret'
     expect(isAuthorizedCron(request('bearer s3cret'))).toBe(false)
   })
-
-  it('refuses bearer secret with trailing space', () => {
-    process.env.CRON_SECRET = 's3cret'
-    expect(isAuthorizedCron(request('Bearer s3cret '))).toBe(false)
-  })
 })

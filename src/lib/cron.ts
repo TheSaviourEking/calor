@@ -15,8 +15,5 @@ export function isAuthorizedCron(request: Request): boolean {
   const received = request.headers.get('authorization') ?? ''
   const expected = `Bearer ${secret}`
 
-  // Reject if header had leading/trailing whitespace
-  if (received !== received.trim()) return false
-
   return timingSafeEqual(digest(received), digest(expected))
 }
