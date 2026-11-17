@@ -69,8 +69,6 @@ interface ChatMessage {
   id: string
   message: string
   type: string
-  customerId: string | null
-  guestName: string | null
   isPinned: boolean
   isHighlighted: boolean
   reactionCounts: string | null

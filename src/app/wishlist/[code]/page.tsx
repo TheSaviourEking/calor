@@ -17,10 +17,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   
   const wishlist = await db.sharedWishlist.findUnique({
     where: { shareCode: code },
-    select: { title: true, customer: { select: { nickname: true, firstName: true, lastName: true } } },
+    select: { title: true, isActive: true, expiresAt: true, customer: { select: { nickname: true, firstName: true, lastName: true } } },
   })
 
-  if (!wishlist) {
+  if (!wishlist || !wishlist.isActive || (wishlist.expiresAt && new Date() > wishlist.expiresAt)) {
     return { title: 'Wishlist Not Found | calo.' }
   }
 
@@ -76,7 +76,7 @@ export default async function SharedWishlistPage({ params }: Props) {
     .map(id => products.find(p => p.id === id))
     .filter(Boolean)
 
-  const { customer, ...rest } = sharedWishlist
+  const { customer, customerId: _customerId, ...rest } = sharedWishlist
 
   return (
     <SharedWishlistClient

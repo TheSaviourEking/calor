@@ -55,8 +55,6 @@ interface StreamProduct {
 interface ChatMessage {
   id: string
   message: string
-  customerId: string | null
-  guestName: string | null
   isPinned: boolean
   isHighlighted: boolean
   createdAt: string

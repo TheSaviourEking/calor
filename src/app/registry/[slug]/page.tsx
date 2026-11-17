@@ -13,9 +13,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params
   const registry = await db.giftRegistry.findUnique({
     where: { slug },
-    select: { title: true, status: true, customer: { select: { nickname: true, firstName: true, lastName: true } } },
+    select: { title: true, status: true, isPublic: true, password: true, customer: { select: { nickname: true, firstName: true, lastName: true } } },
   })
-  if (!registry || registry.status !== 'active') {
+  if (!registry || registry.status !== 'active' || (!registry.isPublic && registry.password)) {
     return { title: 'Gift Registry | calo.', description: 'View and purchase gifts from this registry.' }
   }
   return registryMetadata(registry.title, publicDisplayName(registry.customer, 'a calo. member'))

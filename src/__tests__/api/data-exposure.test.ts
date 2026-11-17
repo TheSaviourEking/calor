@@ -212,4 +212,29 @@ describe('public names', () => {
     expect(JSON.stringify(wishlistMetadata('Hers', 'Amber 4821'))).toContain('Amber 4821')
     expect(JSON.stringify(wishlistMetadata(null, 'Ada L.'))).not.toContain('Lovelace')
   })
+
+  it('generateMetadata hides owner and title for a password-protected registry', async () => {
+    const row = { title: 'Our secret day', status: 'active', isPublic: false, password: 'hash', customer: ada }
+    db.giftRegistry.findUnique.mockResolvedValue(row)
+    const { generateMetadata } = await import('@/app/registry/[slug]/page')
+    const meta = await generateMetadata({ params: Promise.resolve({ slug: 's' }) })
+    expect(meta.title).toBe('Gift Registry | calo.')
+    expect(JSON.stringify(meta)).not.toMatch(/Ada|secret/)
+
+    db.giftRegistry.findUnique.mockResolvedValue({ ...row, isPublic: true })
+    const open = await generateMetadata({ params: Promise.resolve({ slug: 's' }) })
+    expect(JSON.stringify(open)).toContain('Ada L.')
+  })
+
+  it('wishlist generateMetadata is generic when inactive or expired', async () => {
+    const row = { title: 'Hers', isActive: true, expiresAt: null, customer: ada }
+    const { generateMetadata } = await import('@/app/wishlist/[code]/page')
+    for (const r of [{ ...row, isActive: false }, { ...row, expiresAt: new Date(Date.now() - 1000) }]) {
+      db.sharedWishlist.findUnique.mockResolvedValue(r)
+      const meta = await generateMetadata({ params: Promise.resolve({ code: 'abc' }) })
+      expect(JSON.stringify(meta)).not.toMatch(/Ada|Hers/)
+    }
+    db.sharedWishlist.findUnique.mockResolvedValue(row)
+    expect(JSON.stringify(await generateMetadata({ params: Promise.resolve({ code: 'abc' }) }))).toContain('Ada L.')
+  })
 })
