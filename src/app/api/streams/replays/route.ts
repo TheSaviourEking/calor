@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { PUBLIC_IMAGE_SELECT } from '@/lib/photos/public-image'
 
 // GET /api/streams/replays - Get available replays
 export async function GET(request: NextRequest) {
@@ -33,7 +34,7 @@ export async function GET(request: NextRequest) {
                 id: true,
                 name: true,
                 slug: true,
-                images: { take: 1 },
+                images: { take: 1, select: PUBLIC_IMAGE_SELECT },
                 variants: { take: 1 },
               },
             },

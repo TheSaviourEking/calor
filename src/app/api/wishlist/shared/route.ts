@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
         variants: { select: { id: true, price: true } },
         images: {
           take: 1,
-          select: { url: true, altText: true },
+          select: { url: true, altText: true, treatment: true },
         },
       },
     })

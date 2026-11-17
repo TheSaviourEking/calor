@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Package, ChevronRight, Tag, Heart, ShoppingBag } from 'lucide-react'
 import { toast } from 'sonner'
 import { useCartStore } from '@/stores'
+import type { PhotoTreatment } from '@/lib/photos/types'
 
 interface BundleItem {
   id: string
@@ -12,7 +13,7 @@ interface BundleItem {
     id: string
     name: string
     slug: string
-    images: Array<{ url: string; altText: string }>
+    images: Array<{ url: string; altText: string; treatment?: string }>
     variants: Array<{ price: number }>
   }
 }
@@ -49,6 +50,7 @@ export default function BundlesClient({ bundles }: BundlesClientProps) {
           price: Math.floor(bundle.priceCents / bundle.items.length / item.quantity),
           quantity: item.quantity,
           image: item.product.images[0]?.url,
+          imageTreatment: item.product.images[0]?.treatment as PhotoTreatment | undefined,
         })
       }
     })

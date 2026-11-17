@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import ProductPhoto from '@/components/product/ProductPhoto'
 import { Download, BookOpen, Headphones, Video, Lock } from 'lucide-react'
 import Link from 'next/link'
 import ClientWrapper from '@/components/layout/ClientWrapper'
@@ -99,9 +100,9 @@ export default function DigitalLibraryPage() {
                 return (
                   <div key={`${item.orderId}-${idx}`} className="bg-warm-white border border-sand p-5 flex items-center gap-5">
                     {/* Thumbnail */}
-                    <div className="w-16 h-16 bg-gradient-to-br from-cream to-sand flex-shrink-0 flex items-center justify-center text-terracotta">
+                    <div className="relative w-16 h-16 bg-gradient-to-br from-cream to-sand flex-shrink-0 flex items-center justify-center text-terracotta">
                       {item.productImage ? (
-                        <img src={item.productImage} alt={item.productName} className="w-full h-full object-cover" />
+                        <ProductPhoto src={item.productImage} alt={item.productName} aspect="fill" sizes="64px" />
                       ) : Icon}
                     </div>
 

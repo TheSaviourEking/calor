@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import type { PhotoTreatment } from '@/lib/photos/types'
 
 export interface CartItem {
   id: string
@@ -10,6 +11,7 @@ export interface CartItem {
   price: number
   quantity: number
   image?: string
+  imageTreatment?: PhotoTreatment
 }
 
 interface CartStore {

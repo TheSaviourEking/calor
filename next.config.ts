@@ -1,4 +1,16 @@
 import type { NextConfig } from "next";
+import { STATIC_REMOTE_PATTERNS } from "./src/lib/photos/image-hosts";
+
+// R2 custom/public domain, when configured
+function r2PublicPatterns() {
+  const raw = process.env.R2_PUBLIC_URL;
+  if (!raw) return [];
+  try {
+    return [{ protocol: "https" as const, hostname: new URL(raw).hostname }];
+  } catch {
+    return [];
+  }
+}
 
 const nextConfig: NextConfig = {
   // standalone output for Docker/VPS — set STANDALONE=true in env
@@ -7,13 +19,10 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ["prisma", "@prisma/engines", "@prisma/client"],
   reactStrictMode: true,
   images: {
+    // Static hosts are shared with ProductPhoto, which serves anything else unoptimized
     remotePatterns: [
-      { protocol: "https", hostname: "cdn.pixabay.com" },
-      // Default R2 bucket URL
-      { protocol: "https", hostname: "*.r2.cloudflarestorage.com" },
-      { protocol: "https", hostname: "images.unsplash.com" },
-      // TODO: Add your R2 custom domain here at deploy time, e.g.:
-      // { protocol: "https", hostname: "assets.yourdomain.com" },
+      ...STATIC_REMOTE_PATTERNS.map((p) => ({ ...p })),
+      ...r2PublicPatterns(),
     ],
   },
   async rewrites() {

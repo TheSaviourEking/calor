@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { requireStreamOwner } from '@/lib/auth/guards'
+import { PUBLIC_IMAGE_SELECT } from '@/lib/photos/public-image'
 
 // GET /api/streams/[id]/offers - Get offers for a stream
 export async function GET(
@@ -19,7 +20,7 @@ export async function GET(
             id: true,
             name: true,
             slug: true,
-            images: { take: 1 },
+            images: { take: 1, select: PUBLIC_IMAGE_SELECT },
             variants: { take: 1 },
           },
         },

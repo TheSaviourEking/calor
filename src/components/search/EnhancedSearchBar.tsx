@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { Search, X, Clock, TrendingUp, Sparkles, Loader2, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
-import Image from 'next/image'
+import ProductPhoto from '@/components/product/ProductPhoto'
+import type { PhotoTreatment } from '@/lib/photos/types'
 import { useLocaleStore } from '@/stores'
 
 interface Suggestion {
@@ -12,6 +13,7 @@ interface Suggestion {
     slug: string
     name: string
     image: string | null
+    imageTreatment?: string
     price: number
     category: string
   }>
@@ -281,12 +283,13 @@ export default function EnhancedSearchBar({
                 >
                   <div className="w-10 h-10 bg-sand/50 flex items-center justify-center flex-shrink-0">
                     {product.image ? (
-                      <Image
+                      <ProductPhoto
                         src={product.image}
                         alt={product.name}
-                        width={40}
-                        height={40}
-                        className="object-cover"
+                        treatment={product.imageTreatment as PhotoTreatment | undefined}
+                        aspect="square"
+                        sizes="40px"
+                        className="w-full"
                       />
                     ) : (
                       <span className="font-display text-warm-gray text-lg">{product.name[0]}</span>

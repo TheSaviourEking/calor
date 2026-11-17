@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { PUBLIC_IMAGE_SELECT } from '@/lib/photos/public-image'
 
 // GET /api/recommendations/product/[id] - Get recommendations for a specific product
 export async function GET(
@@ -37,7 +38,7 @@ export async function GET(
           published: true,
         },
         include: {
-          images: { orderBy: { sortOrder: 'asc' }, take: 1 },
+          images: { orderBy: { sortOrder: 'asc' }, take: 1, select: PUBLIC_IMAGE_SELECT },
           category: true,
           variants: { take: 1 },
         },
@@ -87,7 +88,7 @@ export async function GET(
         published: true,
       },
       include: {
-        images: { orderBy: { sortOrder: 'asc' }, take: 1 },
+        images: { orderBy: { sortOrder: 'asc' }, take: 1, select: PUBLIC_IMAGE_SELECT },
         category: true,
         variants: { take: 1 },
       },
@@ -108,7 +109,7 @@ export async function GET(
                 include: {
                   product: {
                     include: {
-                      images: { orderBy: { sortOrder: 'asc' }, take: 1 },
+                      images: { orderBy: { sortOrder: 'asc' }, take: 1, select: PUBLIC_IMAGE_SELECT },
                       category: true,
                     },
                   },
@@ -143,7 +144,7 @@ export async function GET(
             published: true,
           },
           include: {
-            images: { orderBy: { sortOrder: 'asc' }, take: 1 },
+            images: { orderBy: { sortOrder: 'asc' }, take: 1, select: PUBLIC_IMAGE_SELECT },
             category: true,
             variants: { take: 1 },
           },

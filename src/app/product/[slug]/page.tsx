@@ -13,6 +13,7 @@ interface PageProps {
 }
 
 import { Metadata } from 'next';
+import { PUBLIC_IMAGE_SELECT } from '@/lib/photos/public-image'
 
 async function getProduct(slug: string) {
   return db.product.findUnique({
@@ -20,7 +21,7 @@ async function getProduct(slug: string) {
     include: {
       category: true,
       variants: true,
-      images: { orderBy: { sortOrder: "asc" } },
+      images: { orderBy: { sortOrder: "asc" }, select: PUBLIC_IMAGE_SELECT },
       videos: {
         where: { isActive: true },
         orderBy: [{ isFeatured: "desc" }, { sortOrder: "asc" }],
@@ -74,7 +75,7 @@ async function getRelatedProducts(categoryId: string, excludeId: string) {
       },
       images: {
         take: 1,
-        select: { url: true, altText: true },
+        select: { url: true, altText: true, treatment: true },
       },
       videos: {
         take: 1,

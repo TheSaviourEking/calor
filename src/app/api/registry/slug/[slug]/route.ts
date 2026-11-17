@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getSession } from '@/lib/auth/session'
 import bcrypt from 'bcryptjs'
+import { PUBLIC_IMAGE_SELECT } from '@/lib/photos/public-image'
 
 interface RouteParams {
   params: Promise<{ slug: string }>
@@ -32,7 +33,7 @@ export async function GET(request: Request, { params }: RouteParams) {
           include: {
             product: {
               include: {
-                images: { take: 1 },
+                images: { take: 1, select: PUBLIC_IMAGE_SELECT },
                 variants: { take: 1 },
                 category: { select: { name: true } },
               },

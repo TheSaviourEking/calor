@@ -66,7 +66,7 @@ export default async function SharedWishlistPage({ params }: Props) {
       variants: { select: { id: true, price: true, stock: true } },
       images: {
         take: 1,
-        select: { url: true, altText: true },
+        select: { url: true, altText: true, treatment: true },
       },
     },
   })

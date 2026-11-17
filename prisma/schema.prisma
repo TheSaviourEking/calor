@@ -270,6 +270,16 @@ model ProductImage {
   altText   String
   sortOrder Int     @default(0)
 
+  originalUrl     String? // untouched upload, kept under originals/
+  treatment       String  @default("original") // "original", "blend", "composite"
+  backdrop        String? // composite backdrop: "satin", "linen", "blush"
+  reviewStatus    String  @default("approved") // "approved", "pending", "rejected"
+  whiteBackground Boolean @default(false)
+  width           Int?
+  height          Int?
+  compositeUrl    String?
+  reviewNote      String?
+
   @@index([productId])
 }
 

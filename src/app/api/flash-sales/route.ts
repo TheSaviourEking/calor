@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { PUBLIC_IMAGE_SELECT } from '@/lib/photos/public-image'
 
 // Get active flash sales
 export async function GET(_request: NextRequest) {
@@ -30,7 +31,7 @@ export async function GET(_request: NextRequest) {
               published: true,
             },
             include: {
-              images: { take: 1 },
+              images: { take: 1, select: PUBLIC_IMAGE_SELECT },
               variants: { take: 1 },
               category: true,
             },

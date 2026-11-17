@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import ProductPhoto from '@/components/product/ProductPhoto'
+import type { PhotoTreatment } from '@/lib/photos/types'
 import Link from 'next/link'
 import { 
   Plus, Search, Edit, Trash2, Eye, EyeOff, Package, 
@@ -26,6 +28,13 @@ interface ProductImage {
   id: string
   url: string
   altText: string
+  treatment?: string
+}
+
+const TREATMENT_LABEL: Record<string, string> = {
+  original: 'Original',
+  blend: 'Blended',
+  composite: 'calo. composite',
 }
 
 interface Product {
@@ -274,15 +283,24 @@ export default function AdminProductsClient({
                   <tr key={product.id} className="hover:bg-sand/10 transition-colors">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-cream to-sand flex-shrink-0 flex items-center justify-center">
-                          {product.images[0]?.url ? (
-                            <img 
-                              src={product.images[0].url} 
-                              alt={product.name}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <span className="font-display text-charcoal/30">{product.name.charAt(0)}</span>
+                        <div className="flex flex-col items-center gap-1 flex-shrink-0">
+                          <div className="relative w-10 h-10 bg-gradient-to-br from-cream to-sand flex items-center justify-center">
+                            {product.images[0]?.url ? (
+                              <ProductPhoto
+                                src={product.images[0].url}
+                                alt={product.name}
+                                treatment={product.images[0].treatment as PhotoTreatment | undefined}
+                                aspect="fill"
+                                sizes="40px"
+                              />
+                            ) : (
+                              <span className="font-display text-charcoal/30">{product.name.charAt(0)}</span>
+                            )}
+                          </div>
+                          {product.images[0]?.url && (
+                            <span className="font-body text-warm-gray text-[10px] uppercase tracking-wider whitespace-nowrap">
+                              {TREATMENT_LABEL[product.images[0].treatment ?? 'original'] ?? TREATMENT_LABEL.original}
+                            </span>
                           )}
                         </div>
                         <div className="min-w-0">
@@ -334,6 +352,12 @@ export default function AdminProductsClient({
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-2">
+                        <Link
+                          href={`/admin/products/${product.id}/photos`}
+                          className="px-2 py-1 font-body text-warm-gray text-xs hover:bg-sand transition-colors"
+                        >
+                          Photos
+                        </Link>
                         <button
                           onClick={() => handleTogglePublished(product)}
                           className="p-1.5 hover:bg-sand transition-colors"

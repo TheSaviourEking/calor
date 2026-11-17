@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getSession } from '@/lib/auth/session'
+import { PUBLIC_IMAGE_SELECT } from '@/lib/photos/public-image'
 
 // GET - Get all stock alerts for logged-in customer
 export async function GET() {
@@ -15,7 +16,7 @@ export async function GET() {
       include: {
         product: {
           include: {
-            images: { orderBy: { sortOrder: 'asc' }, take: 1 },
+            images: { orderBy: { sortOrder: 'asc' }, take: 1, select: PUBLIC_IMAGE_SELECT },
             variants: true,
           },
         },

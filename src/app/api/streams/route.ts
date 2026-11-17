@@ -5,6 +5,7 @@ import { randomBytes } from 'crypto'
 import bcrypt from 'bcryptjs'
 import { requireHostProfile } from '@/lib/auth/guards'
 import { getSession } from '@/lib/auth/session'
+import { PUBLIC_IMAGE_SELECT } from '@/lib/photos/public-image'
 
 async function hashStreamPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 10)
@@ -78,7 +79,7 @@ export async function GET(request: NextRequest) {
                   id: true,
                   name: true,
                   slug: true,
-                  images: { take: 1 },
+                  images: { take: 1, select: PUBLIC_IMAGE_SELECT },
                   variants: { take: 1 },
                 },
               },

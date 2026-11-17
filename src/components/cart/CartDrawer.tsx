@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import Image from 'next/image'
+import ProductPhoto from '@/components/product/ProductPhoto'
 import { X, Plus, Minus, Trash2, ArrowRight } from 'lucide-react'
 import { useCartStore, useLocaleStore } from '@/stores'
 
@@ -119,14 +119,14 @@ export default function CartDrawer() {
                   className="flex gap-4 animate-slide-in-up"
                 >
                   {/* Image */}
-                  <div className="w-[72px] h-[72px] bg-gradient-to-br from-cream to-sand flex-shrink-0">
+                  <div className="relative w-[72px] h-[72px] bg-gradient-to-br from-cream to-sand flex-shrink-0">
                     {item.image ? (
-                      <Image
+                      <ProductPhoto
                         src={item.image}
                         alt={item.name}
-                        width={72}
-                        height={72}
-                        className="w-full h-full object-cover"
+                        treatment={item.imageTreatment}
+                        aspect="fill"
+                        sizes="72px"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">

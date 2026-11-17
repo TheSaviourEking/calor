@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import Image from 'next/image'
+import ProductPhoto from '@/components/product/ProductPhoto'
+import type { PhotoTreatment } from '@/lib/photos/types'
 import { useQuizStore } from '@/stores/quiz'
 import { useCartStore } from '@/stores'
 import {
@@ -108,7 +109,8 @@ export default function QuizClient() {
             category: product.category?.name || 'Product',
             price: product.variants[0].price,
             quantity: 1,
-            image: product.images?.[0]?.url
+            image: product.images?.[0]?.url,
+            imageTreatment: product.images?.[0]?.treatment as PhotoTreatment | undefined
           })
         }
       }
@@ -242,11 +244,12 @@ export default function QuizClient() {
               <div key={product.id} className="bg-warm-white border border-sand group">
                 <div className="relative aspect-square bg-sand/30">
                   {product.images?.[0]?.url ? (
-                    <Image
+                    <ProductPhoto
                       src={product.images[0].url}
                       alt={product.name}
-                      fill
-                      className="object-cover"
+                      treatment={product.images[0].treatment as PhotoTreatment | undefined}
+                      aspect="fill"
+                      sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
                     />
                   ) : (
                     <div className="flex items-center justify-center h-full">
@@ -295,7 +298,8 @@ export default function QuizClient() {
                             category: product.category?.name || 'Product',
                             price: product.variants[0].price,
                             quantity: 1,
-                            image: product.images?.[0]?.url
+                            image: product.images?.[0]?.url,
+            imageTreatment: product.images?.[0]?.treatment as PhotoTreatment | undefined
                           })
                           toast.success('Added to bag')
                           openCart()

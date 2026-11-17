@@ -103,6 +103,9 @@ describe('admin-only handlers', () => {
     ['gift-cards', 'POST'], ['abandoned-cart', 'GET'], ['abandoned-cart/recover', 'POST'],
     ['admin/audit-logs', 'POST'],
     ['promotions', 'GET'], ['admin/products/[id]/images', 'GET', { id: 'x' }],
+    ['admin/products/[id]/images', 'POST', { id: 'x' }], ['upload', 'POST'], ['products', 'POST'],
+    ['admin/products/[id]/images/[imageId]/composite', 'POST', { id: 'x', imageId: 'x' }],
+    ['admin/products/[id]/images/[imageId]/review', 'POST', { id: 'x', imageId: 'x' }],
   ])
 
   it.each(cases.map((c) => [label(c), c] as const))('%s returns 401 without a session', async (_name, c) => {

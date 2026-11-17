@@ -1,14 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { getSession } from '@/lib/auth/session'
+import { requireAdminUser } from '@/lib/auth/guards'
+import { isStoredOriginal } from '@/lib/photos/storage'
+import type { PhotoTreatment } from '@/lib/photos/types'
+
+const positiveInt = (v: unknown) => (Number.isInteger(v) && (v as number) > 0 ? (v as number) : null)
+// 'composite' is set only by the admin approval step, never by a client write
+const clientTreatment = (v: unknown): PhotoTreatment => (v === 'blend' ? 'blend' : 'original')
 
 export async function POST(req: NextRequest) {
-    try {
-        const session = await getSession()
-        if (!session?.customerId) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-        }
+    const auth = await requireAdminUser()
+    if (!auth.ok) return auth.response
 
+    try {
         const body = await req.json()
         const {
             name, shortDescription, fullDescription,
@@ -117,7 +121,12 @@ export async function POST(req: NextRequest) {
                     create: images.map((img: any, index: number) => ({
                         url: img.url,
                         altText: img.altText || `${name} - Image ${index + 1}`,
-                        sortOrder: img.sortOrder || index
+                        sortOrder: img.sortOrder || index,
+                        originalUrl: isStoredOriginal(img.originalUrl) ? img.originalUrl : null,
+                        treatment: clientTreatment(img.treatment),
+                        whiteBackground: img.whiteBackground === true,
+                        width: positiveInt(img.width),
+                        height: positiveInt(img.height),
                     }))
                 } : undefined,
                 videos: videos && videos.length > 0 ? {

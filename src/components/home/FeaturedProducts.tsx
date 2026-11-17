@@ -1,5 +1,6 @@
 import { db } from '@/lib/db'
 import ProductCard from '@/components/product/ProductCard'
+import { PUBLIC_IMAGE_SELECT } from '@/lib/photos/public-image'
 
 async function getFeaturedProducts() {
   const products = await db.product.findMany({
@@ -19,6 +20,7 @@ async function getFeaturedProducts() {
       images: {
         take: 1,
         orderBy: { sortOrder: 'asc' },
+        select: PUBLIC_IMAGE_SELECT,
       },
       videos: {
         take: 1,

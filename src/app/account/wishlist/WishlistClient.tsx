@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import ProductPhoto from '@/components/product/ProductPhoto'
+import type { PhotoTreatment } from '@/lib/photos/types'
 import { Heart, Share2, Link as LinkIcon, Copy, Check, X, Loader2, ShoppingBag } from 'lucide-react'
 import Link from 'next/link'
 import { useWishlistStore, useLocaleStore, useCartStore } from '@/stores'
@@ -13,7 +15,7 @@ export interface WishlistProduct {
     shortDescription: string
     category: { name: string; slug: string }
     variants: Array<{ id: string; price: number; stock: number }>
-    images: Array<{ url: string; altText: string }>
+    images: Array<{ url: string; altText: string; treatment?: string }>
 }
 
 export interface SharedWishlist {
@@ -78,6 +80,7 @@ export default function WishlistClient({ initialSharedWishlists = [] }: { initia
             quantity: 1,
             variantId: variant?.id || '',
             image: product.images[0]?.url,
+            imageTreatment: product.images[0]?.treatment as PhotoTreatment | undefined,
         })
         toast.success(`Added ${product.name} to bag`)
     }
@@ -189,10 +192,12 @@ export default function WishlistClient({ initialSharedWishlists = [] }: { initia
                             <div key={product.id} className="group bg-warm-white border border-sand p-4">
                                 <div className="relative aspect-square bg-gradient-to-br from-cream to-sand mb-4 overflow-hidden">
                                     {product.images[0]?.url ? (
-                                        <img
+                                        <ProductPhoto
                                             src={product.images[0].url}
                                             alt={product.images[0].altText || product.name}
-                                            className="w-full h-full object-cover"
+                                            treatment={product.images[0].treatment as PhotoTreatment | undefined}
+                                            aspect="fill"
+                                            sizes="(max-width: 768px) 100vw, 33vw"
                                         />
                                     ) : (
                                         <div className="absolute inset-0 flex items-center justify-center">
