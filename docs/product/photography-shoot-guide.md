@@ -36,5 +36,6 @@ They are the same images uploaded to storage at `backdrops/satin.jpg`, `backdrop
 ## Export and upload
 
 - JPEG, sRGB, long edge 3000 px.
-- In admin, upload with **"Studio shot — use as is"** ticked. These images are not processed.
+- Each file must be under **5 MB**, the upload limit. Pick an export quality that keeps a 3000 px JPEG under it (around 85 to 90 usually does); a larger file is rejected.
+- Upload on the new-product form in admin (`/admin/products/new`) with **"Studio shot — use as is"** ticked. That form is the only place studio uploads can be made today. These images are not processed.
 - Check the colour against the real product before uploading. If it looks off, reshoot rather than correct it.
