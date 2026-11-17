@@ -180,3 +180,38 @@ export function verifyProductUntouched(
 export async function encodeComposite(raw: RawImage): Promise<Buffer> {
   return sharp(raw.data, rawInput(raw)).webp({ quality: 90 }).toBuffer()
 }
+
+export type CutoutCheck = { ok: boolean; maxDiff: number; reason?: 'transparency' | 'size' | 'empty' | 'changed' }
+
+/**
+ * Checks a background-removal result against the photo it came from, before
+ * any compositing: it must have a transparent background, be the same size as
+ * the EXIF-upright original, and every fully opaque pixel must match the
+ * original within HONESTY_TOLERANCE per channel. Fails closed when no pixel is
+ * fully opaque.
+ */
+export async function verifyCutoutMatchesOriginal(original: Buffer, cutout: Buffer): Promise<CutoutCheck> {
+  const meta = await load(cutout).metadata()
+  const cut = await load(cutout).rotate().ensureAlpha().raw().toBuffer({ resolveWithObject: true })
+  let transparent = false
+  for (let i = 3; i < cut.data.length && !transparent; i += 4) transparent = cut.data[i] < 255
+  if (!meta.hasAlpha || !transparent) return { ok: false, maxDiff: 255, reason: 'transparency' }
+
+  const orig = await load(original).rotate().removeAlpha().ensureAlpha().raw().toBuffer({ resolveWithObject: true })
+  if (orig.info.width !== cut.info.width || orig.info.height !== cut.info.height) {
+    return { ok: false, maxDiff: 255, reason: 'size' }
+  }
+
+  let maxDiff = 0
+  let checked = 0
+  for (let i = 0; i < cut.data.length; i += 4) {
+    if (cut.data[i + 3] !== 255) continue
+    for (let ch = 0; ch < 3; ch++) {
+      const diff = Math.abs(cut.data[i + ch] - orig.data[i + ch])
+      if (diff > maxDiff) maxDiff = diff
+    }
+    checked++
+  }
+  if (checked === 0) return { ok: false, maxDiff: 255, reason: 'empty' }
+  return maxDiff <= HONESTY_TOLERANCE ? { ok: true, maxDiff } : { ok: false, maxDiff, reason: 'changed' }
+}

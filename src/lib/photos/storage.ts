@@ -50,9 +50,26 @@ export async function putObject(key: string, body: Buffer, contentType: string):
   return publicUrl(key)
 }
 
+// Resolves a site-relative path ("/images/x.png", never "//host") against the
+// app's own origin. Reads the env var directly: @/lib/config throws at import
+// when unrelated env vars are missing. Returns null if it cannot stay on-origin.
+function appOriginUrl(path: string): string | null {
+  if (!path.startsWith('/') || path.startsWith('//')) return null
+  const base = process.env.NEXT_PUBLIC_BASE_URL
+  if (!base) return null
+  try {
+    const origin = new URL(base).origin
+    const resolved = new URL(path, origin)
+    return resolved.origin === origin ? resolved.href : null
+  } catch {
+    return null
+  }
+}
+
 /**
  * Reads a stored photo back: a data: URL is decoded in place, a URL under the
- * bucket's public base is fetched. Any other URL is refused, so this never
+ * bucket's public base or a site-relative path on the app's own origin is
+ * fetched without following redirects. Any other URL is refused, so this never
  * fetches an arbitrary host.
  */
 export async function getObject(url: string): Promise<Buffer> {
@@ -66,9 +83,10 @@ export async function getObject(url: string): Promise<Buffer> {
       : Buffer.from(decodeURIComponent(payload))
   }
 
-  if (!isUnderPublicBase(url)) throw new Error('Refusing to fetch a URL outside photo storage')
+  const target = isUnderPublicBase(url) ? url : appOriginUrl(url)
+  if (!target) throw new Error('Refusing to fetch a URL outside photo storage')
 
-  const res = await fetch(url)
-  if (!res.ok) throw new Error(`Failed to fetch ${url}: ${res.status}`)
+  const res = await fetch(target, { redirect: 'error' })
+  if (!res.ok) throw new Error(`Failed to fetch ${target}: ${res.status}`)
   return Buffer.from(await res.arrayBuffer())
 }

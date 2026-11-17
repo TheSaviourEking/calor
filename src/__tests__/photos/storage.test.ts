@@ -85,7 +85,36 @@ describe('photo storage', () => {
     vi.stubGlobal('fetch', fetchSpy)
     const out = await getObject('https://cdn.example.com/originals/a.png')
     expect([...out]).toEqual([1, 2, 3])
-    expect(fetchSpy).toHaveBeenCalledWith('https://cdn.example.com/originals/a.png')
+    expect(fetchSpy).toHaveBeenCalledWith('https://cdn.example.com/originals/a.png', { redirect: 'error' })
+  })
+
+  it('fetches a site-relative path from the app origin without following redirects', async () => {
+    configure()
+    vi.stubEnv('NEXT_PUBLIC_BASE_URL', 'https://calo.example/')
+    const fetchSpy = vi.fn(async () => new Response(new Uint8Array([4, 5])))
+    vi.stubGlobal('fetch', fetchSpy)
+    const out = await getObject('/images/products/x.png')
+    expect([...out]).toEqual([4, 5])
+    expect(fetchSpy).toHaveBeenCalledWith('https://calo.example/images/products/x.png', { redirect: 'error' })
+  })
+
+  it('refuses a site-relative path when the app origin is unknown', async () => {
+    vi.stubEnv('NEXT_PUBLIC_BASE_URL', '')
+    const fetchSpy = vi.fn()
+    vi.stubGlobal('fetch', fetchSpy)
+    await expect(getObject('/images/products/x.png')).rejects.toThrow(/outside photo storage/)
+    expect(fetchSpy).not.toHaveBeenCalled()
+  })
+
+  it('refuses protocol-relative and host-escaping paths', async () => {
+    configure()
+    vi.stubEnv('NEXT_PUBLIC_BASE_URL', 'https://calo.example')
+    const fetchSpy = vi.fn()
+    vi.stubGlobal('fetch', fetchSpy)
+    for (const url of ['//evil.test/a.png', '/\\evil.test/a.png', '/\\/evil.test/a.png']) {
+      await expect(getObject(url)).rejects.toThrow(/outside photo storage/)
+    }
+    expect(fetchSpy).not.toHaveBeenCalled()
   })
 
   it('refuses to fetch a URL outside photo storage', async () => {

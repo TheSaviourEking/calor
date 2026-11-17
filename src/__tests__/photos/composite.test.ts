@@ -5,6 +5,7 @@ import {
   composeOnBackdrop,
   verifyProductUntouched,
   encodeComposite,
+  verifyCutoutMatchesOriginal,
 } from '@/lib/photos/composite'
 
 const BACKDROP_RGB = [0xea, 0xdf, 0xd2]
@@ -124,5 +125,68 @@ describe('encodeComposite', () => {
     expect(meta.format).toBe('webp')
     expect(meta.width).toBe(200)
     expect(meta.height).toBe(200)
+  })
+})
+
+describe('verifyCutoutMatchesOriginal', () => {
+  // An 80x60 photo: product rectangle on a white studio background.
+  const SHAPE = { w: 40, h: 30, left: 20, top: 15 }
+  async function original(): Promise<Buffer> {
+    const block = await sharp({ create: { width: SHAPE.w, height: SHAPE.h, channels: 3, background: PRODUCT } }).png().toBuffer()
+    return sharp({ create: { width: 80, height: 60, channels: 3, background: '#ffffff' } })
+      .composite([{ input: block, left: SHAPE.left, top: SHAPE.top }])
+      .png()
+      .toBuffer()
+  }
+
+  it('accepts a cutout whose opaque pixels match the original', async () => {
+    const result = await verifyCutoutMatchesOriginal(await original(), await cutout(80, 60, SHAPE))
+    expect(result.ok).toBe(true)
+    expect(result.maxDiff).toBeLessThanOrEqual(2)
+  })
+
+  it('rejects a cutout without transparency', async () => {
+    const jpeg = await sharp(await original()).jpeg().toBuffer()
+    const result = await verifyCutoutMatchesOriginal(await original(), jpeg)
+    expect(result).toMatchObject({ ok: false, reason: 'transparency' })
+  })
+
+  it('rejects a fully opaque PNG cutout as having no transparency', async () => {
+    const opaque = await sharp(await original()).ensureAlpha().png().toBuffer()
+    const result = await verifyCutoutMatchesOriginal(await original(), opaque)
+    expect(result).toMatchObject({ ok: false, reason: 'transparency' })
+  })
+
+  it('rejects a cutout of a different size', async () => {
+    const result = await verifyCutoutMatchesOriginal(await original(), await cutout(40, 30, { w: 20, h: 15, left: 10, top: 7 }))
+    expect(result).toMatchObject({ ok: false, reason: 'size' })
+  })
+
+  it('rejects a cutout whose product colours differ', async () => {
+    const block = await sharp({ create: { width: SHAPE.w, height: SHAPE.h, channels: 4, background: '#3a6aaa' } }).png().toBuffer()
+    const recoloured = await sharp({ create: { width: 80, height: 60, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
+      .composite([{ input: block, left: SHAPE.left, top: SHAPE.top }])
+      .png()
+      .toBuffer()
+    const result = await verifyCutoutMatchesOriginal(await original(), recoloured)
+    expect(result).toMatchObject({ ok: false, reason: 'changed' })
+    expect(result.maxDiff).toBeGreaterThan(2)
+  })
+
+  it('fails closed when the cutout has no fully opaque pixels', async () => {
+    const { data, info } = await sharp(await cutout(80, 60, SHAPE)).raw().toBuffer({ resolveWithObject: true })
+    const faint = Buffer.from(data)
+    for (let i = 3; i < faint.length; i += 4) if (faint[i] === 255) faint[i] = 254
+    const png = await sharp(faint, { raw: { width: info.width, height: info.height, channels: 4 } }).png().toBuffer()
+    const result = await verifyCutoutMatchesOriginal(await original(), png)
+    expect(result).toMatchObject({ ok: false, reason: 'empty' })
+  })
+
+  it('compares against the EXIF-upright original', async () => {
+    // Original stored 60x80 with orientation 6 displays as 80x60, matching the cutout.
+    const stored = await sharp(await original()).rotate(-90).png().toBuffer()
+    const oriented = await sharp(stored).webp({ lossless: true }).withMetadata({ orientation: 6 }).toBuffer()
+    const result = await verifyCutoutMatchesOriginal(oriented, await cutout(80, 60, SHAPE))
+    expect(result.ok).toBe(true)
   })
 })
