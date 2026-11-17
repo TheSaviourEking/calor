@@ -8,14 +8,24 @@ vi.mock('next/image', () => ({
     alt,
     className,
     unoptimized,
+    fill,
+    sizes,
+    priority,
   }: {
     src: string
     alt: string
     className?: string
     unoptimized?: boolean
+    fill?: boolean
+    sizes?: string
+    priority?: boolean
   }) => (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={src} alt={alt} className={className} data-unoptimized={String(!!unoptimized)} />
+    <img src={src} alt={alt} className={className} data-unoptimized={String(!!unoptimized)}
+      data-fill={String(!!fill)}
+      data-sizes={sizes}
+      data-priority={String(!!priority)}
+    />
   ),
 }))
 
@@ -53,5 +63,27 @@ describe('ProductPhoto', () => {
     render(<ProductPhoto src={null} alt="Ora" />)
     expect(screen.queryByRole('img')).toBeNull()
     expect(screen.getByText('O')).toBeInTheDocument()
+  })
+
+  it.each([
+    ['square', ['relative', 'aspect-square'], ['absolute']],
+    ['portrait', ['relative', 'aspect-[3/4]'], ['absolute']],
+    ['fill', ['absolute', 'inset-0'], ['relative']],
+  ] as const)('maps aspect=%s to the right tile classes', (aspect, has, lacks) => {
+    render(<ProductPhoto src="https://x/a.jpg" alt="T" aspect={aspect} />)
+    const tile = screen.getByAltText('T').closest('[data-treatment]')!
+    for (const c of has) expect(tile).toHaveClass(c)
+    for (const c of lacks) expect(tile).not.toHaveClass(c)
+    expect(tile).toHaveClass('bg-sand')
+  })
+
+  it('forwards fill, sizes and priority and never crops the product', () => {
+    render(<ProductPhoto src="https://x/a.jpg" alt="F" sizes="50vw" priority />)
+    const img = screen.getByAltText('F')
+    expect(img).toHaveAttribute('data-fill', 'true')
+    expect(img).toHaveAttribute('data-sizes', '50vw')
+    expect(img).toHaveAttribute('data-priority', 'true')
+    expect(img).toHaveClass('object-contain')
+    expect(img).not.toHaveClass('object-cover')
   })
 })

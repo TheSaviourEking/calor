@@ -12,8 +12,8 @@ type ProductPhotoProps = {
 }
 
 const ASPECT_CLASS = {
-  square: 'aspect-square',
-  portrait: 'aspect-[3/4]',
+  square: 'relative aspect-square',
+  portrait: 'relative aspect-[3/4]',
   fill: 'absolute inset-0',
 } as const
 
@@ -27,7 +27,7 @@ export default function ProductPhoto({
   className,
 }: ProductPhotoProps) {
   const tileClass = [
-    'relative overflow-hidden bg-sand [container-type:size]',
+    'overflow-hidden bg-sand [container-type:size]',
     ASPECT_CLASS[aspect],
     className,
   ]
@@ -44,7 +44,7 @@ export default function ProductPhoto({
           sizes={sizes}
           priority={priority}
           unoptimized={src.startsWith('data:')}
-          className={`object-cover${treatment === 'blend' ? ' mix-blend-multiply' : ''}`}
+          className={`object-contain${treatment === 'blend' ? ' mix-blend-multiply' : ''}`}
         />
       ) : (
         <div className="absolute inset-0 flex items-center justify-center">
