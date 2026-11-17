@@ -21,7 +21,7 @@ async function getProducts() {
       images: {
         take: 2,
         orderBy: { sortOrder: 'asc' },
-        select: { url: true, altText: true },
+        select: { url: true, altText: true, treatment: true },
       },
       videos: {
         take: 1,

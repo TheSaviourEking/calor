@@ -86,7 +86,7 @@ export async function GET(request: NextRequest) {
         images: {
           take: 2,
           orderBy: { sortOrder: 'asc' },
-          select: { url: true, altText: true },
+          select: { url: true, altText: true, treatment: true },
         },
         _count: {
           select: { reviews: true },

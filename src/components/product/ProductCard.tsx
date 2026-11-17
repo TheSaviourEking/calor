@@ -13,6 +13,8 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog"
 import Link from 'next/link'
+import ProductPhoto from '@/components/product/ProductPhoto'
+import type { PhotoTreatment } from '@/lib/photos/types'
 
 interface Product {
   id: string
@@ -35,6 +37,7 @@ interface Product {
   images: Array<{
     url: string
     altText: string
+    treatment?: string
   }>
   videos?: Array<{
     url: string
@@ -74,6 +77,7 @@ const ProductCard = memo(function ProductCard({ product }: ProductCardProps) {
       price: price,
       quantity: 1,
       image: product.images[0]?.url,
+      imageTreatment: product.images[0]?.treatment as PhotoTreatment | undefined,
     })
     toast.success('Added to bag')
     setTimeout(() => setIsAdding(false), 1000)
@@ -127,19 +131,25 @@ const ProductCard = memo(function ProductCard({ product }: ProductCardProps) {
         >
           {product.images?.[0] ? (
             <>
-              <img
+              <ProductPhoto
                 src={product.images[0].url}
                 alt={product.images[0].altText || product.name}
-                className={`w-full h-full object-cover transition-all duration-700 group-hover:scale-105 ${
+                treatment={product.images[0].treatment as PhotoTreatment | undefined}
+                aspect="fill"
+                sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+                className={`transition-all duration-700 group-hover:scale-105 ${
                   hasSecondImage ? 'group-hover:opacity-0' : ''
                 }`}
               />
               {/* Secondary image cross-fade */}
               {hasSecondImage && (
-                <img
+                <ProductPhoto
                   src={product.images[1].url}
                   alt={product.images[1].altText || product.name}
-                  className="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-700 group-hover:opacity-100"
+                  treatment={product.images[1].treatment as PhotoTreatment | undefined}
+                  aspect="fill"
+                  sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
+                  className="opacity-0 transition-opacity duration-700 group-hover:opacity-100"
                 />
               )}
             </>

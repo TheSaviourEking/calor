@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import Image from 'next/image'
+import ProductPhoto from '@/components/product/ProductPhoto'
+import type { PhotoTreatment } from '@/lib/photos/types'
 import { X, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 
@@ -12,7 +13,7 @@ interface Product {
   shortDescription: string
   category: { name: string }
   variants: Array<{ price: number }>
-  images: Array<{ url: string; altText: string }>
+  images: Array<{ url: string; altText: string; treatment?: string }>
 }
 
 interface ProductComparisonProps {
@@ -95,12 +96,13 @@ export default function ProductComparison({ products, onClose }: ProductComparis
                         >
                           <div className="aspect-square bg-gradient-to-br from-cream to-sand mb-3 mx-auto max-w-[150px]">
                             {product.images[0] ? (
-                              <Image
+                              <ProductPhoto
                                 src={product.images[0].url}
                                 alt={product.images[0].altText || product.name}
-                                width={150}
-                                height={150}
-                                className="w-full h-full object-cover"
+                                treatment={product.images[0].treatment as PhotoTreatment | undefined}
+                                aspect="square"
+                                sizes="150px"
+                                className="w-full"
                               />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center">

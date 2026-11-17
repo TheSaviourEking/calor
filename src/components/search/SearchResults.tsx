@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { Grid, List, ArrowUpDown, Loader2, Sparkles, Star } from 'lucide-react'
-import Image from 'next/image'
+import ProductPhoto from '@/components/product/ProductPhoto'
+import type { PhotoTreatment } from '@/lib/photos/types'
 import Link from 'next/link'
 import { Heart, ShoppingBag } from 'lucide-react'
 import { toast } from 'sonner'
@@ -27,6 +28,7 @@ interface SearchResult {
   images: Array<{
     url: string
     altText: string
+    treatment?: string
   }>
   inventoryCount: number
   isDigital: boolean
@@ -92,6 +94,7 @@ export default function SearchResults({
       price: product.price,
       quantity: 1,
       image: product.images[0]?.url,
+      imageTreatment: product.images[0]?.treatment as PhotoTreatment | undefined,
     })
     toast.success('Added to bag')
     setTimeout(() => setAddingToCart(null), 1000)
@@ -230,11 +233,12 @@ export default function SearchResults({
               {/* Image Area */}
               <div className="relative aspect-square bg-gradient-to-br from-cream to-sand mb-4 overflow-hidden">
                 {product.images[0]?.url ? (
-                  <Image
+                  <ProductPhoto
                     src={product.images[0].url}
                     alt={product.images[0].altText || product.name}
-                    fill
-                    className="object-cover"
+                    treatment={product.images[0].treatment as PhotoTreatment | undefined}
+                    aspect="fill"
+                    sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
                   />
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center">
@@ -334,11 +338,12 @@ export default function SearchResults({
               {/* Image */}
               <Link href={`/product/${product.slug}`} className="w-24 h-24 flex-shrink-0 bg-gradient-to-br from-cream to-sand relative overflow-hidden">
                 {product.images[0]?.url ? (
-                  <Image
+                  <ProductPhoto
                     src={product.images[0].url}
                     alt={product.images[0].altText || product.name}
-                    fill
-                    className="object-cover"
+                    treatment={product.images[0].treatment as PhotoTreatment | undefined}
+                    aspect="fill"
+                    sizes="96px"
                   />
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center">

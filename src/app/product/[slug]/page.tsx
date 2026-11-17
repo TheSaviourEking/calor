@@ -74,7 +74,7 @@ async function getRelatedProducts(categoryId: string, excludeId: string) {
       },
       images: {
         take: 1,
-        select: { url: true, altText: true },
+        select: { url: true, altText: true, treatment: true },
       },
       videos: {
         take: 1,

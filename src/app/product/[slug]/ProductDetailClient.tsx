@@ -34,12 +34,15 @@ import ProductCard from "@/components/product/ProductCard";
 import ReviewsSection from "@/components/reviews/ReviewsSection";
 import SocialProof from "@/components/social-proof/SocialProof";
 import Link from "next/link";
+import ProductPhoto from "@/components/product/ProductPhoto";
+import type { PhotoTreatment } from "@/lib/photos/types";
 
 interface ProductImage {
   id: string;
   url: string;
   altText: string;
   sortOrder: number;
+  treatment?: string;
 }
 
 interface ProductVideo {
@@ -319,6 +322,7 @@ export default function ProductDetailClient({
       price: price,
       quantity: quantity,
       image: product.images[0]?.url,
+      imageTreatment: product.images[0]?.treatment as PhotoTreatment | undefined,
     });
     toast.success("Added to bag");
   };
@@ -473,10 +477,15 @@ export default function ProductDetailClient({
               {/* Main Media Display */}
               <div className="absolute inset-0">
                 {mediaItems[activeMediaIndex]?.type === 'image' ? (
-                  <img
+                  <ProductPhoto
                     src={mediaItems[activeMediaIndex].url}
                     alt={mediaItems[activeMediaIndex].altText || product.name}
-                    className="w-full h-full object-cover"
+                    treatment={
+                      (mediaItems[activeMediaIndex] as { treatment?: string }).treatment as PhotoTreatment | undefined
+                    }
+                    aspect="fill"
+                    sizes="(min-width: 1024px) 50vw, 100vw"
+                    priority
                   />
                 ) : mediaItems[activeMediaIndex]?.type === 'video' ? (
                   <video
@@ -508,7 +517,13 @@ export default function ProductDetailClient({
                     onClick={() => setActiveMediaIndex(idx)}
                   >
                     {item.type === 'image' ? (
-                      <img src={item.url} alt="" className="w-full h-full object-cover" />
+                      <ProductPhoto
+                        src={item.url}
+                        alt=""
+                        treatment={(item as { treatment?: string }).treatment as PhotoTreatment | undefined}
+                        aspect="fill"
+                        sizes="64px"
+                      />
                     ) : (
                       <div className="w-full h-full bg-sand flex items-center justify-center">
                         <Play className="w-5 h-5 text-charcoal" />

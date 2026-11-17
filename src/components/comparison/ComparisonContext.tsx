@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect, createContext, useContext } from 'react'
-import Image from 'next/image'
+import ProductPhoto from '@/components/product/ProductPhoto'
+import type { PhotoTreatment } from '@/lib/photos/types'
 import { X, Scale, Plus, Trash2 } from 'lucide-react'
 import ProductComparison from '@/components/comparison/ProductComparison'
 
@@ -12,7 +13,7 @@ interface ComparisonProduct {
   shortDescription: string
   category: { name: string }
   variants: Array<{ price: number }>
-  images: Array<{ url: string; altText: string }>
+  images: Array<{ url: string; altText: string; treatment?: string }>
 }
 
 interface ComparisonContextType {
@@ -86,7 +87,7 @@ export function ComparisonProvider({ children }: { children: React.ReactNode }) 
                   >
                     <div className="w-10 h-10 bg-cream/10 overflow-hidden">
                       {p.images[0] ? (
-                        <Image src={p.images[0].url} alt={p.name} width={40} height={40} className="w-full h-full object-cover" />
+                        <ProductPhoto src={p.images[0].url} alt={p.name} treatment={p.images[0].treatment as PhotoTreatment | undefined} aspect="square" sizes="40px" className="w-full" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
                           <span className="font-display text-cream/50 text-xs">{p.name.charAt(0)}</span>
