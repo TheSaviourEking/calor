@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import ProductPhoto from '@/components/product/ProductPhoto'
+import type { PhotoTreatment } from '@/lib/photos/types'
 import Link from 'next/link'
 import { Heart, Copy, Check, ShoppingBag, ExternalLink } from 'lucide-react'
 import ClientWrapper from '@/components/layout/ClientWrapper'
@@ -28,7 +30,7 @@ interface SharedWishlistProps {
       inventoryCount: number
       category: { name: string; slug: string }
       variants: Array<{ id: string; price: number; stock: number }>
-      images: Array<{ url: string; altText: string }>
+      images: Array<{ url: string; altText: string; treatment?: string }>
     }>
   }
 }
@@ -58,6 +60,7 @@ export default function SharedWishlistClient({ wishlist }: SharedWishlistProps) 
       quantity: 1,
       variantId: variant?.id,
       image: product.images[0]?.url,
+      imageTreatment: product.images[0]?.treatment as PhotoTreatment | undefined,
       productId: product.id,
       category: product.category.name,
     })
@@ -76,6 +79,7 @@ export default function SharedWishlistClient({ wishlist }: SharedWishlistProps) 
         quantity: 1,
         variantId: variant?.id,
         image: product.images[0]?.url,
+        imageTreatment: product.images[0]?.treatment as PhotoTreatment | undefined,
         productId: product.id,
         category: product.category.name,
       })
@@ -159,10 +163,12 @@ export default function SharedWishlistClient({ wishlist }: SharedWishlistProps) 
                 <div key={product.id} className="group">
                   <div className="relative aspect-square bg-gradient-to-br from-cream to-sand mb-4 overflow-hidden">
                     {product.images[0]?.url ? (
-                      <img
+                      <ProductPhoto
                         src={product.images[0].url}
                         alt={product.images[0].altText || product.name}
-                        className="w-full h-full object-cover"
+                        treatment={product.images[0].treatment as PhotoTreatment | undefined}
+                        aspect="fill"
+                        sizes="(max-width: 768px) 100vw, 25vw"
                       />
                     ) : (
                       <div className="absolute inset-0 flex items-center justify-center">

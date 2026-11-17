@@ -1,9 +1,10 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
+import ProductPhoto from '@/components/product/ProductPhoto'
+import type { PhotoTreatment } from '@/lib/photos/types'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import Image from 'next/image'
 import { io, Socket } from 'socket.io-client'
 import {
   ArrowLeft, Video, VideoOff, MessageCircle, X, Zap, Eye, Pin, Loader2, Copy
@@ -38,7 +39,7 @@ interface Product {
   id: string
   name: string
   slug: string
-  images: Array<{ url: string }>
+  images: Array<{ url: string; treatment?: string }>
   variants: Array<{ id: string; name: string; price: number }>
   category: { name: string }
 }
@@ -445,11 +446,12 @@ export default function GoLiveClient() {
                   >
                     <div className="aspect-square bg-sand/20 mb-2 relative">
                       {sp.product.images[0] && (
-                        <Image
+                        <ProductPhoto
                           src={sp.product.images[0].url}
                           alt={sp.product.name}
-                          fill
-                          className="object-cover"
+                          treatment={sp.product.images[0].treatment as PhotoTreatment | undefined}
+                          aspect="fill"
+                          sizes="160px"
                         />
                       )}
                     </div>

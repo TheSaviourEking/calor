@@ -1,4 +1,6 @@
 import { db } from '@/lib/db'
+import ProductPhoto from '@/components/product/ProductPhoto'
+import type { PhotoTreatment } from '@/lib/photos/types'
 import { getSession } from '@/lib/auth/session'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
@@ -95,9 +97,15 @@ export default async function StreamDetailsPage({ params }: { params: Promise<{ 
                                 <div className="grid grid-cols-2 gap-4">
                                     {stream.products.map(sp => (
                                         <div key={sp.id} className="flex gap-4 border border-sand p-3">
-                                            <div className="w-16 h-16 bg-sand flex-shrink-0">
+                                            <div className="relative w-16 h-16 bg-sand flex-shrink-0">
                                                 {sp.product.images[0] && (
-                                                    <img src={sp.product.images[0].url} alt="" className="w-full h-full object-cover" />
+                                                    <ProductPhoto
+                                                        src={sp.product.images[0].url}
+                                                        alt=""
+                                                        treatment={sp.product.images[0].treatment as PhotoTreatment | undefined}
+                                                        aspect="fill"
+                                                        sizes="64px"
+                                                    />
                                                 )}
                                             </div>
                                             <div>

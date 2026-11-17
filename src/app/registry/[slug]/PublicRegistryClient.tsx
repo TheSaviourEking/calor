@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import ProductPhoto from '@/components/product/ProductPhoto'
+import type { PhotoTreatment } from '@/lib/photos/types'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -29,6 +31,7 @@ interface RegistryItem {
     slug: string
     name: string
     category: { name: string }
+    images?: Array<{ url: string; treatment?: string }>
   } | null
   contributionTotal: number
 }
@@ -136,6 +139,12 @@ export default function PublicRegistryClient({
     fetchRegistry(password)
   }
 
+  // Treatment only applies when the item shows the linked product's own photo.
+  const itemTreatment = (item: RegistryItem): PhotoTreatment | undefined => {
+    const first = item.product?.images?.[0]
+    return first && first.url === item.imageUrl ? (first.treatment as PhotoTreatment | undefined) : undefined
+  }
+
   const addToCart = (item: RegistryItem) => {
     addItem({
       id: `registry-${item.id}`,
@@ -146,6 +155,7 @@ export default function PublicRegistryClient({
       price: item.price,
       quantity: 1,
       image: item.imageUrl || undefined,
+      imageTreatment: itemTreatment(item),
     })
     toast.success('Added to bag!')
   }
@@ -383,10 +393,12 @@ export default function PublicRegistryClient({
                   {/* Image */}
                   <div className="relative aspect-square bg-gradient-to-br from-cream to-sand">
                     {item.imageUrl ? (
-                      <img
+                      <ProductPhoto
                         src={item.imageUrl}
                         alt={item.name}
-                        className="w-full h-full object-cover"
+                        treatment={itemTreatment(item)}
+                        aspect="fill"
+                        sizes="(max-width: 768px) 100vw, 50vw"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">

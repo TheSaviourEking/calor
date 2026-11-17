@@ -1,9 +1,10 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
+import ProductPhoto from '@/components/product/ProductPhoto'
+import type { PhotoTreatment } from '@/lib/photos/types'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import Image from 'next/image'
 import { io, Socket } from 'socket.io-client'
 import {
   Users, Send, Clock, Zap, Loader2
@@ -35,7 +36,7 @@ interface Product {
   id: string
   name: string
   slug: string
-  images: Array<{ url: string; altText: string }>
+  images: Array<{ url: string; altText: string; treatment?: string }>
   variants: Array<{ id: string; name: string; price: number; stock: number }>
   category: { name: string; slug: string }
 }
@@ -317,6 +318,7 @@ export default function StreamViewerClient() {
       price: variant.price,
       quantity: 1,
       image: product.images[0]?.url,
+      imageTreatment: product.images[0]?.treatment as PhotoTreatment | undefined,
     })
 
     // Track analytics
@@ -433,7 +435,7 @@ export default function StreamViewerClient() {
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-warm-gray/30 flex items-center justify-center">
                     {stream.host.avatar ? (
-                      <Image src={stream.host.avatar} alt={stream.host.displayName} width={40} height={40} className="object-cover" />
+                      <img src={stream.host.avatar} alt={stream.host.displayName} width={40} height={40} className="object-cover" />
                     ) : (
                       <span className="font-body text-cream text-sm">
                         {stream.host.displayName.charAt(0).toUpperCase()}
@@ -483,11 +485,12 @@ export default function StreamViewerClient() {
                           <Link href={`/product/${sp.product.slug}`} className="block mb-2">
                             <div className="aspect-square bg-sand/20 mb-2 relative">
                               {sp.product.images[0] && (
-                                <Image
+                                <ProductPhoto
                                   src={sp.product.images[0].url}
                                   alt={sp.product.name}
-                                  fill
-                                  className="object-cover"
+                                  treatment={sp.product.images[0].treatment as PhotoTreatment | undefined}
+                                  aspect="fill"
+                                  sizes="(max-width: 1024px) 50vw, 20vw"
                                 />
                               )}
                               {sp.isPinned && (
@@ -712,11 +715,12 @@ export default function StreamViewerClient() {
               <div key={sp.id} className="flex-shrink-0 w-32">
                 <div className="aspect-square bg-sand/20 mb-2 relative">
                   {sp.product.images[0] && (
-                    <Image
+                    <ProductPhoto
                       src={sp.product.images[0].url}
                       alt={sp.product.name}
-                      fill
-                      className="object-cover"
+                      treatment={sp.product.images[0].treatment as PhotoTreatment | undefined}
+                      aspect="fill"
+                      sizes="128px"
                     />
                   )}
                 </div>

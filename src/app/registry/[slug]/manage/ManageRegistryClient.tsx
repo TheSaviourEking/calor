@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import ProductPhoto from '@/components/product/ProductPhoto'
+import type { PhotoTreatment } from '@/lib/photos/types'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Plus, Users, Calendar, Package,
@@ -26,7 +28,7 @@ interface RegistryItem {
     id: string
     slug: string
     name: string
-    images: Array<{ url: string }>
+    images: Array<{ url: string; treatment?: string }>
     variants: Array<{ price: number }>
   } | null
   purchases: Array<{ id: string; purchaserName: string }>
@@ -111,7 +113,7 @@ export default function ManageRegistryClient({ initialRegistry = null }: ManageR
     id: string
     name: string
     slug: string
-    images: Array<{ url: string }>
+    images: Array<{ url: string; treatment?: string }>
     variants: Array<{ price: number }>
   }>>([])
 
@@ -440,9 +442,19 @@ export default function ManageRegistryClient({ initialRegistry = null }: ManageR
               {registry.items.map((item) => (
                 <div key={item.id} className="flex items-center gap-4 p-4 bg-warm-white border border-sand">
                   {/* Image */}
-                  <div className="w-16 h-16 bg-gradient-to-br from-cream to-sand flex-shrink-0">
+                  <div className="relative w-16 h-16 bg-gradient-to-br from-cream to-sand flex-shrink-0">
                     {item.imageUrl && (
-                      <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
+                      <ProductPhoto
+                        src={item.imageUrl}
+                        alt={item.name}
+                        treatment={
+                          item.product?.images[0]?.url === item.imageUrl
+                            ? (item.product.images[0].treatment as PhotoTreatment | undefined)
+                            : undefined
+                        }
+                        aspect="fill"
+                        sizes="64px"
+                      />
                     )}
                   </div>
 
@@ -688,9 +700,15 @@ export default function ManageRegistryClient({ initialRegistry = null }: ManageR
                       onClick={() => addProductToRegistry(product)}
                       className="w-full flex items-center gap-3 p-3 hover:bg-cream text-left"
                     >
-                      <div className="w-10 h-10 bg-gradient-to-br from-cream to-sand flex-shrink-0">
+                      <div className="relative w-10 h-10 bg-gradient-to-br from-cream to-sand flex-shrink-0">
                         {product.images[0]?.url && (
-                          <img src={product.images[0].url} alt={product.name} className="w-full h-full object-cover" />
+                          <ProductPhoto
+                            src={product.images[0].url}
+                            alt={product.name}
+                            treatment={product.images[0].treatment as PhotoTreatment | undefined}
+                            aspect="fill"
+                            sizes="40px"
+                          />
                         )}
                       </div>
                       <div>
