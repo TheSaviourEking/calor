@@ -59,6 +59,22 @@ describe('ProductPhoto', () => {
     expect(screen.getByAltText('D')).toHaveAttribute('data-unoptimized', 'true')
   })
 
+  it('serves hosts outside the next/image allowlist unoptimized', () => {
+    render(<ProductPhoto src="https://evil.example/a.jpg" alt="E" />)
+    expect(screen.getByAltText('E')).toHaveAttribute('data-unoptimized', 'true')
+  })
+
+  it('keeps allowlisted hosts and site-relative paths optimized', () => {
+    render(
+      <>
+        <ProductPhoto src="https://pub-1.r2.dev/a.jpg" alt="R" />
+        <ProductPhoto src="/images/products/a.png" alt="L" />
+      </>,
+    )
+    expect(screen.getByAltText('R')).toHaveAttribute('data-unoptimized', 'false')
+    expect(screen.getByAltText('L')).toHaveAttribute('data-unoptimized', 'false')
+  })
+
   it('renders the placeholder tile when there is no photo', () => {
     render(<ProductPhoto src={null} alt="Ora" />)
     expect(screen.queryByRole('img')).toBeNull()

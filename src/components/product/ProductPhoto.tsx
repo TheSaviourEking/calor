@@ -1,5 +1,6 @@
 import Image from 'next/image'
 import type { PhotoTreatment } from '@/lib/photos/types'
+import { isOptimizableSrc } from '@/lib/photos/image-hosts'
 
 type ProductPhotoProps = {
   src: string | null | undefined
@@ -43,7 +44,7 @@ export default function ProductPhoto({
           fill
           sizes={sizes}
           priority={priority}
-          unoptimized={src.startsWith('data:')}
+          unoptimized={!isOptimizableSrc(src)}
           className={`object-contain${treatment === 'blend' ? ' mix-blend-multiply' : ''}`}
         />
       ) : (
