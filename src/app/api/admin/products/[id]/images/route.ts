@@ -1,25 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { requireAdmin } from '@/lib/admin/middleware'
 import { requireAdminUser } from '@/lib/auth/guards'
+import { isStorageConfigured } from '@/lib/photos/storage'
+import { ingestPhoto, InvalidImageError } from '@/lib/photos/ingest'
 
 // Upload image for a product
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const auth = await requireAdmin()
-  if (!auth.authorized) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const auth = await requireAdminUser()
+  if (!auth.ok) return auth.response
 
   try {
+    if (!isStorageConfigured()) {
+      return NextResponse.json(
+        { error: 'Image upload is not configured. R2 storage credentials are missing.' },
+        { status: 503 }
+      )
+    }
+
     const { id } = await params
     const formData = await request.formData()
-    const file = formData.get('file') as File
+    const file = formData.get('file')
     const altText = formData.get('altText') as string || ''
 
-    if (!file) {
+    if (!(file instanceof File)) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 })
     }
 
@@ -40,11 +46,7 @@ export async function POST(
       )
     }
 
-    // Convert file to base64 for storage (in production, use cloud storage)
-    const bytes = await file.arrayBuffer()
-    const buffer = Buffer.from(bytes)
-    const base64 = buffer.toString('base64')
-    const dataUrl = `data:${file.type};base64,${base64}`
+    const photo = await ingestPhoto(Buffer.from(await file.arrayBuffer()), { studio: false })
 
     // Get current max sort order
     const existingImages = await db.productImage.findMany({ /* take: handled */
@@ -59,14 +61,22 @@ export async function POST(
     const image = await db.productImage.create({
       data: {
         productId: id,
-        url: dataUrl,
+        url: photo.url,
+        originalUrl: photo.originalUrl,
         altText: altText || `Product image ${sortOrder + 1}`,
         sortOrder,
+        treatment: photo.treatment,
+        whiteBackground: photo.whiteBackground,
+        width: photo.width,
+        height: photo.height,
       },
     })
 
     return NextResponse.json({ image })
   } catch (error) {
+    if (error instanceof InvalidImageError) {
+      return NextResponse.json({ error: error.message }, { status: 400 })
+    }
     console.error('Image upload error:', error)
     return NextResponse.json(
       { error: 'Failed to upload image' },

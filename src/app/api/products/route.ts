@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { getSession } from '@/lib/auth/session'
+import { requireAdminUser } from '@/lib/auth/guards'
+import { isPhotoTreatment } from '@/lib/photos/types'
+
+const positiveInt = (v: unknown) => (Number.isInteger(v) && (v as number) > 0 ? (v as number) : null)
 
 export async function POST(req: NextRequest) {
-    try {
-        const session = await getSession()
-        if (!session?.customerId) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-        }
+    const auth = await requireAdminUser()
+    if (!auth.ok) return auth.response
 
+    try {
         const body = await req.json()
         const {
             name, shortDescription, fullDescription,
@@ -117,7 +118,12 @@ export async function POST(req: NextRequest) {
                     create: images.map((img: any, index: number) => ({
                         url: img.url,
                         altText: img.altText || `${name} - Image ${index + 1}`,
-                        sortOrder: img.sortOrder || index
+                        sortOrder: img.sortOrder || index,
+                        originalUrl: typeof img.originalUrl === 'string' ? img.originalUrl : null,
+                        treatment: isPhotoTreatment(img.treatment) ? img.treatment : 'original',
+                        whiteBackground: img.whiteBackground === true,
+                        width: positiveInt(img.width),
+                        height: positiveInt(img.height),
                     }))
                 } : undefined,
                 videos: videos && videos.length > 0 ? {

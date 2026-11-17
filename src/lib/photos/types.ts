@@ -1,4 +1,9 @@
-export type PhotoTreatment = 'original' | 'blend' | 'composite'
+export const PHOTO_TREATMENTS = ['original', 'blend', 'composite'] as const
+export type PhotoTreatment = (typeof PHOTO_TREATMENTS)[number]
+
+export function isPhotoTreatment(v: unknown): v is PhotoTreatment {
+  return typeof v === 'string' && (PHOTO_TREATMENTS as readonly string[]).includes(v)
+}
 export type ReviewStatus = 'approved' | 'pending' | 'rejected'
 
 export const BACKDROPS = ['satin', 'linen', 'blush'] as const

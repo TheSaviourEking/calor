@@ -37,6 +37,19 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
+import type { PhotoTreatment } from '@/lib/photos/types'
+
+// An image row; uploads carry what /api/upload detected, pasted links do not
+interface ProductImageInput {
+    url: string
+    altText: string
+    sortOrder: number
+    originalUrl?: string
+    treatment?: PhotoTreatment
+    whiteBackground?: boolean
+    width?: number
+    height?: number
+}
 
 // Helper component for shadcn tooltip
 function HelpTooltip({ content }: { content: string }) {
@@ -213,7 +226,8 @@ export default function AdminProductForm() {
 
     const [regionalPrices, setRegionalPrices] = useState<{ countryCode: string, currency: string, priceCents: string, compareAtPriceCents: string }[]>([])
 
-    const [images, setImages] = useState<{ url: string, altText: string, sortOrder: number }[]>([])
+    const [images, setImages] = useState<ProductImageInput[]>([])
+    const [studioShot, setStudioShot] = useState(false)
     const [videos, setVideos] = useState<{ url: string, thumbnailUrl?: string, title?: string, description?: string, duration?: number, source: string, videoType: string, isFeatured: boolean, sortOrder: number }[]>([])
     const [newImageUrl, setNewImageUrl] = useState('')
     const [newVideoUrl, setNewVideoUrl] = useState('')
@@ -279,6 +293,7 @@ export default function AdminProductForm() {
         setUploadingMedia(true)
         const form = new FormData()
         form.append('file', file)
+        if (type === 'image' && studioShot) form.append('studio', 'true')
 
         try {
             const res = await fetch('/api/upload', {
@@ -294,7 +309,16 @@ export default function AdminProductForm() {
             const data = await res.json()
             if (data.url) {
                 if (type === 'image') {
-                    setImages(prev => [...prev, { url: data.url, altText: formData.name || '', sortOrder: prev.length }])
+                    setImages(prev => [...prev, {
+                        url: data.url,
+                        altText: formData.name || '',
+                        sortOrder: prev.length,
+                        originalUrl: data.originalUrl,
+                        treatment: data.treatment,
+                        whiteBackground: data.whiteBackground,
+                        width: data.width,
+                        height: data.height,
+                    }])
                 } else {
                     setVideos(prev => [...prev, {
                         url: data.url,
@@ -757,6 +781,17 @@ export default function AdminProductForm() {
                                 {uploadingMedia ? 'Uploading...' : 'Upload Image'}
                                 <input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, 'image')} className="hidden" disabled={uploadingMedia} />
                             </label>
+                        </div>
+
+                        <div className="flex items-center gap-2 mb-4">
+                            <input
+                                type="checkbox"
+                                id="studio-shot"
+                                checked={studioShot}
+                                onChange={(e) => setStudioShot(e.target.checked)}
+                                className="accent-terracotta w-4 h-4"
+                            />
+                            <label htmlFor="studio-shot" className="font-body text-xs text-warm-gray">Studio shot — use as is</label>
                         </div>
 
                         <div className="flex gap-2 mb-6">
