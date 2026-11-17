@@ -10,8 +10,12 @@ const required = [
   'NEXT_PUBLIC_BASE_URL',
 ] as const
 
+// `next build` imports route modules to collect page data; a build has no
+// business needing runtime secrets, so only the running app enforces them.
+const isBuildPhase = process.env.NEXT_PHASE === 'phase-production-build'
+
 for (const key of required) {
-  if (!process.env[key]) {
+  if (!process.env[key] && !isBuildPhase) {
     throw new Error(
       `Missing required environment variable: ${key}. ` +
       `See .env.example for setup instructions.`
