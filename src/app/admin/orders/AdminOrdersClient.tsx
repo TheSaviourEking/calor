@@ -51,6 +51,9 @@ interface Order {
   shippingCents: number
   totalCents: number
   currency: string
+  plainPackaging: boolean
+  discreetLabel: boolean
+  deliveryInstructions: string | null
   isGift: boolean
   giftMessage: string | null
   trackingNumber: string | null
@@ -257,6 +260,9 @@ export default function AdminOrdersClient({ initialOrders }: AdminOrdersClientPr
                         <span className="font-body text-charcoal text-sm font-medium">
                           {order.reference}
                         </span>
+                        <span className="block font-body text-warm-gray text-xs">
+                          {order.plainPackaging ? 'Plain box' : 'Branded box'}
+                        </span>
                       </td>
                       <td className="px-4 py-3">
                         <div>
@@ -424,6 +430,32 @@ export default function AdminOrdersClient({ initialOrders }: AdminOrdersClientPr
                   <p className="font-body text-warm-gray text-sm">
                     {selectedOrder.address.country}
                   </p>
+                </div>
+              </div>
+
+              {/* Packaging */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-body text-charcoal text-sm font-medium">Packaging</h3>
+                  <a
+                    href={`/admin/orders/${selectedOrder.id}/slip`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-body text-xs uppercase tracking-wider text-charcoal underline"
+                  >
+                    Packing slip
+                  </a>
+                </div>
+                <div className="bg-warm-white p-4 border border-sand">
+                  <span className="inline-block px-2 py-1 text-xs font-body bg-sand/40 text-charcoal">
+                    {selectedOrder.plainPackaging ? 'Plain box' : 'Branded box'}
+                  </span>
+                  {selectedOrder.deliveryInstructions && (
+                    <p className="font-body text-charcoal text-sm mt-3">
+                      <span className="text-warm-gray">Instructions: </span>
+                      {selectedOrder.deliveryInstructions}
+                    </p>
+                  )}
                 </div>
               </div>
 

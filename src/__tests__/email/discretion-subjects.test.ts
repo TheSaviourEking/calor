@@ -108,3 +108,64 @@ describe('neutral email subjects', () => {
     }
   })
 })
+
+describe('packaging claims follow the order', () => {
+  const confirmation = (plainPackaging?: boolean) =>
+    sendOrderConfirmation({
+      customerEmail: 'a@b.co',
+      customerName: 'Ada',
+      orderReference: 'CAL-1',
+      total: 5000,
+      currency: 'USD',
+      items: [{ name: PRODUCT, quantity: 1, price: 5000 }],
+      ...(plainPackaging === undefined ? {} : { plainPackaging }),
+    })
+  const shipping = (plainPackaging?: boolean) =>
+    sendShippingNotification({
+      customerEmail: 'a@b.co',
+      customerName: 'Ada',
+      orderReference: 'CAL-1',
+      trackingNumber: 'TRK1',
+      estimatedDelivery: 'Friday',
+      ...(plainPackaging === undefined ? {} : { plainPackaging }),
+    })
+
+  it('order confirmation claims plain packaging by default and when true', async () => {
+    await confirmation()
+    expect(lastCall().html).toContain('plain, unmarked packaging')
+    await confirmation(true)
+    expect(lastCall().html).toContain('plain, unmarked packaging')
+  })
+
+  it('order confirmation drops the claim when the customer chose branded packaging', async () => {
+    await confirmation(false)
+    expect(lastCall().html).not.toContain('plain, unmarked packaging')
+    expect(lastCall().html).not.toContain('unmarked')
+  })
+
+  it('shipping notification claims plain packaging by default and when true', async () => {
+    await shipping()
+    expect(lastCall().html).toContain('plain, unmarked packaging')
+    await shipping(true)
+    expect(lastCall().html).toContain('plain, unmarked packaging')
+  })
+
+  it('shipping notification drops the claim when the customer chose branded packaging', async () => {
+    await shipping(false)
+    expect(lastCall().html).not.toContain('unmarked')
+  })
+
+  it('abandoned cart and gift card say plain packaging is the default, not a guarantee', async () => {
+    await sendAbandonedCartEmail({
+      email: 'a@b.co',
+      name: 'Ada',
+      cartData: { items: [{ name: PRODUCT, quantity: 1, price: 5000 }], total: 5000 },
+      discountCode: 'BACK10',
+      discountPercent: 10,
+    })
+    expect(lastCall().html).toContain('Orders ship in plain packaging by default.')
+    expect(lastCall().html).not.toContain('All orders ship')
+    await sendGiftCardEmail({ recipientEmail: 'a@b.co', recipientName: 'Bo', senderName: SENDER, code: 'GC-1', value: 5000 })
+    expect(lastCall().html).toContain('Orders ship in plain packaging by default.')
+  })
+})

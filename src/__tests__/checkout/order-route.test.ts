@@ -13,6 +13,7 @@ const { db, tx, getSession, sendOrderConfirmationFor } = vi.hoisted(() => {
     loyaltyAccount: { updateMany: vi.fn() },
     loyaltyTransaction: { create: vi.fn() },
     order: { create: vi.fn() },
+    packagingPreference: { findUnique: vi.fn() },
   }
   const db = {
     customer: { findUnique: vi.fn() },
@@ -74,6 +75,7 @@ beforeEach(() => {
   db.giftWrappingOption.findFirst.mockResolvedValue(null)
   db.address.findFirst.mockResolvedValue(null)
   db.$transaction.mockImplementation(async (fn: (client: typeof tx) => unknown) => fn(tx))
+  tx.packagingPreference.findUnique.mockResolvedValue(null)
   tx.address.create.mockImplementation(async ({ data }: { data: Record<string, unknown> }) => ({ id: 'addr_1', ...data }))
   tx.variant.updateMany.mockResolvedValue({ count: 1 })
   tx.product.updateMany.mockResolvedValue({ count: 1 })
@@ -212,5 +214,44 @@ describe('POST /api/orders', () => {
     await post({ ...body, shippingAddress: { ...body.shippingAddress, id: 'addr_of_someone_else' } })
     expect(db.address.findFirst).toHaveBeenCalledWith({ where: { id: 'addr_of_someone_else', customerId: 'cust_1' } })
     expect(tx.address.create).toHaveBeenCalledTimes(1)
+  })
+
+  it('guest orders default to plain packaging, a discreet label and no instructions', async () => {
+    const res = await post({ ...body, guestEmail: 'guest@example.com' })
+    expect(res.status).toBe(200)
+    const order = tx.order.create.mock.calls[0][0].data
+    expect(order.plainPackaging).toBe(true)
+    expect(order.discreetLabel).toBe(true)
+    expect(order.deliveryInstructions).toBeNull()
+    expect(tx.packagingPreference.findUnique).not.toHaveBeenCalled()
+  })
+
+  it('copies the customer packaging preference onto the order', async () => {
+    getSession.mockResolvedValue({ customerId: 'cust_1', email: 'me@example.com' })
+    db.customer.findUnique.mockResolvedValue({ id: 'cust_1' })
+    tx.packagingPreference.findUnique.mockResolvedValue({
+      plainPackaging: false,
+      discreteLabel: true,
+      deliveryInstructions: 'Leave with concierge',
+    })
+
+    const res = await post(body)
+    expect(res.status).toBe(200)
+    expect(tx.packagingPreference.findUnique.mock.calls[0][0].where).toEqual({ customerId: 'cust_1' })
+    const order = tx.order.create.mock.calls[0][0].data
+    expect(order.plainPackaging).toBe(false)
+    expect(order.discreetLabel).toBe(true)
+    expect(order.deliveryInstructions).toBe('Leave with concierge')
+  })
+
+  it('a signed-in customer with no saved preference gets the defaults', async () => {
+    getSession.mockResolvedValue({ customerId: 'cust_1', email: 'me@example.com' })
+    db.customer.findUnique.mockResolvedValue({ id: 'cust_1' })
+
+    await post(body)
+    const order = tx.order.create.mock.calls[0][0].data
+    expect(order.plainPackaging).toBe(true)
+    expect(order.discreetLabel).toBe(true)
+    expect(order.deliveryInstructions).toBeNull()
   })
 })

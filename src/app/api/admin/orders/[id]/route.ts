@@ -92,6 +92,7 @@ export async function PATCH(
             month: 'long', 
             day: 'numeric',
           }) || '5-7 business days',
+          plainPackaging: order.plainPackaging,
         })
       }
     }

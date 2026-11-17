@@ -107,10 +107,12 @@ interface OrderEmailData {
     quantity: number
     price: number
   }>
+  // Defaults to true; false when the customer chose branded packaging
+  plainPackaging?: boolean
 }
 
 export async function sendOrderConfirmation(data: OrderEmailData): Promise<{ success: boolean; error?: string }> {
-  const { customerEmail, customerName, orderReference, total, currency, items } = data
+  const { customerEmail, customerName, orderReference, total, currency, items, plainPackaging = true } = data
 
   const itemsList = items
     .map((item) => `<tr><td style="padding: 8px 0;">${escapeHtml(item.name)}</td><td style="padding: 8px 0; text-align: center;">${item.quantity}</td><td style="padding: 8px 0; text-align: right;">$${(item.price / 100).toFixed(2)}</td></tr>`)
@@ -160,10 +162,10 @@ export async function sendOrderConfirmation(data: OrderEmailData): Promise<{ suc
           
           <p class="total">Total: $${(total / 100).toFixed(2)} ${currency}</p>
           
-          <div class="note">
+          ${plainPackaging ? `<div class="note">
             <strong>Discreet Delivery</strong><br>
             Your order will arrive in plain, unmarked packaging. No product names visible on the outside.
-          </div>
+          </div>` : ''}
           
           <a href="${config.app.baseUrl}/account/orders" class="button">Track Your Order</a>
           
@@ -469,8 +471,10 @@ export async function sendShippingNotification(data: {
   orderReference: string
   trackingNumber: string
   estimatedDelivery: string
+  // Defaults to true; false when the customer chose branded packaging
+  plainPackaging?: boolean
 }): Promise<{ success: boolean; error?: string }> {
-  const { customerEmail, customerName, orderReference, trackingNumber, estimatedDelivery } = data
+  const { customerEmail, customerName, orderReference, trackingNumber, estimatedDelivery, plainPackaging = true } = data
 
   return sendEmail(
     customerEmail,
@@ -504,10 +508,10 @@ export async function sendShippingNotification(data: {
           
           <p><strong>Estimated Delivery:</strong> ${estimatedDelivery}</p>
           
-          <div class="note">
+          ${plainPackaging ? `<div class="note">
             <strong>Discreet Packaging</strong><br>
             Your order is on its way in plain, unmarked packaging. No product names or brand visible on the outside.
-          </div>
+          </div>` : ''}
           
           <div class="footer">
             <p>Track your order at ${config.app.baseUrl}/track-order</p>
@@ -586,7 +590,7 @@ export async function sendGiftCardEmail(data: {
           
           <div class="discreet">
             <strong>Discreet Shopping</strong><br>
-            Your order will arrive in plain, unmarked packaging. Card payments show ${STATEMENT_DESCRIPTOR}.
+            Orders ship in plain packaging by default. Card payments show ${STATEMENT_DESCRIPTOR}.
           </div>
           
           <div class="footer">
@@ -666,7 +670,7 @@ export async function sendAbandonedCartEmail(data: {
           
           <div class="discreet">
             <strong>Discreet Delivery</strong><br>
-            All orders ship in plain packaging. Your privacy is our priority.
+            Orders ship in plain packaging by default.
           </div>
           
           <div class="footer">
