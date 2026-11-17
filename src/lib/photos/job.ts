@@ -94,3 +94,76 @@ export async function runCompositeJob(
     }
   }
 }
+
+export type ReviewDecision = 'approve' | 'reject'
+
+type ProductImageRow = NonNullable<Awaited<ReturnType<typeof db.productImage.findUnique>>>
+
+export type ReviewResult = { ok: true; image: ProductImageRow } | { ok: false; status: 409; error: string }
+
+const REVIEW_ERRORS = {
+  missing: 'This photo no longer exists.',
+  notReady: 'The composite is still being made.',
+  nothingToApprove: 'There is no composite to approve.',
+  nothingToReject: 'There is no composite to reject.',
+  changed: 'This photo changed while you were reviewing it. Reload and try again.',
+} as const
+
+function refuse(error: string): ReviewResult {
+  return { ok: false, status: 409, error }
+}
+
+const isApprovedComposite = (image: ProductImageRow) =>
+  image.reviewStatus === 'approved' && image.treatment === 'composite'
+
+/**
+ * Approves or rejects a composite. Approval is the only way a composite
+ * becomes the live photo, and it only ever points url at the composite the
+ * job finished and the admin saw. Each write is conditional on the row still
+ * being in the state that was read, so concurrent reviews (or a new job
+ * claiming the row) cannot both win.
+ */
+export async function reviewComposite(imageId: string, decision: ReviewDecision): Promise<ReviewResult> {
+  const image = await db.productImage.findUnique({ where: { id: imageId } })
+  if (!image) return refuse(REVIEW_ERRORS.missing)
+
+  const jobRunning = image.reviewStatus === 'pending' && !image.compositeUrl
+  if (jobRunning) return refuse(REVIEW_ERRORS.notReady)
+
+  let data: Record<string, unknown>
+  if (decision === 'approve') {
+    if (isApprovedComposite(image)) return { ok: true, image }
+    if (image.reviewStatus !== 'pending') return refuse(REVIEW_ERRORS.nothingToApprove)
+    data = {
+      url: image.compositeUrl,
+      treatment: 'composite',
+      reviewStatus: 'approved',
+      // Keep the photo the composite replaces, so a later rejection can restore it
+      originalUrl: image.originalUrl ?? image.url,
+    }
+  } else {
+    const alreadyRejected = image.reviewStatus === 'rejected' && image.treatment !== 'composite' && !image.compositeUrl
+    if (alreadyRejected) return { ok: true, image }
+    if (image.reviewStatus === 'approved' && image.treatment !== 'composite') return refuse(REVIEW_ERRORS.nothingToReject)
+    data = {
+      reviewStatus: 'rejected',
+      compositeUrl: null,
+      url: image.originalUrl ?? image.url,
+      treatment: image.whiteBackground ? 'blend' : 'original',
+    }
+  }
+
+  const { count } = await db.productImage.updateMany({
+    where: { id: imageId, reviewStatus: image.reviewStatus, compositeUrl: image.compositeUrl },
+    data,
+  })
+
+  const current = await db.productImage.findUnique({ where: { id: imageId } })
+  if (!current) return refuse(REVIEW_ERRORS.missing)
+  if (count === 0) {
+    // A concurrent approval of the same composite already did the work
+    const sameApproval = decision === 'approve' && isApprovedComposite(current) && current.url === image.compositeUrl
+    if (!sameApproval) return refuse(REVIEW_ERRORS.changed)
+  }
+  return { ok: true, image: current }
+}
