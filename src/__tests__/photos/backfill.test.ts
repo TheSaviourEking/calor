@@ -4,7 +4,7 @@ import sharp from 'sharp'
 import os from 'os'
 import path from 'path'
 import fs from 'fs/promises'
-import { planBackfill, createLoader, checkDatabaseSafety } from '@/lib/photos/backfill'
+import { planBackfill, createLoader, checkDatabaseSafety, applyBackfill } from '@/lib/photos/backfill'
 
 async function whitePhoto(w = 400, h = 300): Promise<Buffer> {
   const square = await sharp({ create: { width: 100, height: 80, channels: 4, background: '#202020' } }).png().toBuffer()
@@ -117,8 +117,43 @@ describe('checkDatabaseSafety', () => {
   it('allows a remote host with the override', () => {
     expect(checkDatabaseSafety(remote, true)).toEqual({ ok: true })
   })
+  it.each(['host', 'hostaddr', 'HOST', 'HostAddr'])(
+    'refuses a localhost URL whose %s query parameter could redirect the connection',
+    (param) => {
+      const r = checkDatabaseSafety(`postgresql://u:p@localhost:5432/x?${param}=db.abc.supabase.co`, false)
+      expect(r.ok).toBe(false)
+      if (!r.ok) expect(r.reason).toContain(param)
+      expect(JSON.stringify(r)).not.toContain('u:p')
+    },
+  )
+  it.each(['host', 'hostaddr'])('with the override, allows a %s query parameter but reports the effective host', (param) => {
+    const r = checkDatabaseSafety(`postgresql://u:p@localhost:5432/x?sslmode=require&${param}=10.1.2.3`, true)
+    expect(r.ok).toBe(true)
+    if (r.ok) expect(r.notice).toContain('10.1.2.3')
+    expect(JSON.stringify(r)).not.toContain('u:p')
+  })
   it('refuses a missing or unparseable URL even with the override', () => {
     expect(checkDatabaseSafety(undefined, true).ok).toBe(false)
     expect(checkDatabaseSafety('not a url', true).ok).toBe(false)
+  })
+})
+
+describe('applyBackfill', () => {
+  const data = { originalUrl: '/a.png', treatment: 'blend' as const, whiteBackground: true, width: 4, height: 3 }
+
+  it('writes conditionally so a row approved since planning is not overwritten', async () => {
+    const updateMany = vi.fn(async ({ where }: { where: { id: string } }) => ({ count: where.id === 'b' ? 0 : 1 }))
+    const result = await applyBackfill(
+      [
+        { id: 'a', data },
+        { id: 'b', data },
+      ],
+      updateMany,
+    )
+    expect(updateMany).toHaveBeenCalledWith({
+      where: { id: 'a', originalUrl: null, treatment: { not: 'composite' } },
+      data,
+    })
+    expect(result).toEqual({ planned: 2, written: 1, unchanged: ['b'] })
   })
 })

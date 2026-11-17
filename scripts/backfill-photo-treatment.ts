@@ -6,7 +6,7 @@
 //   bun run photos:backfill --apply         (write)
 //   --i-mean-production                     (allow a DATABASE_URL host other than localhost)
 import path from 'path'
-import { checkDatabaseSafety, createLoader, planBackfill, type BackfillUpdate } from '../src/lib/photos/backfill'
+import { applyBackfill, checkDatabaseSafety, createLoader, planBackfill, type BackfillUpdate } from '../src/lib/photos/backfill'
 
 const PAGE_SIZE = 100
 
@@ -19,6 +19,7 @@ async function main() {
     console.error(`Refusing to run: ${safety.reason}`)
     process.exit(1)
   }
+  if (safety.notice) console.warn(safety.notice)
 
   // Imported only after the guard so a refused run never opens a connection
   const { db } = await import('../src/lib/db')
@@ -56,10 +57,10 @@ async function main() {
       return
     }
 
-    for (const u of updates) {
-      await db.productImage.update({ where: { id: u.id }, data: u.data })
-    }
-    console.log(`Updated ${updates.length} rows.`)
+    // Conditional writes: rows approved or changed since planning are left alone
+    const result = await applyBackfill(updates, (args) => db.productImage.updateMany(args))
+    for (const id of result.unchanged) console.warn(`NOT WRITTEN ${id}: no longer qualifies (changed since planning)`)
+    console.log(`Wrote ${result.written} of ${result.planned} planned rows.`)
   } finally {
     await db.$disconnect()
   }

@@ -92,21 +92,65 @@ export function createLoader(publicDir: string): (url: string) => Promise<Buffer
 
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1'])
 
+// Query parameters that libpq-style clients may use to connect somewhere other
+// than the URL's hostname
+const HOST_OVERRIDE_PARAMS = new Set(['host', 'hostaddr'])
+
 /** Decides whether the script may touch this database. Never echoes credentials. */
 export function checkDatabaseSafety(
   databaseUrl: string | undefined,
   allowRemote: boolean,
-): { ok: true } | { ok: false; reason: string } {
+): { ok: true; notice?: string } | { ok: false; reason: string } {
   if (!databaseUrl) return { ok: false, reason: 'DATABASE_URL is not set' }
-  let host: string
+  let url: URL
   try {
-    host = new URL(databaseUrl).hostname
+    url = new URL(databaseUrl)
   } catch {
     return { ok: false, reason: 'DATABASE_URL could not be parsed' }
   }
+  const host = url.hostname
+
+  const overrides = [...url.searchParams].filter(([key]) => HOST_OVERRIDE_PARAMS.has(key.toLowerCase()))
+  if (overrides.length > 0) {
+    const described = overrides.map(([key, value]) => `${key}="${value}"`).join(', ')
+    if (!allowRemote) {
+      return {
+        ok: false,
+        reason: `DATABASE_URL query parameter ${described} can override host "${host}"; pass --i-mean-production to run against it`,
+      }
+    }
+    return { ok: true, notice: `DATABASE_URL query parameter ${described} overrides host "${host}"; effective host: ${overrides[overrides.length - 1][1]}` }
+  }
+
   if (LOCAL_HOSTS.has(host) || allowRemote) return { ok: true }
   return {
     ok: false,
     reason: `DATABASE_URL host "${host}" is not localhost or 127.0.0.1; pass --i-mean-production to run against it`,
   }
+}
+
+type BackfillUpdateMany = (args: {
+  where: { id: string; originalUrl: null; treatment: { not: 'composite' } }
+  data: BackfillUpdate['data']
+}) => Promise<{ count: number }>
+
+/**
+ * Writes a plan, but only to rows that still qualify: a row approved as a
+ * composite (or given an original) between planning and applying is left alone.
+ */
+export async function applyBackfill(
+  updates: BackfillUpdate[],
+  updateMany: BackfillUpdateMany,
+): Promise<{ planned: number; written: number; unchanged: string[] }> {
+  let written = 0
+  const unchanged: string[] = []
+  for (const u of updates) {
+    const { count } = await updateMany({
+      where: { id: u.id, originalUrl: null, treatment: { not: 'composite' } },
+      data: u.data,
+    })
+    if (count > 0) written += count
+    else unchanged.push(u.id)
+  }
+  return { planned: updates.length, written, unchanged }
 }
