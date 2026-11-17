@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { requireAdminUser } from '@/lib/auth/guards'
-import { isPhotoTreatment } from '@/lib/photos/types'
+import { isStoredOriginal } from '@/lib/photos/storage'
+import type { PhotoTreatment } from '@/lib/photos/types'
 
 const positiveInt = (v: unknown) => (Number.isInteger(v) && (v as number) > 0 ? (v as number) : null)
+// 'composite' is set only by the admin approval step, never by a client write
+const clientTreatment = (v: unknown): PhotoTreatment => (v === 'blend' ? 'blend' : 'original')
 
 export async function POST(req: NextRequest) {
     const auth = await requireAdminUser()
@@ -119,8 +122,8 @@ export async function POST(req: NextRequest) {
                         url: img.url,
                         altText: img.altText || `${name} - Image ${index + 1}`,
                         sortOrder: img.sortOrder || index,
-                        originalUrl: typeof img.originalUrl === 'string' ? img.originalUrl : null,
-                        treatment: isPhotoTreatment(img.treatment) ? img.treatment : 'original',
+                        originalUrl: isStoredOriginal(img.originalUrl) ? img.originalUrl : null,
+                        treatment: clientTreatment(img.treatment),
                         whiteBackground: img.whiteBackground === true,
                         width: positiveInt(img.width),
                         height: positiveInt(img.height),

@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { NextRequest } from 'next/server'
 import sharp from 'sharp'
 
@@ -17,18 +17,30 @@ const { db, getSession, putObject, isStorageConfigured } = vi.hoisted(() => ({
 
 vi.mock('@/lib/db', () => ({ db }))
 vi.mock('@/lib/auth/session', () => ({ getSession }))
-vi.mock('@/lib/photos/storage', () => ({ putObject, isStorageConfigured }))
+// Real URL checks (isStoredOriginal), stubbed network writes
+vi.mock('@/lib/photos/storage', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/photos/storage')>()),
+  putObject,
+  isStorageConfigured,
+}))
 
 import { POST as createProduct } from '@/app/api/products/route'
 import { POST as addImage } from '@/app/api/admin/products/[id]/images/route'
 
+let adminCount = 0
 const asAdmin = () => {
-  getSession.mockResolvedValue({ customerId: 'admin_1' })
+  // A fresh admin per test keeps the in-memory rate limit from leaking between tests
+  getSession.mockResolvedValue({ customerId: `writes-admin-${++adminCount}` })
   db.customer.findUnique.mockResolvedValue({ isAdmin: true, isHost: false })
 }
 
+afterEach(() => {
+  vi.unstubAllEnvs()
+})
+
 beforeEach(() => {
   vi.clearAllMocks()
+  vi.stubEnv('R2_PUBLIC_URL', 'https://cdn.example.com/')
   getSession.mockResolvedValue(null)
   isStorageConfigured.mockReturnValue(true)
   putObject.mockImplementation(async (key: string) => `https://cdn.example.com/${key}`)
@@ -69,6 +81,15 @@ describe('POST /api/products', () => {
           height: 600,
         },
         { url: 'https://elsewhere.example.com/b.jpg', altText: '', sortOrder: 1, treatment: 'bogus', width: 'wide' },
+        // A client cannot point originalUrl at another host or mark a photo composite
+        {
+          url: 'https://cdn.example.com/originals/c.png',
+          originalUrl: 'http://169.254.169.254/latest/meta-data',
+          altText: '',
+          sortOrder: 2,
+          treatment: 'composite',
+        },
+        { url: 'x', originalUrl: 'https://cdn.example.com/elsewhere/d.png', altText: '', sortOrder: 3 },
       ],
     })
     expect(res.status).toBe(200)
@@ -92,6 +113,8 @@ describe('POST /api/products', () => {
       width: null,
       height: null,
     })
+    expect(images[2]).toMatchObject({ originalUrl: null, treatment: 'original' })
+    expect(images[3]).toMatchObject({ originalUrl: null })
   })
 })
 
@@ -113,8 +136,38 @@ describe('POST /api/admin/products/[id]/images', () => {
     expect(putObject).not.toHaveBeenCalled()
   })
 
+  it('returns 404 for a missing product without storing anything', async () => {
+    asAdmin()
+    db.product.findUnique.mockResolvedValue(null)
+    const png = await sharp({ create: { width: 30, height: 20, channels: 3, background: '#ffffff' } }).png().toBuffer()
+    const res = await postImage(png)
+    expect(res.status).toBe(404)
+    expect(putObject).not.toHaveBeenCalled()
+    expect(db.productImage.create).not.toHaveBeenCalled()
+  })
+
+  it('rejects GIF bytes sent as a PNG', async () => {
+    asAdmin()
+    db.product.findUnique.mockResolvedValue({ id: 'p_1' })
+    const gif = await sharp({ create: { width: 20, height: 20, channels: 3, background: '#fff' } }).gif().toBuffer()
+    const res = await postImage(gif)
+    expect(res.status).toBe(400)
+    expect(putObject).not.toHaveBeenCalled()
+  })
+
+  it('rate-limits after 60 uploads a minute per admin', async () => {
+    asAdmin()
+    db.product.findUnique.mockResolvedValue({ id: 'p_1' })
+    const statuses: number[] = []
+    // Bad bytes are rejected cheaply but still count toward the limit
+    for (let i = 0; i < 61; i++) statuses.push((await postImage(Buffer.from('x'), 'text/plain')).status)
+    expect(statuses.slice(0, 60).every((s) => s === 400)).toBe(true)
+    expect(statuses[60]).toBe(429)
+  })
+
   it('stores the original in R2 and persists the detected fields', async () => {
     asAdmin()
+    db.product.findUnique.mockResolvedValue({ id: 'p_1' })
     const png = await sharp({ create: { width: 300, height: 200, channels: 3, background: '#ffffff' } }).png().toBuffer()
     const res = await postImage(png)
     expect(res.status).toBe(200)
@@ -137,6 +190,7 @@ describe('POST /api/admin/products/[id]/images', () => {
 
   it('rejects bytes that are not an image', async () => {
     asAdmin()
+    db.product.findUnique.mockResolvedValue({ id: 'p_1' })
     const res = await postImage(Buffer.from('definitely not a png'))
     expect(res.status).toBe(400)
     expect(db.productImage.create).not.toHaveBeenCalled()

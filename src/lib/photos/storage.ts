@@ -5,12 +5,13 @@ import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
 
 function settings() {
   const accountId = process.env.R2_ACCOUNT_ID
+  const base = process.env.R2_PUBLIC_URL || (accountId ? `https://pub-${accountId}.r2.dev` : '')
   return {
     accountId,
     accessKeyId: process.env.R2_ACCESS_KEY_ID,
     secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
     bucket: process.env.R2_BUCKET_NAME,
-    publicBase: (process.env.R2_PUBLIC_URL || `https://pub-${accountId}.r2.dev`).replace(/\/+$/, ''),
+    publicBase: base.replace(/\/+$/, ''),
   }
 }
 
@@ -21,6 +22,17 @@ export function isStorageConfigured(): boolean {
 
 export function publicUrl(key: string): string {
   return `${settings().publicBase}/${key}`
+}
+
+// True only for a URL under our bucket's public base
+function isUnderPublicBase(url: string, prefix = ''): boolean {
+  const base = settings().publicBase
+  return base !== '' && url.startsWith(`${base}/${prefix}`)
+}
+
+/** True when the URL points at an original this app stored under originals/. */
+export function isStoredOriginal(url: unknown): url is string {
+  return typeof url === 'string' && isUnderPublicBase(url, 'originals/')
 }
 
 export async function putObject(key: string, body: Buffer, contentType: string): Promise<string> {
@@ -38,7 +50,11 @@ export async function putObject(key: string, body: Buffer, contentType: string):
   return publicUrl(key)
 }
 
-/** Reads a stored photo back: a public URL is fetched, a data: URL is decoded in place. */
+/**
+ * Reads a stored photo back: a data: URL is decoded in place, a URL under the
+ * bucket's public base is fetched. Any other URL is refused, so this never
+ * fetches an arbitrary host.
+ */
 export async function getObject(url: string): Promise<Buffer> {
   if (url.startsWith('data:')) {
     const comma = url.indexOf(',')
@@ -49,6 +65,8 @@ export async function getObject(url: string): Promise<Buffer> {
       ? Buffer.from(payload, 'base64')
       : Buffer.from(decodeURIComponent(payload))
   }
+
+  if (!isUnderPublicBase(url)) throw new Error('Refusing to fetch a URL outside photo storage')
 
   const res = await fetch(url)
   if (!res.ok) throw new Error(`Failed to fetch ${url}: ${res.status}`)

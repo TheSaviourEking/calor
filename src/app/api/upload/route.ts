@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAdminUser } from '@/lib/auth/guards'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { isStorageConfigured } from '@/lib/photos/storage'
-import { ingestPhoto, InvalidImageError } from '@/lib/photos/ingest'
-
-const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/avif']
-const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5 MB
+import {
+    ALLOWED_UPLOAD_MIME_TYPES as ALLOWED_MIME_TYPES,
+    MAX_UPLOAD_BYTES as MAX_FILE_SIZE,
+    ingestPhoto,
+    InvalidImageError,
+} from '@/lib/photos/ingest'
 
 // Admin-only product photo upload. Stores the original under originals/ and
 // returns how the storefront should treat it.

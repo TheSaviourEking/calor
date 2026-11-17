@@ -4,16 +4,23 @@ import { NextRequest } from 'next/server'
 import sharp from 'sharp'
 import { crc32 } from 'node:zlib'
 
-const { db, getSession, putObject, isStorageConfigured } = vi.hoisted(() => ({
+const { db, getSession, putObject, isStorageConfigured, detectSpy } = vi.hoisted(() => ({
   db: { customer: { findUnique: vi.fn() } },
   getSession: vi.fn(),
   putObject: vi.fn(),
   isStorageConfigured: vi.fn(),
+  detectSpy: vi.fn(),
 }))
 
 vi.mock('@/lib/db', () => ({ db }))
 vi.mock('@/lib/auth/session', () => ({ getSession }))
 vi.mock('@/lib/photos/storage', () => ({ putObject, isStorageConfigured }))
+// Real detection, observed: lets a test prove an image never reached the decoder
+vi.mock('@/lib/photos/detect', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/photos/detect')>()
+  detectSpy.mockImplementation(actual.detectWhiteBackground)
+  return { detectWhiteBackground: detectSpy }
+})
 
 import { POST } from '@/app/api/upload/route'
 
@@ -119,6 +126,16 @@ describe('POST /api/upload', () => {
     png.writeUInt32BE(10_000, 20)
     png.writeUInt32BE(crc32(png.subarray(12, 29)) >>> 0, 29)
     const res = await upload(await pngFile('huge.png', png))
+    expect(res.status).toBe(400)
+    // Rejected from the header alone: the pixel data is never decoded
+    expect(detectSpy).not.toHaveBeenCalled()
+    expect(putObject).not.toHaveBeenCalled()
+  })
+
+  it('rejects GIF bytes sent with an allowed MIME type', async () => {
+    asAdmin()
+    const gif = await sharp({ create: { width: 20, height: 20, channels: 3, background: '#fff' } }).gif().toBuffer()
+    const res = await upload(await pngFile('sneaky.png', gif))
     expect(res.status).toBe(400)
     expect(putObject).not.toHaveBeenCalled()
   })

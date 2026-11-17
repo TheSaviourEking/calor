@@ -8,6 +8,11 @@ import type { PhotoTreatment } from './types'
 // a huge canvas. Anything above this is rejected before it is decoded.
 export const MAX_INPUT_PIXELS = 50_000_000
 
+// Formats a product photo may be in. Routes pre-check the client's claimed MIME
+// against this list; ingestPhoto enforces it again on the detected format.
+export const ALLOWED_UPLOAD_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/avif']
+export const MAX_UPLOAD_BYTES = 5 * 1024 * 1024
+
 export class InvalidImageError extends Error {}
 
 export interface IngestedPhoto {
@@ -25,7 +30,6 @@ function storedAs(meta: sharp.Metadata): { ext: string; contentType: string } | 
     case 'jpeg': return { ext: 'jpg', contentType: 'image/jpeg' }
     case 'png': return { ext: 'png', contentType: 'image/png' }
     case 'webp': return { ext: 'webp', contentType: 'image/webp' }
-    case 'gif': return { ext: 'gif', contentType: 'image/gif' }
     case 'heif': return meta.compression === 'av1' ? { ext: 'avif', contentType: 'image/avif' } : null
     default: return null
   }

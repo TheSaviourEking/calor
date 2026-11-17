@@ -12,7 +12,7 @@ vi.mock('@aws-sdk/client-s3', () => ({
   },
 }))
 
-import { getObject, isStorageConfigured, publicUrl, putObject } from '@/lib/photos/storage'
+import { getObject, isStorageConfigured, isStoredOriginal, publicUrl, putObject } from '@/lib/photos/storage'
 
 function configure(publicBase = 'https://cdn.example.com/') {
   vi.stubEnv('R2_ACCOUNT_ID', 'acct')
@@ -80,6 +80,7 @@ describe('photo storage', () => {
   })
 
   it('fetches a public URL', async () => {
+    configure()
     const fetchSpy = vi.fn(async () => new Response(new Uint8Array([1, 2, 3])))
     vi.stubGlobal('fetch', fetchSpy)
     const out = await getObject('https://cdn.example.com/originals/a.png')
@@ -87,7 +88,37 @@ describe('photo storage', () => {
     expect(fetchSpy).toHaveBeenCalledWith('https://cdn.example.com/originals/a.png')
   })
 
+  it('refuses to fetch a URL outside photo storage', async () => {
+    configure()
+    const fetchSpy = vi.fn()
+    vi.stubGlobal('fetch', fetchSpy)
+    for (const url of [
+      'http://169.254.169.254/latest/meta-data',
+      'https://cdn.example.com.evil.test/originals/a.png',
+      'file:///etc/passwd',
+    ]) {
+      await expect(getObject(url)).rejects.toThrow(/outside photo storage/)
+    }
+    expect(fetchSpy).not.toHaveBeenCalled()
+  })
+
+  it('refuses every remote URL when no public base is configured', async () => {
+    vi.stubEnv('R2_PUBLIC_URL', '')
+    vi.stubEnv('R2_ACCOUNT_ID', '')
+    vi.stubGlobal('fetch', vi.fn())
+    await expect(getObject('https://pub-.r2.dev/a.png')).rejects.toThrow(/outside photo storage/)
+  })
+
+  it('recognises only originals under the public base', () => {
+    configure()
+    expect(isStoredOriginal('https://cdn.example.com/originals/a.png')).toBe(true)
+    expect(isStoredOriginal('https://cdn.example.com/composites/a.png')).toBe(false)
+    expect(isStoredOriginal('https://evil.test/originals/a.png')).toBe(false)
+    expect(isStoredOriginal(42)).toBe(false)
+  })
+
   it('throws when the fetch fails', async () => {
+    configure()
     vi.stubGlobal('fetch', vi.fn(async () => new Response('nope', { status: 404 })))
     await expect(getObject('https://cdn.example.com/missing.png')).rejects.toThrow(/404/)
   })

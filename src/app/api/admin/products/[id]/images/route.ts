@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { requireAdminUser } from '@/lib/auth/guards'
+import { checkRateLimit } from '@/lib/rate-limit'
 import { isStorageConfigured } from '@/lib/photos/storage'
-import { ingestPhoto, InvalidImageError } from '@/lib/photos/ingest'
+import {
+  ALLOWED_UPLOAD_MIME_TYPES,
+  MAX_UPLOAD_BYTES,
+  ingestPhoto,
+  InvalidImageError,
+} from '@/lib/photos/ingest'
 
 // Upload image for a product
 export async function POST(
@@ -11,6 +17,12 @@ export async function POST(
 ) {
   const auth = await requireAdminUser()
   if (!auth.ok) return auth.response
+
+  // Shares the /api/upload budget: one limit per admin across both upload paths
+  const limit = await checkRateLimit(`upload:${auth.customerId}`, { windowMs: 60_000, maxRequests: 60 })
+  if (!limit.allowed) {
+    return NextResponse.json({ error: 'Too many uploads. Try again in a minute.' }, { status: 429 })
+  }
 
   try {
     if (!isStorageConfigured()) {
@@ -21,6 +33,12 @@ export async function POST(
     }
 
     const { id } = await params
+    // Before storing anything, so a bad id leaves no orphaned object
+    const product = await db.product.findUnique({ where: { id }, select: { id: true } })
+    if (!product) {
+      return NextResponse.json({ error: 'Product not found' }, { status: 404 })
+    }
+
     const formData = await request.formData()
     const file = formData.get('file')
     const altText = formData.get('altText') as string || ''
@@ -29,17 +47,14 @@ export async function POST(
       return NextResponse.json({ error: 'No file provided' }, { status: 400 })
     }
 
-    // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
-    if (!allowedTypes.includes(file.type)) {
+    if (!ALLOWED_UPLOAD_MIME_TYPES.includes(file.type)) {
       return NextResponse.json(
-        { error: 'Invalid file type. Only JPEG, PNG, WebP, and GIF allowed.' },
+        { error: `File type not allowed. Accepted types: ${ALLOWED_UPLOAD_MIME_TYPES.join(', ')}` },
         { status: 400 }
       )
     }
 
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > MAX_UPLOAD_BYTES) {
       return NextResponse.json(
         { error: 'File too large. Maximum size is 5MB.' },
         { status: 400 }
