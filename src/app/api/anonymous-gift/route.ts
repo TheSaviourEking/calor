@@ -3,6 +3,7 @@ import { Resend } from 'resend'
 import { db } from '@/lib/db'
 import { config } from '@/lib/config'
 import { rateLimitByIp } from '@/lib/rate-limit'
+import { EMAIL_SUBJECTS } from '@/lib/discretion'
 
 const resend = new Resend(config.resend.apiKey)
 
@@ -26,7 +27,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const recipientEmail = typeof body.recipientEmail === 'string' ? body.recipientEmail.trim() : ''
     const orderReference = typeof body.orderReference === 'string' ? body.orderReference.trim() : ''
-    const senderName = typeof body.senderName === 'string' ? escapeHtml(body.senderName.slice(0, 100)) : ''
 
     if (!recipientEmail || !orderReference) {
       return NextResponse.json({ error: 'Recipient email and order reference are required' }, { status: 400 })
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     // gift to this recipient, and the message comes from the order, not the caller
     const order = await db.order.findUnique({
       where: { reference: orderReference },
-      select: { isAnonymousGift: true, recipientEmail: true, giftMessage: true },
+      select: { isAnonymousGift: true, recipientEmail: true, giftMessage: true, plainPackaging: true },
     })
     if (
       !order ||
@@ -50,9 +50,9 @@ export async function POST(request: NextRequest) {
 
     // Send anonymous gift notification email
     await resend.emails.send({
-      from: 'CALO CO. <gifts@calo.one>',
+      from: 'Gift notification <gifts@calo.one>',
       to: recipientEmail,
-      subject: 'You have received a gift',
+      subject: EMAIL_SUBJECTS.giftCard,
       html: `
         <!DOCTYPE html>
         <html>
@@ -74,12 +74,12 @@ export async function POST(request: NextRequest) {
             
             <div class="gift-box">
               <p style="font-size: 48px; margin: 0;">A special delivery awaits you</p>
-              <p style="font-size: 18px; margin-top: 10px;">Someone special has sent you a gift from CALO CO.</p>
+              <p style="font-size: 18px; margin-top: 10px;">Someone has sent you a gift.</p>
             </div>
             
             ${giftMessage ? `<div class="message">"${giftMessage}"</div>` : ''}
             
-            ${senderName ? `<p>A message from: ${senderName}</p>` : ''}
+            <p>The sender chose to stay anonymous.</p>
             
             <p class="order-ref">Order #${escapeHtml(orderReference)}</p>
             
@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
             
             <div class="discreet">
               <strong>About Your Delivery</strong><br>
-              Your gift will arrive in plain, unmarked packaging. No product names or brand visible on the outside. Your privacy matters to us.
+              ${order.plainPackaging ? 'Your gift will arrive in plain, unmarked packaging. ' : ''}Your privacy matters to us.
             </div>
             
             <div class="footer">

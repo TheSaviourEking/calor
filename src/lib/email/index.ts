@@ -1,5 +1,6 @@
 import { Resend } from 'resend'
 import { config } from '@/lib/config'
+import { EMAIL_SUBJECTS, STATEMENT_DESCRIPTOR } from '@/lib/discretion'
 
 // Initialize Resend with API key
 const resendApiKey = config.resend.apiKey
@@ -112,13 +113,13 @@ export async function sendOrderConfirmation(data: OrderEmailData): Promise<{ suc
   const { customerEmail, customerName, orderReference, total, currency, items } = data
 
   const itemsList = items
-    .map((item) => `<tr><td style="padding: 8px 0;">${item.name}</td><td style="padding: 8px 0; text-align: center;">${item.quantity}</td><td style="padding: 8px 0; text-align: right;">$${(item.price / 100).toFixed(2)}</td></tr>`)
+    .map((item) => `<tr><td style="padding: 8px 0;">${escapeHtml(item.name)}</td><td style="padding: 8px 0; text-align: center;">${item.quantity}</td><td style="padding: 8px 0; text-align: right;">$${(item.price / 100).toFixed(2)}</td></tr>`)
     .join('')
 
   return sendEmail(
     customerEmail,
     'calo. <orders@calo.one>',
-    'Your calo. order is confirmed',
+    EMAIL_SUBJECTS.orderConfirmed,
     `
       <!DOCTYPE html>
       <html>
@@ -139,10 +140,10 @@ export async function sendOrderConfirmation(data: OrderEmailData): Promise<{ suc
       </head>
       <body>
         <div class="container">
-          <h1>Hi ${customerName},</h1>
+          <h1>Hi ${escapeHtml(customerName)},</h1>
           <p>Your order is confirmed and on its way to you.</p>
           
-          <p class="order-ref">Order #${orderReference}</p>
+          <p class="order-ref">Order #${escapeHtml(orderReference)}</p>
           
           <table>
             <thead>
@@ -315,7 +316,7 @@ export async function sendWelcomeEmail(email: string, firstName: string): Promis
             <span style="color: #6B5D56; font-size: 14px;">Faster checkout with saved addresses and payment methods.</span>
           </div>
           
-          <p style="margin-top: 30px;">We take your privacy seriously. Your bank statement will always show "CALO CO." only.</p>
+          <p style="margin-top: 30px;">We take your privacy seriously. Card payments show ${STATEMENT_DESCRIPTOR}.</p>
           
           <a href="${config.app.baseUrl}/account" class="button">Visit Your Account</a>
           
@@ -474,7 +475,7 @@ export async function sendShippingNotification(data: {
   return sendEmail(
     customerEmail,
     'calo. <orders@calo.one>',
-    'Your order is on its way',
+    EMAIL_SUBJECTS.shipped,
     `
       <!DOCTYPE html>
       <html>
@@ -540,7 +541,7 @@ export async function sendGiftCardEmail(data: {
   return sendEmail(
     recipientEmail,
     'calo. <gifts@calo.one>',
-    `You've received a gift card from ${senderName}`,
+    EMAIL_SUBJECTS.giftCard,
     `
       <!DOCTYPE html>
       <html>
@@ -585,7 +586,7 @@ export async function sendGiftCardEmail(data: {
           
           <div class="discreet">
             <strong>Discreet Shopping</strong><br>
-            Your order will arrive in plain, unmarked packaging. Bank statements show only "CALO CO."
+            Your order will arrive in plain, unmarked packaging. Card payments show ${STATEMENT_DESCRIPTOR}.
           </div>
           
           <div class="footer">
@@ -617,14 +618,13 @@ export async function sendAbandonedCartEmail(data: {
 }): Promise<{ success: boolean; error?: string }> {
   const { email, name, cartData, discountCode, discountPercent } = data
 
-  const itemsList = cartData.items
-    .map((item) => `<tr><td style="padding: 8px 0;">${escapeHtml(item.name)} x${item.quantity}</td><td style="padding: 8px 0; text-align: right;">$${(item.price / 100).toFixed(2)}</td></tr>`)
-    .join('')
+  const itemCount = cartData.items.length
+  const itemLabel = `${itemCount} ${itemCount === 1 ? 'item' : 'items'}`
 
   return sendEmail(
     email,
     'calo. <hello@calo.one>',
-    `You left something behind... ${discountPercent}% off inside`,
+    EMAIL_SUBJECTS.abandonedCart,
     `
       <!DOCTYPE html>
       <html>
@@ -653,9 +653,8 @@ export async function sendAbandonedCartEmail(data: {
           </div>
           
           <div class="cart-summary">
-            <p style="margin: 0 0 10px 0; font-weight: 500; color: #2C2C2C;">Your cart (${cartData.items.length} items)</p>
+            <p style="margin: 0 0 10px 0; font-weight: 500; color: #2C2C2C;">Your bag (${itemLabel})</p>
             <table style="width: 100%; font-size: 14px; color: #2C2C2C;">
-              ${itemsList}
               <tr style="border-top: 1px solid #E8E2D9;">
                 <td style="padding: 10px 0; font-weight: 500;">Total</td>
                 <td style="padding: 10px 0; text-align: right; font-weight: 500;">$${(cartData.total / 100).toFixed(2)}</td>
@@ -700,7 +699,7 @@ export async function sendPriceDropAlert(data: {
   return sendEmail(
     email,
     'calo. <alerts@calo.one>',
-    `Price Drop: ${productName}`,
+    EMAIL_SUBJECTS.priceDrop,
     `
       <!DOCTYPE html>
       <html>
@@ -758,7 +757,7 @@ export async function sendBackInStockAlert(data: {
   return sendEmail(
     email,
     'calo. <alerts@calo.one>',
-    `Back in Stock: ${productName}`,
+    EMAIL_SUBJECTS.backInStock,
     `
       <!DOCTYPE html>
       <html>
