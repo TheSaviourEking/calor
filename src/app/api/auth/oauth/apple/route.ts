@@ -77,7 +77,6 @@ export async function POST(request: NextRequest) {
         customer = await db.customer.update({
           where: { id: customer.id },
           data: {
-            nickname: await uniqueGeneratedNickname(),
             appleId: appleUserId,
             appleEmail: appleEmail,
             authProvider: 'apple',
@@ -92,6 +91,7 @@ export async function POST(request: NextRequest) {
             email: appleEmail,
             firstName,
             lastName,
+            nickname: await uniqueGeneratedNickname(),
             appleId: appleUserId,
             appleEmail: appleEmail,
             authProvider: 'apple',

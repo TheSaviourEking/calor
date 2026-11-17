@@ -74,7 +74,6 @@ export async function GET(request: NextRequest) {
         customer = await db.customer.update({
           where: { id: customer.id },
           data: {
-            nickname: await uniqueGeneratedNickname(),
             googleId: googleUser.id,
             googleEmail: googleUser.email,
             authProvider: 'google',
@@ -90,6 +89,7 @@ export async function GET(request: NextRequest) {
             email: googleUser.email,
             firstName: nameParts[0] || googleUser.given_name || 'User',
             lastName: nameParts.slice(1).join(' ') || googleUser.family_name || '',
+            nickname: await uniqueGeneratedNickname(),
             googleId: googleUser.id,
             googleEmail: googleUser.email,
             authProvider: 'google',

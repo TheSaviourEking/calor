@@ -5,7 +5,7 @@ const MAX_TRIES = 5
 
 /** A generated nickname nobody has (case-insensitive). After 5 collisions, adds a 6th digit. */
 export async function uniqueGeneratedNickname(): Promise<string> {
-  let candidate = generateNickname()
+  let candidate = ''
   for (let i = 0; i < MAX_TRIES; i++) {
     candidate = generateNickname()
     const taken = await db.customer.findFirst({
