@@ -1,5 +1,16 @@
 import type { NextConfig } from "next";
 
+// R2 custom/public domain, when configured
+function r2PublicPatterns() {
+  const raw = process.env.R2_PUBLIC_URL;
+  if (!raw) return [];
+  try {
+    return [{ protocol: "https" as const, hostname: new URL(raw).hostname }];
+  } catch {
+    return [];
+  }
+}
+
 const nextConfig: NextConfig = {
   // standalone output for Docker/VPS — set STANDALONE=true in env
   // Vercel ignores this and uses its own build pipeline
@@ -12,8 +23,8 @@ const nextConfig: NextConfig = {
       // Default R2 bucket URL
       { protocol: "https", hostname: "*.r2.cloudflarestorage.com" },
       { protocol: "https", hostname: "images.unsplash.com" },
-      // TODO: Add your R2 custom domain here at deploy time, e.g.:
-      // { protocol: "https", hostname: "assets.yourdomain.com" },
+      { protocol: "https", hostname: "*.r2.dev" },
+      ...r2PublicPatterns(),
     ],
   },
   async rewrites() {
