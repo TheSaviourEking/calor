@@ -21,6 +21,8 @@ const SHADOW_SQUASH = 0.18
 const SHADOW_SIGMA = 18
 const SHADOW_OPACITY = 0.22
 const HONESTY_TOLERANCE = 2
+// Alpha below this is treated as background-removal haze when framing.
+const TRIM_ALPHA_THRESHOLD = 16
 
 function load(input: Buffer): sharp.Sharp {
   return sharp(input, { limitInputPixels: MAX_INPUT_PIXELS })
@@ -30,19 +32,23 @@ function rawInput(img: RawImage) {
   return { raw: { width: img.width, height: img.height, channels: 4 as const } }
 }
 
-/** Upright RGBA cutout cropped to the bounding box of its non-transparent pixels. */
+/**
+ * Upright RGBA cutout cropped to the bounding box of its clearly visible pixels
+ * (alpha >= TRIM_ALPHA_THRESHOLD), so faint background-removal haze does not
+ * skew the framing. The crop carries every pixel inside the box unchanged.
+ */
 async function uprightTrimmedCutout(cutout: Buffer): Promise<RawImage> {
   const { data, info } = await load(cutout).rotate().ensureAlpha().raw().toBuffer({ resolveWithObject: true })
   const { width, height } = info
   let minX = width, minY = height, maxX = -1, maxY = -1
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      if (data[(y * width + x) * 4 + 3] === 0) continue
-      if (x < minX) minX = x
-      if (x > maxX) maxX = x
-      if (y < minY) minY = y
-      if (y > maxY) maxY = y
-    }
+  for (let i = 3, p = 0; i < data.length; i += 4, p++) {
+    if (data[i] < TRIM_ALPHA_THRESHOLD) continue
+    const x = p % width
+    const y = (p - x) / width
+    if (x < minX) minX = x
+    if (x > maxX) maxX = x
+    if (y < minY) minY = y
+    if (y > maxY) maxY = y
   }
   if (maxX < 0) throw new Error('Cutout has no visible pixels')
   const box = { left: minX, top: minY, width: maxX - minX + 1, height: maxY - minY + 1 }

@@ -85,6 +85,25 @@ describe('composeOnBackdrop', () => {
     expect(result.maxDiff).toBeGreaterThanOrEqual(12)
   })
 
+  it('ignores faint background-removal haze when framing the product', async () => {
+    const clean = await cutout(100, 150, { w: 60, h: 100, left: 20, top: 25 })
+    const { data, info } = await sharp(clean).raw().toBuffer({ resolveWithObject: true })
+    const noisy = Buffer.from(data)
+    // stray speckles with alpha 1-15 in the corners and edges, outside the product
+    const specks: Array<[number, number, number]> = [[0, 0, 1], [99, 0, 5], [0, 149, 15], [99, 149, 8], [50, 2, 3]]
+    for (const [x, y, a] of specks) {
+      const i = (y * info.width + x) * 4
+      noisy[i] = noisy[i + 1] = noisy[i + 2] = 200
+      noisy[i + 3] = a
+    }
+    const noisyPng = await sharp(noisy, { raw: { width: info.width, height: info.height, channels: 4 } }).png().toBuffer()
+    const bg = await backdrop()
+    const a = await composeOnBackdrop({ cutout: clean, backdrop: bg, canvas: 400 })
+    const b = await composeOnBackdrop({ cutout: noisyPng, backdrop: bg, canvas: 400 })
+    expect(b.placement).toEqual(a.placement)
+    expect(verifyProductUntouched(b.raw, b.scaledCutout, b.placement).ok).toBe(true)
+  })
+
   it('respects EXIF orientation', async () => {
     // Stored landscape 300x100; orientation 6 means it displays portrait 100x300
     const base = await cutout(300, 100, { w: 300, h: 100, left: 0, top: 0 })
