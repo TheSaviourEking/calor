@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Key, Bell, Eye, Lock, Smartphone } from "lucide-react";
 import Link from "next/link";
+import NicknameSection from "./NicknameSection";
 
 export default function SecurityPage() {
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
@@ -19,6 +20,8 @@ export default function SecurityPage() {
       <p className="font-body text-warm-gray text-sm mb-8">
         Protect your account and manage your privacy preferences.
       </p>
+
+      <NicknameSection />
 
       {/* Change Password */}
       <div className="bg-warm-white p-6 border border-sand mb-6">

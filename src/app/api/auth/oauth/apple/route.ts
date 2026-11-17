@@ -4,6 +4,7 @@ import { randomBytes } from 'crypto'
 import { jwtVerify, SignJWT, importPKCS8, createRemoteJWKSet } from 'jose'
 import { config } from '@/lib/config'
 import { createSession } from '@/lib/auth/session'
+import { uniqueGeneratedNickname } from '@/lib/nickname'
 
 // Apple publishes its signing keys as a JWK set. jose fetches and caches it,
 // picks the key whose `kid` matches the token, and refetches on rotation.
@@ -76,6 +77,7 @@ export async function POST(request: NextRequest) {
         customer = await db.customer.update({
           where: { id: customer.id },
           data: {
+            nickname: await uniqueGeneratedNickname(),
             appleId: appleUserId,
             appleEmail: appleEmail,
             authProvider: 'apple',

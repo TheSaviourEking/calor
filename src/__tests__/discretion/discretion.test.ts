@@ -36,6 +36,13 @@ describe('validateNickname', () => {
     expect(validateNickname(42).ok).toBe(false)
     expect(validateNickname('a'.repeat(25)).ok).toBe(false)
   })
+  it('collapses internal whitespace', () => {
+    expect(validateNickname('Amber   4821')).toEqual({ ok: true, value: 'Amber 4821' })
+  })
+  it('rejects a nickname with no letter or digit', () => {
+    expect(validateNickname('___').ok).toBe(false)
+    expect(validateNickname('- -').ok).toBe(false)
+  })
   it('accepts valid', () => {
     expect(validateNickname('Night_Owl-7')).toEqual({ ok: true, value: 'Night_Owl-7' })
     expect(validateNickname('  Amber 4821 ')).toEqual({ ok: true, value: 'Amber 4821' })

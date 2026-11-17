@@ -38,13 +38,16 @@ export function validateNickname(
   raw: unknown
 ): { ok: true; value: string } | { ok: false; error: string } {
   if (typeof raw !== 'string') return { ok: false, error: 'Nickname must be text' }
-  const value = raw.trim()
+  const value = raw.trim().replace(/\s+/g, ' ')
   if (value.length < 3 || value.length > 24) {
     return { ok: false, error: 'Nickname must be 3 to 24 characters' }
   }
   if (value.includes('@')) return { ok: false, error: 'Nickname cannot contain @' }
   if (!NICKNAME_PATTERN.test(value)) {
     return { ok: false, error: 'Use letters, numbers, spaces, _ or - only' }
+  }
+  if (!/[A-Za-z0-9]/.test(value)) {
+    return { ok: false, error: 'Nickname needs at least one letter or number' }
   }
   return { ok: true, value }
 }

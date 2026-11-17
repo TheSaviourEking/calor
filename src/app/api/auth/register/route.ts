@@ -4,6 +4,7 @@ import { hashPassword, createSession } from '@/lib/auth/session'
 import { sendVerificationEmail, sendSecurityAlert } from '@/lib/email'
 import { getGeoInfo, parseUserAgent, formatLocation } from '@/lib/geo'
 import { rateLimitByIp } from '@/lib/rate-limit'
+import { uniqueGeneratedNickname } from '@/lib/nickname'
 import crypto from 'crypto'
 
 import { z } from 'zod'
@@ -69,6 +70,7 @@ export async function POST(request: NextRequest) {
         firstName,
         lastName,
         passwordHash,
+        nickname: await uniqueGeneratedNickname(),
         ageVerifiedAt: new Date(),
         emailVerifyToken: verifyToken,
         emailVerifyExpires: verifyExpires,

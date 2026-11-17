@@ -3,6 +3,7 @@ import { db } from '@/lib/db'
 import { randomBytes } from 'crypto'
 import { config } from '@/lib/config'
 import { createSession } from '@/lib/auth/session'
+import { uniqueGeneratedNickname } from '@/lib/nickname'
 
 // Google OAuth callback
 export async function GET(request: NextRequest) {
@@ -73,6 +74,7 @@ export async function GET(request: NextRequest) {
         customer = await db.customer.update({
           where: { id: customer.id },
           data: {
+            nickname: await uniqueGeneratedNickname(),
             googleId: googleUser.id,
             googleEmail: googleUser.email,
             authProvider: 'google',
