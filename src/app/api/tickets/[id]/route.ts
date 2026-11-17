@@ -15,12 +15,17 @@ export async function GET(
       ? await db.customer.findUnique({ where: { id: session.customerId } })
       : null
 
+    const isStaff = !!customer?.isAdmin
+
     const ticket = await db.supportTicket.findUnique({
       where: { id },
+      ...(isStaff ? {} : { omit: { internalNotes: true } }),
       include: {
         customer: { select: { id: true, firstName: true, lastName: true, email: true } },
         category: true,
         messages: {
+          // Staff-only messages never reach the customer
+          ...(isStaff ? {} : { where: { isInternal: false } }),
           orderBy: { createdAt: 'asc' }
         }
       }
@@ -30,9 +35,9 @@ export async function GET(
       return NextResponse.json({ error: 'Ticket not found' }, { status: 404 })
     }
 
-    // Check access
-    if (!customer?.isAdmin && ticket.customerId !== session?.customerId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+    // Not yours: indistinguishable from a ticket that does not exist
+    if (!isStaff && (!session?.customerId || ticket.customerId !== session.customerId)) {
+      return NextResponse.json({ error: 'Ticket not found' }, { status: 404 })
     }
 
     return NextResponse.json({ ticket })
