@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { Package, ChevronRight, Tag, Heart, ShoppingBag } from 'lucide-react'
 import { toast } from 'sonner'
 import { useCartStore } from '@/stores'
-import ProductPhoto from '@/components/product/ProductPhoto'
 import type { PhotoTreatment } from '@/lib/photos/types'
 
 interface BundleItem {
@@ -105,11 +104,10 @@ export default function BundlesClient({ bundles }: BundlesClientProps) {
               {/* Bundle Image */}
               <div className="aspect-square bg-gradient-to-br from-cream to-sand relative">
                 {bundle.imageUrl ? (
-                  <ProductPhoto
+                  <img 
                     src={bundle.imageUrl}
                     alt={bundle.name}
-                    aspect="fill"
-                    sizes="(min-width: 768px) 50vw, 100vw"
+                    className="w-full h-full object-cover"
                   />
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center">
