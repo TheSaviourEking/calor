@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { PUBLIC_IMAGE_SELECT } from '@/lib/photos/public-image'
 
 interface QuizAnswer {
   questionId: string
@@ -28,7 +29,7 @@ export async function POST(request: NextRequest) {
       where: { published: true },
       include: {
         variants: true,
-        images: { orderBy: { sortOrder: 'asc' }, take: 1 },
+        images: { orderBy: { sortOrder: 'asc' }, take: 1, select: PUBLIC_IMAGE_SELECT },
         category: true
       }
     })

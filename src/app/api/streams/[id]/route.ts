@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import bcrypt from 'bcryptjs'
 import { requireStreamOwner } from '@/lib/auth/guards'
+import { PUBLIC_IMAGE_SELECT } from '@/lib/photos/public-image'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -34,7 +35,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           include: {
             product: {
               include: {
-                images: { orderBy: { sortOrder: 'asc' } },
+                images: { orderBy: { sortOrder: 'asc' }, select: PUBLIC_IMAGE_SELECT },
                 variants: true,
                 category: { select: { name: true, slug: true } },
               },

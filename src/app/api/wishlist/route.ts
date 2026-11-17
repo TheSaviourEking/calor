@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { PUBLIC_IMAGE_SELECT } from '@/lib/photos/public-image'
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,7 +18,7 @@ export async function POST(request: NextRequest) {
       include: {
         category: { select: { name: true, slug: true } },
         variants: { take: 1 },
-        images: { take: 1 },
+        images: { take: 1, select: PUBLIC_IMAGE_SELECT },
       },
     })
 

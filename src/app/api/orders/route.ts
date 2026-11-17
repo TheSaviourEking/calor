@@ -6,6 +6,7 @@ import { orderCreateSchema } from '@/lib/validations/orders'
 import { priceOrder, OrderPricingError } from '@/lib/orders/pricing'
 import { sendOrderConfirmationFor } from '@/lib/orders/lifecycle'
 import { rateLimitByIp } from '@/lib/rate-limit'
+import { PUBLIC_IMAGE_SELECT } from '@/lib/photos/public-image'
 
 export async function POST(request: NextRequest) {
   try {
@@ -295,7 +296,7 @@ export async function GET(request: NextRequest) {
           items: {
             include: {
               product: {
-                include: { images: true },
+                include: { images: { select: PUBLIC_IMAGE_SELECT } },
               },
             },
           },
@@ -322,7 +323,7 @@ export async function GET(request: NextRequest) {
         items: {
           include: {
             product: {
-              include: { images: { take: 1 } },
+              include: { images: { take: 1, select: PUBLIC_IMAGE_SELECT } },
             },
           },
         },

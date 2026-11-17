@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { PUBLIC_IMAGE_SELECT } from '@/lib/photos/public-image'
 
 export async function GET(request: NextRequest) {
   try {
@@ -18,7 +19,7 @@ export async function GET(request: NextRequest) {
           include: {
             product: {
               include: {
-                images: { take: 1 },
+                images: { take: 1, select: PUBLIC_IMAGE_SELECT },
                 variants: true,
               },
             },

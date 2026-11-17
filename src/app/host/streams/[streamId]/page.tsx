@@ -5,6 +5,7 @@ import { getSession } from '@/lib/auth/session'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Play, Settings, Users, DollarSign } from 'lucide-react'
+import { PUBLIC_IMAGE_SELECT } from '@/lib/photos/public-image'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,7 +25,7 @@ export default async function StreamDetailsPage({ params }: { params: Promise<{ 
                 include: {
                     product: {
                         include: {
-                            images: true,
+                            images: { select: PUBLIC_IMAGE_SELECT },
                         }
                     }
                 }

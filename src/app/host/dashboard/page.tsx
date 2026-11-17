@@ -3,6 +3,7 @@ import { db } from '@/lib/db'
 import { getSession } from '@/lib/auth/session'
 import { redirect } from 'next/navigation'
 import { serialise } from '@/lib/serialise'
+import { PUBLIC_IMAGE_SELECT } from '@/lib/photos/public-image'
 
 export const dynamic = 'force-dynamic'
 
@@ -50,7 +51,7 @@ export default async function HostDashboardPage() {
                 id: true,
                 name: true,
                 slug: true,
-                images: { take: 1 },
+                images: { take: 1, select: PUBLIC_IMAGE_SELECT },
                 variants: { take: 1 },
               },
             },

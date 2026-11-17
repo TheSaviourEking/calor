@@ -2,6 +2,7 @@ import { db } from '@/lib/db'
 import ClientWrapper from '@/components/layout/ClientWrapper'
 import BundlesClient from './BundlesClient'
 import { serialise } from '@/lib/serialise'
+import { PUBLIC_IMAGE_SELECT } from '@/lib/photos/public-image'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,7 +14,7 @@ async function getBundles() {
         include: {
           product: {
             include: {
-              images: { take: 1 },
+              images: { take: 1, select: PUBLIC_IMAGE_SELECT },
               variants: { take: 1 },
             },
           },

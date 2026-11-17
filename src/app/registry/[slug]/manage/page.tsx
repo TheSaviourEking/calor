@@ -3,6 +3,7 @@ import { getSession } from '@/lib/auth/session'
 import ManageRegistryClient from './ManageRegistryClient'
 import { db } from '@/lib/db'
 import { serialise } from '@/lib/serialise'
+import { PUBLIC_IMAGE_SELECT } from '@/lib/photos/public-image'
 
 export const dynamic = 'force-dynamic'
 
@@ -34,7 +35,7 @@ export default async function ManageRegistryPage({ params }: { params: Promise<{
         include: {
           product: {
             include: {
-              images: { take: 1 },
+              images: { take: 1, select: PUBLIC_IMAGE_SELECT },
               variants: { take: 1 },
               category: { select: { name: true } },
             },

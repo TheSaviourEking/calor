@@ -3,6 +3,7 @@ import ClientWrapper from "@/components/layout/ClientWrapper";
 import CategoryClient from "./CategoryClient";
 import Link from "next/link";
 import { serialise } from "@/lib/serialise";
+import { PUBLIC_IMAGE_SELECT } from '@/lib/photos/public-image'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,7 +31,7 @@ async function getProductsByCategory(categorySlug: string) {
         select: { name: true, slug: true },
       },
       variants: { take: 1 },
-      images: { take: 2, orderBy: { sortOrder: "asc" } },
+      images: { take: 2, orderBy: { sortOrder: "asc" }, select: PUBLIC_IMAGE_SELECT },
       videos: {
         take: 1,
         orderBy: { sortOrder: "asc" },

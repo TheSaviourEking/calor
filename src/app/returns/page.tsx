@@ -7,6 +7,7 @@ import { getSession } from '@/lib/auth'
 export const dynamic = 'force-dynamic'
 import { db } from '@/lib/db'
 import { serialise } from '@/lib/serialise'
+import { PUBLIC_IMAGE_SELECT } from '@/lib/photos/public-image'
 
 export const metadata: Metadata = {
   title: 'Returns & Satisfaction Guarantee | calo.',
@@ -27,7 +28,7 @@ export default async function ReturnsPage() {
       items: {
         include: {
           product: {
-            include: { images: { take: 1 } }
+            include: { images: { take: 1, select: PUBLIC_IMAGE_SELECT } }
           }
         }
       }

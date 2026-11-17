@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getSession } from '@/lib/auth'
+import { PUBLIC_IMAGE_SELECT } from '@/lib/photos/public-image'
 
 // GET - List product experiences (user-generated content)
 export async function GET(request: NextRequest) {
@@ -30,7 +31,7 @@ export async function GET(request: NextRequest) {
               id: true,
               name: true,
               slug: true,
-              images: { take: 1 }
+              images: { take: 1, select: PUBLIC_IMAGE_SELECT }
             }
           },
           customer: {

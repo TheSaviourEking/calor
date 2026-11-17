@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getSession } from '@/lib/auth/session'
 import { requireCustomer } from '@/lib/auth/guards'
+import { PUBLIC_IMAGE_SELECT } from '@/lib/photos/public-image'
 
 // GET /api/recommendations - Get personalized recommendations
 export async function GET(request: NextRequest) {
@@ -34,7 +35,7 @@ export async function GET(request: NextRequest) {
           published: true,
         },
         include: {
-          images: { orderBy: { sortOrder: 'asc' }, take: 1 },
+          images: { orderBy: { sortOrder: 'asc' }, take: 1, select: PUBLIC_IMAGE_SELECT },
           category: true,
         },
       })
@@ -127,7 +128,7 @@ export async function GET(request: NextRequest) {
             published: true,
           },
           include: {
-            images: { orderBy: { sortOrder: 'asc' }, take: 1 },
+            images: { orderBy: { sortOrder: 'asc' }, take: 1, select: PUBLIC_IMAGE_SELECT },
             category: true,
           },
         })
@@ -165,7 +166,7 @@ export async function GET(request: NextRequest) {
           id: { notIn: [...Array.from(viewedProductIds), ...Array.from(purchasedProductIds)] as string[] },
         },
         include: {
-          images: { orderBy: { sortOrder: 'asc' }, take: 1 },
+          images: { orderBy: { sortOrder: 'asc' }, take: 1, select: PUBLIC_IMAGE_SELECT },
           category: true,
         },
         take: limit,
@@ -179,7 +180,7 @@ export async function GET(request: NextRequest) {
             id: { notIn: [...Array.from(viewedProductIds), ...Array.from(purchasedProductIds), ...recommendedProducts.map(p => p.id)] as string[] },
           },
           include: {
-            images: { orderBy: { sortOrder: 'asc' }, take: 1 },
+            images: { orderBy: { sortOrder: 'asc' }, take: 1, select: PUBLIC_IMAGE_SELECT },
             category: true,
           },
           orderBy: { purchaseCount: 'desc' },
@@ -205,7 +206,7 @@ export async function GET(request: NextRequest) {
     const trending = await db.product.findMany({ /* take: handled */
       where: { published: true },
       include: {
-        images: { orderBy: { sortOrder: 'asc' }, take: 1 },
+        images: { orderBy: { sortOrder: 'asc' }, take: 1, select: PUBLIC_IMAGE_SELECT },
         category: true,
       },
       orderBy: { purchaseCount: 'desc' },

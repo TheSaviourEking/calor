@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { Prisma } from '@prisma/client'
 import { db } from '@/lib/db'
 import { getSession } from '@/lib/auth/session'
+import { PUBLIC_IMAGE_SELECT } from '@/lib/photos/public-image'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -30,7 +31,7 @@ export async function GET(request: Request, { params }: RouteParams) {
       include: {
         product: {
           include: {
-            images: { take: 1 },
+            images: { take: 1, select: PUBLIC_IMAGE_SELECT },
             variants: { take: 1 },
             category: { select: { name: true } },
           },
@@ -98,7 +99,7 @@ export async function POST(request: Request, { params }: RouteParams) {
       const product = await db.product.findUnique({
         where: { id: productId },
         include: {
-          images: { take: 1 },
+          images: { take: 1, select: PUBLIC_IMAGE_SELECT },
           variants: { take: 1 },
         },
       })
@@ -129,7 +130,7 @@ export async function POST(request: Request, { params }: RouteParams) {
       include: {
         product: {
           include: {
-            images: { take: 1 },
+            images: { take: 1, select: PUBLIC_IMAGE_SELECT },
           },
         },
       },
