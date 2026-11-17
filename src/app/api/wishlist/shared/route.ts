@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { publicDisplayName } from '@/lib/discretion'
 
 // GET /api/wishlist/shared - Get a shared wishlist by share code
 export async function GET(request: NextRequest) {
@@ -16,7 +17,9 @@ export async function GET(request: NextRequest) {
       include: {
         customer: {
           select: {
+            nickname: true,
             firstName: true,
+            lastName: true,
           },
         },
       },
@@ -55,9 +58,12 @@ export async function GET(request: NextRequest) {
       },
     })
 
+    const { customer, customerId: _customerId, ...rest } = sharedWishlist
+
     return NextResponse.json({
       wishlist: {
-        ...sharedWishlist,
+        ...rest,
+        ownerName: publicDisplayName(customer, 'A calo. member'),
         productIds,
         products,
       },

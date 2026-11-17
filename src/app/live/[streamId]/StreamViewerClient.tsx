@@ -75,9 +75,7 @@ interface ChatMessage {
   isHighlighted: boolean
   reactionCounts: string | null
   createdAt: string
-  customer?: {
-    firstName: string
-  }
+  displayName: string
 }
 
 interface Stream {
@@ -651,10 +649,7 @@ export default function StreamViewerClient() {
                   <div className="flex items-start gap-2">
                     <div className="flex-1">
                       <span className="font-body text-warm-gray text-xs">
-                        {msg.customer
-                          ? `${msg.customer.firstName}`
-                          : msg.guestName || 'Guest'
-                        }
+                        {msg.displayName}
                       </span>
                       <p className="font-body text-cream text-sm">{msg.message}</p>
                     </div>

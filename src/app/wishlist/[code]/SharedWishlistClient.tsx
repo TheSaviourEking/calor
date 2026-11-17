@@ -17,10 +17,7 @@ interface SharedWishlistProps {
     description: string | null
     viewCount: number
     createdAt: Date
-    customer: {
-      firstName: string
-      lastName: string
-    }
+    ownerName: string
     productIds: string[]
     products: Array<{
       id: string
@@ -106,7 +103,7 @@ export default function SharedWishlistClient({ wishlist }: SharedWishlistProps) 
             </h1>
 
             <p className="font-body text-warm-gray text-sm mb-4">
-              Curated by {wishlist.customer.firstName} {wishlist.customer.lastName.charAt(0)}.
+              Curated by {wishlist.ownerName}
             </p>
 
             {wishlist.description && (

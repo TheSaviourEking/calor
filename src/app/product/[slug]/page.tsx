@@ -1,3 +1,4 @@
+import { REVIEW_AUTHOR_SELECT, toPublicReview } from '@/lib/reviews/public-review';
 import { db } from "@/lib/db";
 import Link from 'next/link';
 import ClientWrapper from "@/components/layout/ClientWrapper";
@@ -97,12 +98,7 @@ async function getReviews(productId: string) {
   const reviews = await db.review.findMany({
     where: { productId, isApproved: true },
     include: {
-      customer: {
-        select: {
-          firstName: true,
-          lastName: true,
-        },
-      },
+      customer: { select: REVIEW_AUTHOR_SELECT },
     },
     orderBy: { createdAt: 'desc' },
     take: 50,
@@ -132,7 +128,7 @@ async function getReviews(productId: string) {
     },
   };
 
-  return { reviews, summary };
+  return { reviews: reviews.map(toPublicReview), summary };
 }
 
 export default async function ProductPage({ params }: PageProps) {

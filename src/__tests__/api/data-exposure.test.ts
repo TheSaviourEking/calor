@@ -8,6 +8,9 @@ const { db, getSession } = vi.hoisted(() => ({
     streamChatMessage: { findMany: vi.fn() },
     returnRequest: { findUnique: vi.fn(), findFirst: vi.fn(), update: vi.fn() },
     review: { findMany: vi.fn(), aggregate: vi.fn(), groupBy: vi.fn() },
+    giftRegistry: { findUnique: vi.fn(), update: vi.fn() },
+    sharedWishlist: { findUnique: vi.fn(), update: vi.fn() },
+    product: { findMany: vi.fn() },
     liveStream: { findMany: vi.fn(), count: vi.fn() },
   },
   getSession: vi.fn(),
@@ -64,7 +67,7 @@ describe('GET /api/streams/[id]/chat', () => {
       expect(JSON.stringify(m)).not.toContain('lastName')
       expect(JSON.stringify(m)).not.toContain('Tim')
     }
-    expect(messages.map((m: { displayName: string }) => m.displayName).sort()).toEqual(['Sam', 'Vic'])
+    expect(messages.map((m: { displayName: string }) => m.displayName).sort()).toEqual(['Sam', 'Vic T.'])
     expect(db.streamChatMessage.findMany.mock.calls[0][0].where.isDeleted).toBe(false)
   })
 })
@@ -113,5 +116,100 @@ describe('GET /api/streams', () => {
     const where = db.liveStream.findMany.mock.calls[0][0].where
     expect(where.status).toBe('live')
     expect(where.isPrivate).toBe(false)
+  })
+})
+
+describe('public names', () => {
+  const ada = { nickname: null, firstName: 'Ada', lastName: 'Lovelace' }
+
+  it('chat displayName is the nickname when set, else First L.', async () => {
+    db.streamChatMessage.findMany.mockResolvedValue([
+      { id: 'a', message: 'hi', type: 'chat', createdAt: new Date(), customer: { ...ada, nickname: 'Amber 4821' }, guestName: null },
+      { id: 'b', message: 'yo', type: 'chat', createdAt: new Date(), customer: ada, guestName: null },
+    ])
+    const { GET } = await import('@/app/api/streams/[id]/chat/route')
+    const res = await GET(new NextRequest('http://localhost/api/streams/s1/chat'), { params: Promise.resolve({ id: 's1' }) })
+    const { messages } = await res.json()
+    expect(messages.map((m: { displayName: string }) => m.displayName).sort()).toEqual(['Ada L.', 'Amber 4821'])
+    expect(JSON.stringify(messages)).not.toContain('Lovelace')
+  })
+
+  it('reviews GET shows display names, never last names or emails', async () => {
+    const base = {
+      productId: 'p1', rating: 5, title: 't', content: 'c', photos: null, isVerifiedPurchase: false,
+      isApproved: true, helpfulCount: 0, notHelpfulCount: 0, createdAt: new Date(),
+    }
+    db.review.findMany.mockResolvedValue([
+      { ...base, id: 'r1', customerId: 'c1', customer: ada, guestName: null, guestEmail: null },
+      { ...base, id: 'r2', customerId: null, customer: null, guestName: 'Sam Smith', guestEmail: 'sam@example.com' },
+      { ...base, id: 'r3', customerId: null, customer: null, guestName: 'sam@example.com', guestEmail: 'sam@example.com' },
+    ])
+    const { GET } = await import('@/app/api/reviews/route')
+    const res = await GET(new NextRequest('http://localhost/api/reviews'))
+    const text = JSON.stringify(await res.json())
+    expect(text).not.toContain('lastName')
+    expect(text).not.toContain('Lovelace')
+    expect(text).not.toContain('guestEmail')
+    expect(text).not.toContain('Smith')
+    expect(text).not.toMatch(/\S+@\S+/)
+    expect(text).toContain('"authorName":"Ada L."')
+    expect(text).toContain('"authorName":"Sam"')
+    expect(text).toContain('"authorName":"Anonymous"')
+  })
+
+  it('registry slug API ownerName is a display name and contributions hide emails', async () => {
+    db.giftRegistry.findUnique.mockResolvedValue({
+      id: 'g1', slug: 's', title: 'T', status: 'active', isPublic: true, password: null, allowPartialPurchases: true,
+      customer: { id: 'c1', ...ada }, events: [], guests: false,
+      items: [{
+        id: 'i1', name: 'n', price: 1000, quantity: 1, purchasedCount: 0, priority: 1, sortOrder: 0, product: null,
+        purchases: [],
+        contributions: [{ id: 'k1', registryItemId: 'i1', contributorName: 'Sam Smith', contributorEmail: 'sam@example.com', amountCents: 500, message: 'x', orderId: 'o1', createdAt: new Date() }],
+      }],
+    })
+    db.giftRegistry.update.mockResolvedValue({})
+    const { GET } = await import('@/app/api/registry/slug/[slug]/route')
+    const res = await GET(new Request('http://localhost/api/registry/slug/s'), { params: Promise.resolve({ slug: 's' }) })
+    const body = await res.json()
+    expect(body.registry.ownerName).toBe('Ada L.')
+    const text = JSON.stringify(body)
+    expect(text).not.toContain('sam@example.com')
+    expect(text).not.toContain('Smith')
+    expect(text).not.toContain('Lovelace')
+    expect(body.registry.items[0].contributions[0].contributorName).toBe('Sam')
+  })
+
+  it('registry slug API prefers the nickname', async () => {
+    db.giftRegistry.findUnique.mockResolvedValue({
+      id: 'g1', slug: 's', title: 'T', status: 'active', isPublic: true, password: null,
+      customer: { id: 'c1', ...ada, nickname: 'Amber 4821' }, events: [], items: [], guests: false,
+    })
+    db.giftRegistry.update.mockResolvedValue({})
+    const { GET } = await import('@/app/api/registry/slug/[slug]/route')
+    const res = await GET(new Request('http://localhost/api/registry/slug/s'), { params: Promise.resolve({ slug: 's' }) })
+    expect((await res.json()).registry.ownerName).toBe('Amber 4821')
+  })
+
+  it('shared wishlist API returns ownerName only, no raw customer names', async () => {
+    db.sharedWishlist.findUnique.mockResolvedValue({
+      id: 'w1', shareCode: 'abc', title: 'T', isActive: true, expiresAt: null, productIds: '[]', customerId: 'c1', customer: ada,
+    })
+    db.sharedWishlist.update.mockResolvedValue({})
+    db.product.findMany.mockResolvedValue([])
+    const { GET } = await import('@/app/api/wishlist/shared/route')
+    const res = await GET(new NextRequest('http://localhost/api/wishlist/shared?code=abc'))
+    const body = await res.json()
+    expect(body.wishlist.ownerName).toBe('Ada L.')
+    const text = JSON.stringify(body)
+    expect(text).not.toContain('Lovelace')
+    expect(text).not.toContain('lastName')
+    expect(text).not.toContain('c1')
+  })
+
+  it('registry and wishlist metadata use the display name', async () => {
+    const { registryMetadata, wishlistMetadata } = await import('@/lib/public-metadata')
+    expect(JSON.stringify(registryMetadata('Our day', 'Ada L.'))).toContain('Ada L.')
+    expect(JSON.stringify(wishlistMetadata('Hers', 'Amber 4821'))).toContain('Amber 4821')
+    expect(JSON.stringify(wishlistMetadata(null, 'Ada L.'))).not.toContain('Lovelace')
   })
 })

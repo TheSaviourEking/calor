@@ -60,9 +60,7 @@ interface ChatMessage {
   isPinned: boolean
   isHighlighted: boolean
   createdAt: string
-  customer?: {
-    firstName: string
-  }
+  displayName: string
 }
 
 interface Stream {
@@ -496,10 +494,7 @@ export default function GoLiveClient() {
                     <div className="flex items-start justify-between">
                       <div>
                         <span className="font-body text-warm-gray text-xs">
-                          {msg.customer
-                            ? `${msg.customer.firstName}`
-                            : msg.guestName || 'Guest'
-                          }
+                          {msg.displayName}
                         </span>
                         <p className="font-body text-cream text-sm">{msg.message}</p>
                       </div>

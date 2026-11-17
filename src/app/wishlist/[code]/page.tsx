@@ -2,6 +2,8 @@ import { Metadata } from 'next'
 import { db } from '@/lib/db'
 import { notFound } from 'next/navigation'
 import SharedWishlistClient from './SharedWishlistClient'
+import { publicDisplayName } from '@/lib/discretion'
+import { wishlistMetadata } from '@/lib/public-metadata'
 import { serialise } from '@/lib/serialise'
 
 export const dynamic = 'force-dynamic'
@@ -15,17 +17,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   
   const wishlist = await db.sharedWishlist.findUnique({
     where: { shareCode: code },
-    select: { title: true, customer: { select: { firstName: true } } },
+    select: { title: true, customer: { select: { nickname: true, firstName: true, lastName: true } } },
   })
 
   if (!wishlist) {
     return { title: 'Wishlist Not Found | calo.' }
   }
 
-  return {
-    title: `${wishlist.title || 'Wishlist'} by ${wishlist.customer.firstName} | calo.`,
-    description: `View ${wishlist.customer.firstName}'s curated wishlist on calo.`,
-  }
+  return wishlistMetadata(wishlist.title, publicDisplayName(wishlist.customer, 'a calo. member'))
 }
 
 export default async function SharedWishlistPage({ params }: Props) {
@@ -36,6 +35,7 @@ export default async function SharedWishlistPage({ params }: Props) {
     include: {
       customer: {
         select: {
+          nickname: true,
           firstName: true,
           lastName: true,
         },
@@ -76,10 +76,13 @@ export default async function SharedWishlistPage({ params }: Props) {
     .map(id => products.find(p => p.id === id))
     .filter(Boolean)
 
+  const { customer, ...rest } = sharedWishlist
+
   return (
     <SharedWishlistClient
       wishlist={serialise({
-        ...sharedWishlist,
+        ...rest,
+        ownerName: publicDisplayName(customer, 'A calo. member'),
         productIds,
         products: sortedProducts,
       }) as any}
