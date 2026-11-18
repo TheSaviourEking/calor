@@ -307,6 +307,20 @@ Run in this exact order on launch day:
 
 ---
 
+## 🤫 Discreet by default — deploy steps
+
+Every privacy promise on the site quotes these values, so each must match reality before launch:
+
+1. [ ] **Stripe statement descriptor**: in the Stripe dashboard (Settings → Public details) set the statement descriptor to `CALO CO`. The code sends no descriptor override, so the account-level value is what prints on card statements.
+2. [ ] **`SHIP_FROM_NAME`**: set it in Vercel to the sender name your shipper actually prints on the label (default `CC Fulfillment`).
+3. [ ] **Migration**: apply `20261117120000_discreet_by_default` (`bun run db:migrate:deploy`; the build also runs `scripts/migrate-deploy.mjs`). It adds `Customer.nickname` and the per-order packaging columns.
+4. [ ] **Nickname backfill**: give existing members a generated nickname so public pages stop showing "First L.". The script refuses any host other than localhost unless you pass `--i-mean-production`:
+   - dry run: `bun run nicknames:backfill -- --i-mean-production` and read the plan
+   - write: `bun run nicknames:backfill -- --apply --i-mean-production`
+5. [ ] **Packing slip**: open `/admin/orders/<id>/slip` for one real order and print-preview it once. Check the reference, SKUs, packaging line, contents description, return name and delivery note, and that it shows no product names and no calo. wordmark.
+
+---
+
 ## 📋 ROLE SYSTEM — CURRENT STATE vs. RECOMMENDED
 
 ### Current (2 effective roles):
