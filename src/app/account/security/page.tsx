@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Key, Eye, Lock } from "lucide-react";
+import { Eye, Lock } from "lucide-react";
 import Link from "next/link";
 import NicknameSection from "./NicknameSection";
+import ChangePasswordSection from "./ChangePasswordSection";
 import DeleteAccountDialog from "./DeleteAccountDialog";
 
 export default function SecurityPage() {
@@ -42,41 +43,7 @@ export default function SecurityPage() {
 
       <NicknameSection />
 
-      {/* Change Password */}
-      <div className="bg-warm-white p-6 border border-sand mb-6">
-        <div className="flex items-center gap-3 mb-4">
-          <Key className="w-5 h-5 text-terracotta" />
-          <h3
-            className="font-display text-charcoal text-lg"
-            style={{ fontWeight: 400 }}
-          >
-            Change Password
-          </h3>
-        </div>
-        <form className="space-y-4">
-          <input
-            type="password"
-            placeholder="Current password"
-            className="w-full px-4 py-3 border border-sand bg-warm-white font-body text-sm focus:outline-none focus:border-terracotta"
-          />
-          <input
-            type="password"
-            placeholder="New password"
-            className="w-full px-4 py-3 border border-sand bg-warm-white font-body text-sm focus:outline-none focus:border-terracotta"
-          />
-          <input
-            type="password"
-            placeholder="Confirm new password"
-            className="w-full px-4 py-3 border border-sand bg-warm-white font-body text-sm focus:outline-none focus:border-terracotta"
-          />
-          <button
-            type="submit"
-            className="bg-charcoal text-cream px-6 py-3 font-body text-sm uppercase tracking-wider hover:bg-terracotta transition-colors"
-          >
-            Update Password
-          </button>
-        </form>
-      </div>
+      <ChangePasswordSection />
 
       {/* Privacy */}
       <div className="bg-warm-white p-6 border border-sand mb-6">
