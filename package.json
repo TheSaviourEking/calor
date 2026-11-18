@@ -23,6 +23,7 @@
     "start:all:vps": "concurrently \"bun run start:vps\" \"bun run start:chat\" \"bun run start:stream\"",
     "lint": "eslint .",
     "photos:backfill": "bun run scripts/backfill-photo-treatment.ts",
+    "nicknames:backfill": "bun run scripts/backfill-nicknames.ts",
     "lint:fix": "eslint --fix . && eslint mini-services/ --fix",
     "lint:services": "eslint mini-services/",
     "db:push": "prisma db push",
