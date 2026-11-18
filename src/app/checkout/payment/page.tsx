@@ -19,8 +19,9 @@ import {
   Check,
   Loader2,
 } from "lucide-react";
-import { useCartStore, useLocaleStore } from "@/stores";
+import { useCartStore, useLocaleStore, useAuthStore } from "@/stores";
 import Link from "next/link";
+import PrivacyReceipt from "@/components/checkout/PrivacyReceipt";
 
 // Stripe public key (test mode)
 const stripePromise = loadStripe(
@@ -169,6 +170,14 @@ export default function PaymentPage() {
   const [availableMethods, setAvailableMethods] =
     useState<MethodAvailability | null>(null);
 
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const [receiptFacts, setReceiptFacts] = useState<{
+    shipFromName: string;
+    bankAccountName: string | null;
+  }>({ shipFromName: "CC Fulfillment", bankAccountName: null });
+  // Guests and failed fetches fall back to plain packaging (the default)
+  const [plainPackaging, setPlainPackaging] = useState(true);
+
   const total = getTotal();
   const shipping = total >= 7500 ? 0 : 1200;
   const wrappingCost = checkoutData?.giftWrappingCents ?? 0;
@@ -185,9 +194,33 @@ export default function PaymentPage() {
   useEffect(() => {
     fetch("/api/payment/methods")
       .then((res) => res.json())
-      .then((data) => setAvailableMethods(data.methods))
+      .then((data) => {
+        setAvailableMethods(data.methods);
+        if (data.receipt?.shipFromName) setReceiptFacts(data.receipt);
+      })
       .catch(() => setAvailableMethods({ card: true, bank: false, crypto: false }));
   }, []);
+
+  // Packaging preference only exists for signed-in customers
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setPlainPackaging(true);
+      return;
+    }
+    let cancelled = false;
+    fetch("/api/packaging")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!cancelled)
+          setPlainPackaging(data?.preference?.plainPackaging ?? true);
+      })
+      .catch(() => {
+        if (!cancelled) setPlainPackaging(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated]);
 
   // If the selected method is not configured, fall back to card
   useEffect(() => {
@@ -709,6 +742,15 @@ export default function PaymentPage() {
             )}
 
             {/* Place Order Button */}
+            {!clientSecret && !bankDetails && !cryptoUrl && (
+              <PrivacyReceipt
+                method={selectedMethod as "card" | "bank" | "crypto"}
+                plainPackaging={plainPackaging}
+                anonymousGift={checkoutData.isGift && checkoutData.isAnonymousGift}
+                shipFromName={receiptFacts.shipFromName}
+                bankAccountName={receiptFacts.bankAccountName}
+              />
+            )}
             {!clientSecret && !bankDetails && !cryptoUrl && (
               <button
                 type="button"
