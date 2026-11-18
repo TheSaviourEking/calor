@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
 import { useAuthStore } from "@/stores/auth";
@@ -13,6 +13,20 @@ export default function DeleteAccountDialog({ onClose }: { onClose: () => void }
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const passwordRef = useRef<HTMLInputElement>(null);
+  const cancelRef = useRef<HTMLButtonElement>(null);
+
+  // Remember what had focus, and give it back when the dialog closes
+  useEffect(() => {
+    const previous = document.activeElement as HTMLElement | null;
+    return () => previous?.focus?.();
+  }, []);
+
+  // Focus the password field once we know it is shown, otherwise the cancel button
+  useEffect(() => {
+    if (hasPassword === null) return;
+    (hasPassword ? passwordRef.current : cancelRef.current)?.focus();
+  }, [hasPassword]);
 
   useEffect(() => {
     let cancelled = false;
@@ -117,6 +131,7 @@ export default function DeleteAccountDialog({ onClose }: { onClose: () => void }
               </label>
               <input
                 id="delete-password"
+                ref={passwordRef}
                 type="password"
                 autoComplete="current-password"
                 required
@@ -135,6 +150,7 @@ export default function DeleteAccountDialog({ onClose }: { onClose: () => void }
 
           <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-3">
             <button
+              ref={cancelRef}
               type="button"
               onClick={onClose}
               disabled={submitting}

@@ -46,6 +46,7 @@ const h = vi.hoisted(() => ({
   getSession: vi.fn(),
   verifyPassword: vi.fn(),
   destroySession: vi.fn(),
+  checkRateLimit: vi.fn(),
   state: {} as { db: Record<string, unknown>; tx: unknown },
 }))
 
@@ -54,6 +55,7 @@ vi.mock('@/lib/db', () => ({
     return h.state.db
   },
 }))
+vi.mock('@/lib/rate-limit', () => ({ checkRateLimit: h.checkRateLimit }))
 vi.mock('@/lib/auth/session', () => ({
   getSession: h.getSession,
   verifyPassword: h.verifyPassword,
@@ -83,6 +85,7 @@ beforeEach(() => {
   h.getSession.mockResolvedValue(null)
   h.verifyPassword.mockResolvedValue(false)
   h.destroySession.mockResolvedValue(undefined)
+  h.checkRateLimit.mockResolvedValue({ allowed: true, remaining: 4, resetAt: Date.now() + 60_000 })
 })
 
 function mutations(models: Record<string, ModelMock>) {
@@ -258,7 +261,7 @@ describe('DELETE /api/account', () => {
       signedInAs({ passwordHash: 'hash' })
       h.verifyPassword.mockResolvedValue(true)
       const { DELETE } = await import('@/app/api/account/route')
-      // The in-progress check runs inside the transaction so it cannot race checkout
+      // The in-progress check runs inside the transaction, before any write
       const orderCount = vi.fn(async ({ where }: { where: { customerId: string; status: { in: string[] } } }) =>
         where.customerId === ME && where.status.in.includes(status) ? 1 : 0
       )
@@ -282,6 +285,32 @@ describe('DELETE /api/account', () => {
     expect(res.status).toBe(409)
     expect((await res.json()).error).toBe('Contact support to close a host account')
     expect(mutations(txModels)).toEqual([])
+  })
+
+  it('refuses with 409 while a subscription is active and changes nothing', async () => {
+    signedInAs({})
+    const { DELETE } = await import('@/app/api/account/route')
+    txModels.subscription = {
+      count: vi.fn(async ({ where }: { where: { customerId: string; status: { in: string[] } } }) =>
+        where.customerId === ME && where.status.in.includes('active') ? 1 : 0
+      ),
+    } as unknown as ModelMock
+    const res = await DELETE(deleteRequest({}))
+    expect(res.status).toBe(409)
+    expect((await res.json()).error).toMatch(/active subscription/)
+    expect(mutations(txModels)).toEqual([])
+    expect(h.destroySession).not.toHaveBeenCalled()
+  })
+
+  it('rate-limits password attempts with 429 and changes nothing', async () => {
+    signedInAs({ passwordHash: 'hash' })
+    h.checkRateLimit.mockResolvedValue({ allowed: false, remaining: 0, resetAt: Date.now() + 60_000 })
+    const { DELETE } = await import('@/app/api/account/route')
+    const res = await DELETE(deleteRequest({ password: 'guess' }))
+    expect(res.status).toBe(429)
+    expect(h.checkRateLimit).toHaveBeenCalledWith(`account:delete:${ME}`, { windowMs: 60_000, maxRequests: 5 })
+    expect(h.verifyPassword).not.toHaveBeenCalled()
+    expect(transaction).not.toHaveBeenCalled()
   })
 
   it('deletes personal data and anonymises the rest in one transaction', async () => {
@@ -315,6 +344,19 @@ describe('DELETE /api/account', () => {
       where: { id: { in: ['a-used'] } },
       data: { line1: 'Deleted', line2: null, city: 'Deleted', state: null, postcode: 'Deleted', isDefault: false },
     })
+
+    // No trace of the member's email on records kept for others
+    const placeholder = `deleted+${ME}@invalid`
+    expect(tx.referral.updateMany).toHaveBeenCalledWith({
+      where: { referredCustomerId: ME },
+      data: { referredEmail: placeholder, referredCustomerId: null },
+    })
+    expect(tx.giftCard.updateMany).toHaveBeenCalledWith({
+      where: { redeemedById: ME },
+      data: { recipientEmail: placeholder, recipientName: null, redeemedById: null },
+    })
+    expect(tx.productView.deleteMany).toHaveBeenCalledWith({ where: { customerId: ME } })
+    expect(tx.checkoutSession.deleteMany).toHaveBeenCalledWith({ where: { customerId: ME } })
 
     // Reviews kept but detached
     expect(tx.review.updateMany).toHaveBeenCalledWith({

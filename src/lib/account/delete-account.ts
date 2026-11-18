@@ -22,12 +22,14 @@ import type { Prisma } from '@prisma/client'
  *                             guestEmail null (other shoppers rely on reviews and ratings)
  *   ReviewVote (no relation)  detach: customerId null, so helpful counts stay true
  *   GiftCard (purchased)      keep, purchaserId null: the card belongs to its recipient
- *   GiftCard (redeemed)       keep, redeemedById null: balance history is financial
+ *   GiftCard (redeemed)       keep (balance history is financial); recipientEmail becomes
+ *                             deleted+{id}@invalid, recipientName null, redeemedById null
  *   AbandonedCart             delete
  *   AbandonedCartEmailLog     delete
  *   ReferralCode              delete (referrals made with it cascade)
  *   Referral (as referrer)    delete
- *   Referral (as referred)    keep the referrer's record, referredCustomerId null
+ *   Referral (as referred)    keep the referrer's record; referredEmail becomes
+ *                             deleted+{id}@invalid, referredCustomerId null
  *   SavedComparison           delete
  *   ConsultationBooking       keep (paid service), linked; notes, summary, recording cleared
  *   ConsultationReview        keep, marked anonymous
@@ -70,6 +72,14 @@ import type { Prisma } from '@prisma/client'
  *   CustomerRFM               delete
  *   AdminUser                 unlink (customerId null); staff accounts are closed separately
  *
+ * Plain customerId columns with no relation:
+ *   ProductView               delete (browsing history)
+ *   CheckoutSession           delete
+ *
+ * Kept on purpose: RegistryPurchase.purchaserEmail and RegistryGuest.email on
+ * other members' registries. Those rows belong to the registry owner (who
+ * they invited, who bought what) and are not linked to this account.
+ *
  * Stripe: stripeCustomerId is cleared on our side only. Deleting the Stripe
  * customer is a follow-up.
  */
@@ -87,8 +97,12 @@ const DELETED_MEMBER = 'Deleted member'
 
 export async function deleteAccount(customerId: string, tx: Prisma.TransactionClient): Promise<void> {
   const mine = { customerId }
+  const placeholderEmail = `deleted+${customerId}@invalid`
 
-  // Blockers first, inside the transaction, so nothing changes when refused
+  // Blockers first, inside the transaction, so nothing changes when refused.
+  // These are plain counts under READ COMMITTED and take no lock: an order
+  // placed while this runs is not blocked, and would attach to the
+  // anonymised customer row like any other kept order.
   const ordersInProgress = await tx.order.count({
     where: { customerId, status: { in: IN_PROGRESS_ORDER_STATUSES } },
   })
@@ -142,7 +156,10 @@ export async function deleteAccount(customerId: string, tx: Prisma.TransactionCl
   })
   await tx.returnRequest.updateMany({ where: mine, data: { guestEmail: null, reasonDetails: null } })
   await tx.giftCard.updateMany({ where: { purchaserId: customerId }, data: { purchaserId: null } })
-  await tx.giftCard.updateMany({ where: { redeemedById: customerId }, data: { redeemedById: null } })
+  await tx.giftCard.updateMany({
+    where: { redeemedById: customerId },
+    data: { recipientEmail: placeholderEmail, recipientName: null, redeemedById: null },
+  })
   await tx.consultationBooking.updateMany({
     where: mine,
     data: { notes: null, summary: null, recordingUrl: null },
@@ -156,7 +173,10 @@ export async function deleteAccount(customerId: string, tx: Prisma.TransactionCl
   await tx.pointsRedemption.deleteMany({ where: mine })
   await tx.referral.deleteMany({ where: { referrerId: customerId } })
   await tx.referralCode.deleteMany({ where: mine })
-  await tx.referral.updateMany({ where: { referredCustomerId: customerId }, data: { referredCustomerId: null } })
+  await tx.referral.updateMany({
+    where: { referredCustomerId: customerId },
+    data: { referredEmail: placeholderEmail, referredCustomerId: null },
+  })
 
   // Shopping traces
   await tx.abandonedCart.deleteMany({ where: mine })
@@ -170,6 +190,8 @@ export async function deleteAccount(customerId: string, tx: Prisma.TransactionCl
   await tx.customerRFM.deleteMany({ where: mine })
   await tx.sharedWishlist.deleteMany({ where: mine })
   await tx.giftRegistry.deleteMany({ where: mine })
+  await tx.productView.deleteMany({ where: mine })
+  await tx.checkoutSession.deleteMany({ where: mine })
 
   // Support
   await tx.supportChatSession.deleteMany({ where: mine })
@@ -255,7 +277,7 @@ export async function deleteAccount(customerId: string, tx: Prisma.TransactionCl
   await tx.customer.update({
     where: { id: customerId },
     data: {
-      email: `deleted+${customerId}@invalid`,
+      email: placeholderEmail,
       firstName: 'Deleted',
       lastName: '',
       nickname: null,
