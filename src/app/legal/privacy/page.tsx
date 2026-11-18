@@ -1,4 +1,5 @@
 import ClientWrapper from '@/components/layout/ClientWrapper'
+import { DISCRETION_COPY } from '@/lib/discretion'
 
 export default function PrivacyPage() {
   return (
@@ -39,7 +40,7 @@ export default function PrivacyPage() {
                 3. Discreet Billing
               </h2>
               <p className="font-body text-warm-gray text-base leading-relaxed">
-                All charges appear as CALO CO. on your bank statement. No product names or descriptions are ever visible in transaction records.
+                {DISCRETION_COPY.cardStatement} {DISCRETION_COPY.crypto} We send no product names or descriptions to your card issuer.
               </p>
             </section>
 

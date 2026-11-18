@@ -46,7 +46,7 @@ export default function OurStoryPage() {
               Discretion is not secrecy
             </h2>
             <p className="font-body text-warm-gray text-base leading-relaxed mb-8">
-              We understand that privacy matters. Every order ships in plain packaging. Your bank statement shows only CALO CO. Your email subjects never reveal what you purchased. This is not because buying these products is something to hide. It is because your private life is yours alone.
+              We understand that privacy matters. Every order ships in plain packaging. Card payments show CALO CO on your statement. Your email subjects never reveal what you purchased. This is not because buying these products is something to hide. It is because your private life is yours alone.
             </p>
             <p className="font-body text-warm-gray text-base leading-relaxed mb-8">
               We offer payment by card, bank transfer, and cryptocurrency. For those who prefer maximum privacy, Monero provides transaction details visible only to you.

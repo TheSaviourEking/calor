@@ -1088,7 +1088,7 @@ export default function ProductDetailClient({
                 }
               >
                 <p className="font-body text-warm-gray text-sm leading-relaxed">
-                  Your bank statement will show &quot;CALO CO.&quot; only.
+                  Card payments show CALO CO on your statement.
                   Nothing explicit. Ever. We never store your card details.
                 </p>
               </AccordionItem>

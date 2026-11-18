@@ -6,6 +6,23 @@ export function shipFromName(): string {
   return process.env.SHIP_FROM_NAME || 'CC Fulfillment'
 }
 
+/**
+ * Customer-facing discretion promises, one wording everywhere (pages, chatbot,
+ * privacy receipt). Anything that depends on env is a function.
+ */
+export const DISCRETION_COPY = Object.freeze({
+  cardStatement: `Card payments show ${STATEMENT_DESCRIPTOR} on your statement. Your bank decides the exact layout.`,
+  // accountName comes from BANK_TRANSFER_DETAILS, the same value the bank
+  // instructions email prints as "Account name".
+  bankTransfer: (accountName?: string | null): string =>
+    accountName
+      ? `Bank transfers go to an account named ${accountName}.`
+      : 'Bank transfers go to the account name shown in your payment instructions.',
+  crypto: 'Crypto payments show no card statement line.',
+  packaging: (): string =>
+    `Orders ship in plain packaging with no product names on the outside. The sender shows as ${shipFromName()}.`,
+})
+
 export const EMAIL_SUBJECTS = {
   priceDrop: 'Something on your list has changed',
   backInStock: 'Something on your list is available again',

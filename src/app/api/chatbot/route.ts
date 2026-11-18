@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { nanoid } from 'nanoid'
 import { getSession } from '@/lib/auth/session'
+import { DISCRETION_COPY } from '@/lib/discretion'
+import { getBankDetails } from '@/lib/payments/methods'
 
 // GET /api/chatbot - Get conversation history
 export async function GET(request: NextRequest) {
@@ -723,6 +725,16 @@ async function generateIntentResponse(
     case 'product_recommendation':
       content = 'I\'d love to help you find the perfect match! 💫\n\nOur **recommendation quiz** takes about 2 minutes and considers your preferences, experience level, and what you\'re looking for.\n\nOr tell me:\n• Is this for **solo** or **couples** use?\n• Any must-have **features**? (waterproof, quiet, rechargeable)\n• Is this a **gift**?'
       suggestedActions = ['get_recommendations', 'browse_products']
+      break
+
+    case 'privacy_security':
+      content = [
+        DISCRETION_COPY.cardStatement,
+        DISCRETION_COPY.bankTransfer(getBankDetails('DEFAULT')?.accountName),
+        DISCRETION_COPY.crypto,
+        DISCRETION_COPY.packaging(),
+      ].join('\n\n')
+      suggestedActions = ['browse_products', 'shipping_policy']
       break
 
     case 'greeting': {
