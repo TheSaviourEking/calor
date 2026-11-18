@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getSession } from '@/lib/auth'
 import { PUBLIC_IMAGE_SELECT } from '@/lib/photos/public-image'
+import { publicDisplayName } from '@/lib/discretion'
 
 // GET - List product experiences (user-generated content)
 export async function GET(request: NextRequest) {
@@ -36,6 +37,7 @@ export async function GET(request: NextRequest) {
           },
           customer: {
             select: {
+              nickname: true,
               firstName: true,
               lastName: true,
             }
@@ -70,12 +72,12 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({ 
-      experiences: experiences.map(exp => ({
+      experiences: experiences.map(({ customer, customerId: _customerId, ...exp }) => ({
         ...exp,
         likesCount: exp.likes.length,
         commentsCount: exp._count.comments,
-        customerName: exp.customer 
-          ? `${exp.customer.firstName} ${exp.customer.lastName.charAt(0)}.`
+        customerName: customer
+          ? publicDisplayName(customer, 'Anonymous')
           : exp.guestName || 'Anonymous',
         images: exp.images ? JSON.parse(exp.images) : [],
       })),

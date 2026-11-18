@@ -12,6 +12,8 @@ const { db, getSession } = vi.hoisted(() => ({
     sharedWishlist: { findUnique: vi.fn(), update: vi.fn() },
     product: { findMany: vi.fn() },
     liveStream: { findMany: vi.fn(), count: vi.fn() },
+    streamHost: { findMany: vi.fn(), findUnique: vi.fn() },
+    productExperience: { findMany: vi.fn(), count: vi.fn(), update: vi.fn() },
   },
   getSession: vi.fn(),
 }))
@@ -236,5 +238,56 @@ describe('public names', () => {
     }
     db.sharedWishlist.findUnique.mockResolvedValue(row)
     expect(JSON.stringify(await generateMetadata({ params: Promise.resolve({ code: 'abc' }) }))).toContain('Ada L.')
+  })
+})
+
+describe('public host and experience endpoints never send real names', () => {
+  it('GET /api/hosts does not select the host customer', async () => {
+    db.streamHost.findMany.mockResolvedValue([])
+    const { GET } = await import('@/app/api/hosts/route')
+    await GET(new NextRequest('http://localhost/api/hosts'))
+    expect(db.streamHost.findMany.mock.calls[0][0].include.customer).toBeUndefined()
+  })
+
+  it('GET /api/hosts/[id] drops the host customer and shows reviewers by public name', async () => {
+    db.streamHost.findUnique.mockResolvedValue({
+      id: 'h1', displayName: 'Host', streams: [], _count: { streams: 0, reviews: 2 },
+      reviews: [
+        { id: 'r1', rating: 5, customerId: 'c1', customer: { nickname: null, firstName: 'Grace', lastName: 'Hopper' } },
+        { id: 'r2', rating: 4, customerId: 'c2', customer: { nickname: 'Amber 4821', firstName: 'Ada', lastName: 'Lovelace' } },
+      ],
+    })
+    const { GET } = await import('@/app/api/hosts/[id]/route')
+    const res = await GET(new NextRequest('http://localhost/api/hosts/h1'), { params: Promise.resolve({ id: 'h1' }) })
+    const args = db.streamHost.findUnique.mock.calls[0][0]
+    expect(args.include.customer).toBeUndefined()
+    expect(args.include.reviews.include.customer.select).toEqual({ nickname: true, firstName: true, lastName: true })
+    const { host } = await res.json()
+    expect(host.reviews.map((r: { customerName: string }) => r.customerName)).toEqual(['Grace H.', 'Amber 4821'])
+    const text = JSON.stringify(host)
+    expect(text).not.toContain('Hopper')
+    expect(text).not.toContain('Lovelace')
+    expect(text).not.toContain('"customer"')
+    expect(text).not.toContain('customerId')
+  })
+
+  it('GET /api/experience/experiences uses the public display name', async () => {
+    db.productExperience.findMany.mockResolvedValue([
+      { id: 'e1', likes: [], _count: { comments: 0 }, images: null, customerId: 'c1', customer: { nickname: 'Velvet 0042', firstName: 'Grace', lastName: 'Hopper' } },
+      { id: 'e2', likes: [], _count: { comments: 0 }, images: null, customerId: 'c2', customer: { nickname: null, firstName: 'Ada', lastName: 'Lovelace' } },
+      { id: 'e3', likes: [], _count: { comments: 0 }, images: null, customer: null, guestName: 'Sam' },
+    ])
+    db.productExperience.count.mockResolvedValue(3)
+    db.productExperience.update.mockResolvedValue({})
+    const { GET } = await import('@/app/api/experience/experiences/route')
+    const res = await GET(new NextRequest('http://localhost/api/experience/experiences'))
+    const args = db.productExperience.findMany.mock.calls[0][0]
+    expect(args.include.customer.select).toEqual({ nickname: true, firstName: true, lastName: true })
+    const { experiences } = await res.json()
+    expect(experiences.map((e: { customerName: string }) => e.customerName)).toEqual(['Velvet 0042', 'Ada L.', 'Sam'])
+    const text = JSON.stringify(experiences)
+    expect(text).not.toContain('Hopper')
+    expect(text).not.toContain('Lovelace')
+    expect(text).not.toContain('customerId')
   })
 })
