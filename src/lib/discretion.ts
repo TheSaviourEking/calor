@@ -30,6 +30,7 @@ export const EMAIL_SUBJECTS = {
   giftCard: 'A gift is waiting for you',
   orderConfirmed: 'Your order is confirmed',
   shipped: 'Your order is on its way',
+  paymentInstructions: 'Your payment details',
 } as const
 
 /**

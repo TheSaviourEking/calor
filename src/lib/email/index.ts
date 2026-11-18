@@ -228,7 +228,7 @@ export async function sendBankTransferInstructions(
   return sendEmail(
     customerEmail,
     'calo. <orders@calo.one>',
-    `Payment instructions for your calo. order ${orderReference}`,
+    EMAIL_SUBJECTS.paymentInstructions,
     `
       <!DOCTYPE html>
       <html>

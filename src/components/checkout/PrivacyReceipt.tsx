@@ -31,7 +31,7 @@ export default function PrivacyReceipt({
     ['The box', plainPackaging ? 'Plain, no logo' : 'calo. box'],
     ['The label', `From ${shipFromName}`],
     ['Your statement', statementValue(method, bankAccountName)],
-    ['Email subject', EMAIL_SUBJECTS.orderConfirmed],
+    ['Email subject', method === 'bank' ? EMAIL_SUBJECTS.paymentInstructions : EMAIL_SUBJECTS.orderConfirmed],
     ['Tracking link', 'Shows delivery status only'],
   ]
   if (anonymousGift) rows.push(['The recipient', "Won't see your name"])

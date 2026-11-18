@@ -174,6 +174,15 @@ describe('packaging claims follow the order', () => {
   })
 })
 
+describe('bank transfer instructions', () => {
+  it('subject is neutral: no brand, no order reference', async () => {
+    await sendBankTransferInstructions({ customerEmail: 'a@b.co', customerName: 'Ada', orderReference: 'CAL-123', total: 1, currency: 'USD', paymentRef: 'BT-CAL-123', bankDetails: { bankName: 'B', accountName: 'CC', accountNumber: '1', routingNumber: null, swiftCode: null, iban: null, sortCode: null } })
+    expect(lastCall().subject).toBe(EMAIL_SUBJECTS.paymentInstructions)
+    expect(EMAIL_SUBJECTS.paymentInstructions).toBe('Your payment details')
+    expect(lastCall().subject).not.toMatch(/calo|CAL-123/i)
+  })
+})
+
 describe('inbox previews never name a product', () => {
   // What an inbox shows under the subject: visible text, preheader first.
   const previewText = (html: string) =>

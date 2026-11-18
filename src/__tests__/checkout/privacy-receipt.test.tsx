@@ -64,4 +64,9 @@ describe('PrivacyReceipt', () => {
     expect(h.querySelector('em')?.textContent).toBe('you')
     expect(screen.getByText('Before you pay')).toBeTruthy()
   })
+
+  it('bank transfer shows the payment-instructions subject', () => {
+    render(<PrivacyReceipt {...base} method="bank" />)
+    expect(row('Email subject').getByText('Your payment details')).toBeTruthy()
+  })
 })

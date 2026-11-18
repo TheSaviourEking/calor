@@ -191,15 +191,19 @@ export default function PaymentPage() {
     Math.max(0, total + shipping + wrappingCost - estimatedDiscount);
 
   // Only offer payment methods this deployment has configured
+  const checkoutCountry = checkoutData?.country ?? "";
   useEffect(() => {
-    fetch("/api/payment/methods")
+    const qs = checkoutCountry
+      ? `?country=${encodeURIComponent(checkoutCountry)}`
+      : "";
+    fetch(`/api/payment/methods${qs}`)
       .then((res) => res.json())
       .then((data) => {
         setAvailableMethods(data.methods);
         if (data.receipt?.shipFromName) setReceiptFacts(data.receipt);
       })
       .catch(() => setAvailableMethods({ card: true, bank: false, crypto: false }));
-  }, []);
+  }, [checkoutCountry]);
 
   // Packaging preference only exists for signed-in customers
   useEffect(() => {
