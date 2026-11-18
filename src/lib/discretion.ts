@@ -32,6 +32,43 @@ export const EMAIL_SUBJECTS = {
   shipped: 'Your order is on its way',
 } as const
 
+/**
+ * Inbox preview text, one per email. Shown under the subject, so the same rule
+ * applies: no product, product brand, category or store name.
+ */
+export const EMAIL_PREHEADERS = {
+  orderConfirmed: 'Thank you. Your order details are inside.',
+  paymentInstructions: 'The details you need to complete your payment.',
+  welcome: 'Your account is ready.',
+  passwordReset: 'A link to set a new password, valid for one hour.',
+  verification: 'One quick step to confirm your email address.',
+  shipped: 'Tracking details for your order are inside.',
+  giftCard: 'Someone has sent you something. Open to see.',
+  anonymousGift: 'Someone has sent you something. Open to see.',
+  abandonedCart: 'Your bag is saved for you, with a little extra.',
+  priceDrop: 'A saved item has a new price.',
+  backInStock: 'A saved item is available again.',
+  securityAlert: 'A recent change to your account, for your review.',
+} as const
+
+const PREHEADER_LENGTH = 150
+
+/**
+ * Hidden first element of an email body. Inboxes show it as the preview; the
+ * &zwnj;&nbsp; padding fills the rest of the preview so body text (which may
+ * name an item) never shows before the email is opened.
+ */
+export function preheaderHtml(text: string): string {
+  const safe = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  const padding = '&zwnj;&nbsp;'.repeat(Math.max(0, Math.ceil((PREHEADER_LENGTH - text.length) / 2)))
+  return `<div data-preheader style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:transparent;opacity:0;">${safe}${padding}</div>`
+}
+
+/** Puts the preheader directly after <body>, so it is always the first element. */
+export function withPreheader(html: string, text: string): string {
+  return html.replace(/<body([^>]*)>/i, (tag) => `${tag}${preheaderHtml(text)}`)
+}
+
 type NameParts = {
   nickname?: string | null
   firstName?: string | null

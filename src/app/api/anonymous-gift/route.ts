@@ -3,7 +3,7 @@ import { Resend } from 'resend'
 import { db } from '@/lib/db'
 import { config } from '@/lib/config'
 import { rateLimitByIp } from '@/lib/rate-limit'
-import { EMAIL_SUBJECTS } from '@/lib/discretion'
+import { EMAIL_PREHEADERS, EMAIL_SUBJECTS, preheaderHtml } from '@/lib/discretion'
 
 const resend = new Resend(config.resend.apiKey)
 
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
             .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #E8DDD0; font-size: 12px; color: #8B7D74; }
           </style>
         </head>
-        <body>
+        <body>${preheaderHtml(EMAIL_PREHEADERS.anonymousGift)}
           <div class="container">
             <h1>You have received a gift</h1>
             

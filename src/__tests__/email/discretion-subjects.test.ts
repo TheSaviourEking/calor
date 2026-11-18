@@ -23,8 +23,12 @@ import {
   sendOrderConfirmation,
   sendShippingNotification,
   sendWelcomeEmail,
+  sendBankTransferInstructions,
+  sendPasswordResetEmail,
+  sendVerificationEmail,
+  sendSecurityAlert,
 } from '@/lib/email'
-import { EMAIL_SUBJECTS, STATEMENT_DESCRIPTOR } from '@/lib/discretion'
+import { EMAIL_PREHEADERS, EMAIL_SUBJECTS, STATEMENT_DESCRIPTOR, preheaderHtml } from '@/lib/discretion'
 
 const PRODUCT = 'Wand X'
 const SENDER = 'Grace Hopper'
@@ -167,5 +171,68 @@ describe('packaging claims follow the order', () => {
     expect(lastCall().html).not.toContain('All orders ship')
     await sendGiftCardEmail({ recipientEmail: 'a@b.co', recipientName: 'Bo', senderName: SENDER, code: 'GC-1', value: 5000 })
     expect(lastCall().html).toContain('Orders ship in plain packaging by default.')
+  })
+})
+
+describe('inbox previews never name a product', () => {
+  // What an inbox shows under the subject: visible text, preheader first.
+  const previewText = (html: string) =>
+    html
+      .replace(/<head[\s\S]*?<\/head>/i, '')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&zwnj;/g, '‌')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/[ \t\r\n]+/g, ' ')
+      .trim()
+
+  // The body as read once opened, without the hidden preheader.
+  const bodyText = (html: string) =>
+    previewText(html.replace(/<div data-preheader[\s\S]*?<\/div>/, ''))
+
+  const senders: Array<[string, () => Promise<unknown>]> = [
+    ['orderConfirmation', () => sendOrderConfirmation({ customerEmail: 'a@b.co', customerName: 'Ada', orderReference: 'CAL-1', total: 1, currency: 'USD', items: [{ name: PRODUCT, quantity: 1, price: 1 }] })],
+    ['bankTransfer', () => sendBankTransferInstructions({ customerEmail: 'a@b.co', customerName: 'Ada', orderReference: 'CAL-1', total: 1, currency: 'USD', paymentRef: 'PAY-1', bankDetails: { bankName: 'B', accountName: 'CC Holdings', accountNumber: '1', routingNumber: null, swiftCode: null, iban: null, sortCode: null } })],
+    ['welcome', () => sendWelcomeEmail('a@b.co', 'Ada')],
+    ['passwordReset', () => sendPasswordResetEmail({ email: 'a@b.co', customerName: 'Ada', resetToken: 't' })],
+    ['verification', () => sendVerificationEmail({ email: 'a@b.co', customerName: 'Ada', verifyToken: 't' })],
+    ['shipping', () => sendShippingNotification({ customerEmail: 'a@b.co', customerName: 'Ada', orderReference: 'CAL-1', trackingNumber: 'T1', estimatedDelivery: 'soon' })],
+    ['giftCard', () => sendGiftCardEmail({ recipientEmail: 'r@b.co', recipientName: 'Rae', senderName: SENDER, code: 'GC', value: 1, message: `Enjoy the ${PRODUCT}` })],
+    ['abandonedCart', () => sendAbandonedCartEmail({ email: 'a@b.co', name: 'Ada', cartData: { items: [{ name: PRODUCT, quantity: 1, price: 1 }], total: 1 }, discountCode: 'X', discountPercent: 5 })],
+    ['priceDrop', () => sendPriceDropAlert({ email: 'a@b.co', customerName: 'Ada', productName: PRODUCT, originalPrice: 5000, newPrice: 4000, productSlug: 's' })],
+    ['backInStock', () => sendBackInStockAlert({ email: 'a@b.co', customerName: 'Ada', productName: PRODUCT, productSlug: 's' })],
+    ['securityAlert', () => sendSecurityAlert({ email: 'a@b.co', type: 'login', ipAddress: '1.1.1.1', location: 'X', device: 'D', timestamp: new Date(0) })],
+  ]
+
+  it.each(senders)('%s: subject and first 150 preview characters carry no product name', async (_name, run) => {
+    await run()
+    const { subject, html } = lastCall()
+    expect(subject).not.toContain(PRODUCT)
+    expect(html).toMatch(/<body[^>]*>\s*<div data-preheader/)
+    const preview = previewText(html).slice(0, 150)
+    expect(preview.length).toBe(150)
+    expect(preview).not.toContain(PRODUCT)
+    expect(preview).not.toContain(SENDER)
+  })
+
+  it.each(['priceDrop', 'backInStock'])('%s: the first visible sentence has no product name', async (name) => {
+    await senders.find(([n]) => n === name)![1]()
+    const text = bodyText(lastCall().html).replace(/^Hi Ada,\s*/, '')
+    const firstSentence = text.slice(0, text.search(/[.!?]/) + 1)
+    expect(firstSentence.length).toBeGreaterThan(5)
+    expect(firstSentence).not.toContain(PRODUCT)
+  })
+
+  it('every preheader is neutral and free of brand and product words', () => {
+    for (const text of Object.values(EMAIL_PREHEADERS)) {
+      expect(text.length).toBeGreaterThan(10)
+      expect(text).not.toMatch(/calo|wand|vibrat|toy|lube|condom/i)
+    }
+  })
+
+  it('preheaderHtml pads to about 150 characters and is hidden', () => {
+    const html = preheaderHtml('Hello there')
+    expect(html).toContain('display:none')
+    expect(html).toContain('&zwnj;&nbsp;')
+    expect(previewText(html).length).toBeGreaterThanOrEqual(150)
   })
 })
