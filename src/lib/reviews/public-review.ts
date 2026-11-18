@@ -1,4 +1,4 @@
-import { publicDisplayName } from '@/lib/discretion'
+import { DELETED_MEMBER_NAME, publicDisplayName } from '@/lib/discretion'
 
 type ReviewRow = {
   id: string
@@ -24,6 +24,8 @@ export const REVIEW_AUTHOR_SELECT = { nickname: true, firstName: true, lastName:
 /** Member: nickname or "First L."; guest: first word of the name they typed; never an email. */
 export function reviewAuthorName(r: Pick<ReviewRow, 'customer' | 'guestName'>): string {
   if (r.customer) return publicDisplayName(r.customer, 'Anonymous')
+  // Placeholder written by account deletion: show it whole, not its first word
+  if (r.guestName?.trim() === DELETED_MEMBER_NAME) return DELETED_MEMBER_NAME
   const first = r.guestName?.trim().split(/\s+/)[0]
   return first && !first.includes('@') ? first : 'Anonymous'
 }

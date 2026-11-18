@@ -70,6 +70,9 @@ export function withPreheader(html: string, text: string): string {
   return html.replace(/<body([^>]*)>/i, (tag) => `${tag}${preheaderHtml(text)}`)
 }
 
+/** Name left on content kept after a member deletes their account. */
+export const DELETED_MEMBER_NAME = 'Deleted member'
+
 type NameParts = {
   nickname?: string | null
   firstName?: string | null

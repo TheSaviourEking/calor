@@ -1,4 +1,5 @@
 import type { Prisma } from '@prisma/client'
+import { DELETED_MEMBER_NAME } from '@/lib/discretion'
 
 /*
  * Account deletion. The Customer row is kept but anonymised, so records we
@@ -93,7 +94,7 @@ export class AccountDeletionBlocked extends Error {
   }
 }
 
-const DELETED_MEMBER = 'Deleted member'
+const DELETED_MEMBER = DELETED_MEMBER_NAME
 
 export async function deleteAccount(customerId: string, tx: Prisma.TransactionClient): Promise<void> {
   const mine = { customerId }
