@@ -3,6 +3,7 @@ import SupportClient from './SupportClient'
 import { getSession } from '@/lib/auth/session'
 import { db } from '@/lib/db'
 import { serialise } from '@/lib/serialise'
+import { customerTicketListArgs } from '@/lib/support/customer-tickets'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,21 +20,7 @@ export default async function SupportPage() {
   }
 
   const [tickets, categories, orders] = await Promise.all([
-    db.supportTicket.findMany({
-      where: { customerId: session.customerId },
-      include: {
-        customer: { select: { id: true, firstName: true, lastName: true, email: true } },
-        category: { select: { id: true, name: true, slug: true } },
-        messages: {
-          orderBy: { createdAt: 'desc' },
-          take: 1,
-          select: { createdAt: true, senderType: true }
-        },
-        _count: { select: { messages: true } }
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 20
-    }),
+    db.supportTicket.findMany(customerTicketListArgs(session.customerId)),
     db.supportTicketCategory.findMany({
       where: { isActive: true },
       orderBy: { sortOrder: 'asc' },

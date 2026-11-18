@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getSession } from '@/lib/auth'
 import { ticketCreateSchema } from '@/lib/validations/tickets'
+import { CUSTOMER_MESSAGE_COUNT, CUSTOMER_TICKET_OMIT } from '@/lib/support/customer-tickets'
 
 // Get support tickets (for both customers and admins)
 export async function GET(request: NextRequest) {
@@ -50,9 +51,9 @@ export async function GET(request: NextRequest) {
             take: 1,
             select: { createdAt: true, senderType: true }
           },
-          _count: { select: { messages: true } }
+          _count: isStaff ? { select: { messages: true } } : CUSTOMER_MESSAGE_COUNT
         },
-        ...(isStaff ? {} : { omit: { internalNotes: true } }),
+        ...(isStaff ? {} : { omit: CUSTOMER_TICKET_OMIT }),
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * limit,
         take: limit

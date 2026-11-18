@@ -78,7 +78,8 @@ describe('GET /api/tickets (list)', () => {
     const args = db.supportTicket.findMany.mock.calls[0][0]
     expect(args.where.customerId).toBe('c1')
     expect(args.include.messages.where).toEqual({ isInternal: false })
-    expect(args.omit).toEqual({ internalNotes: true })
+    expect(args.omit).toEqual({ internalNotes: true, tags: true })
+    expect(args.include._count).toEqual({ select: { messages: { where: { isInternal: false } } } })
   })
 
   it('admin list keeps everything', async () => {
@@ -90,7 +91,40 @@ describe('GET /api/tickets (list)', () => {
   })
 })
 
+describe('customer support page query', () => {
+  it('omits staff fields and never counts or previews internal messages', async () => {
+    const { customerTicketListArgs } = await import('@/lib/support/customer-tickets')
+    const args = customerTicketListArgs('c1')
+    expect(args.where).toEqual({ customerId: 'c1' })
+    expect(args.omit).toEqual({ internalNotes: true, tags: true })
+    expect(args.include.messages.where).toEqual({ isInternal: false })
+    expect(args.include._count).toEqual({ select: { messages: { where: { isInternal: false } } } })
+  })
+
+  it('the page uses that query', async () => {
+    const fs = await import('node:fs')
+    const src = fs.readFileSync('src/app/account/support/page.tsx', 'utf8')
+    expect(src).toContain('customerTicketListArgs(')
+  })
+})
+
+describe('GET /api/tickets/[id] tags', () => {
+  it('customer query omits tags', async () => {
+    asCustomer()
+    await getTicket(req(), ctx)
+    expect(db.supportTicket.findUnique.mock.calls[0][0].omit).toEqual({ internalNotes: true, tags: true })
+  })
+})
+
 describe('POST /api/tickets/[id]/messages', () => {
+  it('internal note does not bump responseCount; public reply does', async () => {
+    asCustomer('admin1', true)
+    await postMessage(req({ content: 'note', isInternal: true }), ctx)
+    expect(db.supportTicket.update.mock.calls[0][0].data.responseCount).toBeUndefined()
+    await postMessage(req({ content: 'reply' }), ctx)
+    expect(db.supportTicket.update.mock.calls[1][0].data.responseCount).toEqual({ increment: 1 })
+  })
+
   it('customer cannot post an internal message', async () => {
     asCustomer()
     await postMessage(req({ content: 'hello', isInternal: true }), ctx)

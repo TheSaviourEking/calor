@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getSession } from '@/lib/auth'
+import { CUSTOMER_TICKET_OMIT } from '@/lib/support/customer-tickets'
 
 // Get a specific ticket
 export async function GET(
@@ -19,7 +20,7 @@ export async function GET(
 
     const ticket = await db.supportTicket.findUnique({
       where: { id },
-      ...(isStaff ? {} : { omit: { internalNotes: true } }),
+      ...(isStaff ? {} : { omit: CUSTOMER_TICKET_OMIT }),
       include: {
         customer: { select: { id: true, firstName: true, lastName: true, email: true } },
         category: true,
