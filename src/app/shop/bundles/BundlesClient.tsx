@@ -201,7 +201,7 @@ export default function BundlesClient({ bundles }: BundlesClientProps) {
                 Discreet Delivery
               </h3>
               <p className="font-body text-warm-gray text-sm">
-                All bundles ship in plain, unmarked packaging.
+                Bundles ship in plain, unmarked packaging by default.
               </p>
             </div>
           </div>

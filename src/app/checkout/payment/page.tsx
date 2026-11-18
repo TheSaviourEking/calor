@@ -22,6 +22,7 @@ import {
 import { useCartStore, useLocaleStore, useAuthStore } from "@/stores";
 import Link from "next/link";
 import PrivacyReceipt from "@/components/checkout/PrivacyReceipt";
+import { packagingNotice } from "@/lib/discretion";
 
 // Stripe public key (test mode)
 const stripePromise = loadStripe(
@@ -775,8 +776,8 @@ export default function PaymentPage() {
 
             <p className="font-body text-warm-gray text-xs text-center mt-4">
               By placing your order you agree to our Terms of Service. Your
-              order will ship within 1-2 business days in plain, unmarked
-              packaging.
+              order will ship within 1-2 business days.
+              {packagingNotice(plainPackaging) && ` ${packagingNotice(plainPackaging)}`}
             </p>
           </div>
 

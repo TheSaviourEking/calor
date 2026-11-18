@@ -4,6 +4,7 @@ import { Package, CheckCircle, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
 import ClearCheckoutState from './ClearCheckoutState'
 import { confirmationView } from '@/lib/orders/confirmation'
+import { packagingNotice } from '@/lib/discretion'
 
 export const dynamic = 'force-dynamic'
 
@@ -143,13 +144,15 @@ export default async function ConfirmationPage({ searchParams }: PageProps) {
             )}
           </div>
 
-          {/* Discreet Shipping Notice */}
-          <div className="flex items-center justify-center gap-3 mb-8">
-            <Package className="w-5 h-5 text-terracotta" />
-            <p className="font-body text-warm-gray text-sm">
-              Your order will arrive in plain, unmarked packaging.
-            </p>
-          </div>
+          {/* Discreet Shipping Notice: only when this order ships plain */}
+          {order && packagingNotice(order.plainPackaging) && (
+            <div className="flex items-center justify-center gap-3 mb-8">
+              <Package className="w-5 h-5 text-terracotta" />
+              <p className="font-body text-warm-gray text-sm">
+                {packagingNotice(order.plainPackaging)}
+              </p>
+            </div>
+          )}
 
           {/* Actions */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

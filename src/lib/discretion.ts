@@ -20,8 +20,13 @@ export const DISCRETION_COPY = Object.freeze({
       : 'Bank transfers go to the account name shown in your payment instructions.',
   crypto: 'Crypto payments show no card statement line.',
   packaging: (): string =>
-    `Orders ship in plain packaging with no product names on the outside. The sender shows as ${shipFromName()}.`,
+    `Orders ship in plain packaging by default, with no product names on the outside. The sender shows as ${shipFromName()}.`,
 })
+
+/** Per-order packaging line: only an order that really ships plain gets the promise. */
+export function packagingNotice(plainPackaging: boolean): string | null {
+  return plainPackaging ? 'Your order will arrive in plain, unmarked packaging.' : null
+}
 
 export const EMAIL_SUBJECTS = {
   priceDrop: 'Something on your list has changed',

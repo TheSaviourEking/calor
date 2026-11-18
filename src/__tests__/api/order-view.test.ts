@@ -22,6 +22,7 @@ const FULL_ROW = {
   address: { line1: '12 Hidden Lane', line2: null, city: 'Leeds', state: 'WYK', postcode: 'LS1', country: 'GB' },
   totalCents: 3000,
   currency: 'USD',
+  plainPackaging: false,
 }
 
 beforeEach(() => {
@@ -54,6 +55,7 @@ describe('getOrderView', () => {
     expect(view?.full?.address.line1).toBe('12 Hidden Lane')
     expect(view?.full?.totalCents).toBe(3000)
     expect(view?.full?.currency).toBe('USD')
+    expect(view?.full?.plainPackaging).toBe(false)
     expect(JSON.stringify(view)).not.toContain('"customerId"')
   })
 

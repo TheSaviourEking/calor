@@ -4,6 +4,7 @@ import { Package, Truck, CheckCircle, MapPin } from 'lucide-react'
 import Link from 'next/link'
 import { getSession } from '@/lib/auth/session'
 import { getOrderView } from '@/lib/orders/order-view'
+import { packagingNotice } from '@/lib/discretion'
 
 interface PageProps {
   params: Promise<{ reference: string }>
@@ -147,12 +148,14 @@ export default async function OrderTrackingPage({ params }: PageProps) {
                 {full.address.country}
               </p>
 
-              <div className="mt-6 p-4 bg-cream">
-                <p className="font-body text-warm-gray text-xs">
-                  <strong className="text-charcoal">Discreet Packaging</strong><br />
-                  Your order will arrive in plain, unmarked packaging with no product names visible.
-                </p>
-              </div>
+              {packagingNotice(full.plainPackaging) && (
+                <div className="mt-6 p-4 bg-cream">
+                  <p className="font-body text-warm-gray text-xs">
+                    <strong className="text-charcoal">Discreet Packaging</strong><br />
+                    {packagingNotice(full.plainPackaging)}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
           ) : (

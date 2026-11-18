@@ -400,7 +400,7 @@ export default function SubscriptionsClient() {
             {[
               { icon: Gift, title: "Choose Your Box", desc: "Select the subscription that fits your preferences" },
               { icon: Package, title: "We Curate", desc: "Our experts handpick premium products just for you" },
-              { icon: Truck, title: "Discreet Delivery", desc: "Shipped in plain packaging to your door" },
+              { icon: Truck, title: "Discreet Delivery", desc: "Shipped in plain packaging by default" },
               { icon: Star, title: "Enjoy & Repeat", desc: "Discover new favorites every month" }
             ].map((step, i) => (
               <div key={i} className="text-center">
@@ -421,7 +421,7 @@ export default function SubscriptionsClient() {
         <div className="space-y-4">
           {[
             { q: "Can I cancel anytime?", a: "Yes! You can cancel your subscription at any time. If you cancel, you'll still receive any boxes you've already paid for." },
-            { q: "Is shipping discreet?", a: "Absolutely. All packages are shipped in plain, unmarked boxes with no indication of contents." },
+            { q: "Is shipping discreet?", a: "Yes. Orders ship in plain, unmarked boxes by default, with no indication of contents on the outside." },
             { q: "Can I skip a month?", a: "Yes, you can skip any upcoming box from your account page. There's no limit to how many times you can skip." },
             { q: "What if I'm not satisfied?", a: "We offer a satisfaction guarantee. If you're not happy with your box, contact us and we'll make it right." }
           ].map((faq, i) => (

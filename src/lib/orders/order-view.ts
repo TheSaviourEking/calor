@@ -20,6 +20,7 @@ export interface OrderView {
     }
     totalCents: number
     currency: string
+    plainPackaging: boolean
   }
 }
 
@@ -64,6 +65,7 @@ export async function getOrderView(
       },
       totalCents: true,
       currency: true,
+      plainPackaging: true,
     },
   })
   if (!detail) return view
@@ -73,6 +75,7 @@ export async function getOrderView(
     address: detail.address,
     totalCents: detail.totalCents,
     currency: detail.currency,
+    plainPackaging: detail.plainPackaging,
   }
   return view
 }

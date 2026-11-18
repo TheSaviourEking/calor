@@ -727,7 +727,7 @@ async function generateIntentResponse(
       suggestedActions = ['get_recommendations', 'browse_products']
       break
 
-    case 'privacy_security':
+    case 'privacy_security': {
       const bankAccountName = getBankDetails('DEFAULT')?.accountName
       content = [
         DISCRETION_COPY.cardStatement,
@@ -738,6 +738,7 @@ async function generateIntentResponse(
       ].filter(Boolean).join('\n\n')
       suggestedActions = ['browse_products', 'shipping_policy']
       break
+    }
 
     case 'greeting': {
       const greetings = [

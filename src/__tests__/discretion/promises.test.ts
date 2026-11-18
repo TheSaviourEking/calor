@@ -17,7 +17,7 @@ vi.mock('stripe', () => ({
 }))
 
 import { createPaymentIntent } from '@/lib/payments/stripe'
-import { DISCRETION_COPY } from '@/lib/discretion'
+import { DISCRETION_COPY, packagingNotice } from '@/lib/discretion'
 
 describe('Stripe card descriptor', () => {
   beforeEach(() => {
@@ -85,4 +85,53 @@ describe('copy source scan', () => {
       expect(src).not.toContain('CC Fulfillment')
     })
   }
+})
+
+describe('plain packaging promises', () => {
+  const read = (f: string) => readFileSync(join(process.cwd(), f), 'utf8')
+
+  it('packagingNotice follows the order', () => {
+    expect(packagingNotice(true)).toBe('Your order will arrive in plain, unmarked packaging.')
+    expect(packagingNotice(false)).toBeNull()
+  })
+
+  it('DISCRETION_COPY.packaging says plain is the default', () => {
+    expect(DISCRETION_COPY.packaging()).toContain('in plain packaging by default')
+  })
+
+  for (const f of [
+    'src/app/order/[reference]/page.tsx',
+    'src/app/checkout/confirmation/page.tsx',
+    'src/app/checkout/payment/page.tsx',
+  ]) {
+    it(`${f} only promises a plain box when the order has one`, () => {
+      const src = read(f)
+      expect(src).toContain('packagingNotice(')
+      expect(src).not.toMatch(/plain,\s+unmarked/)
+    })
+  }
+
+  // Marketing copy: any sentence that promises plain packaging says it is the default
+  const MARKETING = [
+    'src/app/our-story/page.tsx',
+    'src/app/legal/terms/page.tsx',
+    'src/app/shop/bundles/BundlesClient.tsx',
+    'src/app/subscriptions/SubscriptionsClient.tsx',
+    'src/app/product/[slug]/ProductDetailClient.tsx',
+  ]
+  for (const f of MARKETING) {
+    it(`${f} says plain packaging is the default`, () => {
+      const text = read(f).replace(/\{" "\}/g, ' ').replace(/\s+/g, ' ')
+      const sentences = text.split(/(?<=[.!?])\s|[>"']/).filter((x) => /plain(,| packaging| box)/i.test(x))
+      expect(sentences.length).toBeGreaterThan(0)
+      for (const sentence of sentences) expect(sentence).toMatch(/by default/)
+    })
+  }
+
+  it('our story uses STATEMENT_DESCRIPTOR and a proper crypto sentence', () => {
+    const src = read('src/app/our-story/page.tsx')
+    expect(src).not.toContain('CALO CO')
+    expect(src).toContain('STATEMENT_DESCRIPTOR')
+    expect(src).not.toContain(', Crypto payments')
+  })
 })
