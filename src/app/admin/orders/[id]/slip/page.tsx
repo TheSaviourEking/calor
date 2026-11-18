@@ -6,7 +6,8 @@ import { buildPackingSlip } from '@/lib/orders/packing-slip'
 export const dynamic = 'force-dynamic'
 
 // Neutral by design: no calo. wordmark, no product names. The packer sees a
-// reference, SKUs and quantities, the return name and any delivery note.
+// reference, SKUs and quantities, the contents description, the return name
+// and any delivery note.
 export default async function PackingSlipPage({ params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAdminUser()
   if (!auth.ok) redirect('/')
@@ -69,6 +70,10 @@ export default async function PackingSlipPage({ params }: { params: Promise<{ id
           <div>
             <dt className="text-xs uppercase tracking-wider text-warm-gray">Packaging</dt>
             <dd className="mt-1">{slip.plainPackaging ? 'Plain box, no branding' : 'Branded box'}</dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase tracking-wider text-warm-gray">Label</dt>
+            <dd className="mt-1">{slip.contentsDescription}</dd>
           </div>
           <div>
             <dt className="text-xs uppercase tracking-wider text-warm-gray">Return name</dt>

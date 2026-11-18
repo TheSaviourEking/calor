@@ -39,4 +39,14 @@ describe('buildPackingSlip', () => {
     expect(slip.instructions).toBe('Leave with concierge')
     expect(buildPackingSlip({ ...order, deliveryInstructions: null }).instructions).toBeNull()
   })
+
+  it('prints the contents description the discreet-label choice asks for', () => {
+    expect(buildPackingSlip(order).contentsDescription).toBe('Contents description: generic')
+    expect(buildPackingSlip({ ...order, discreetLabel: false }).contentsDescription).toBe('Contents description: standard')
+  })
+
+  it('the slip page renders the contents description', async () => {
+    const fs = await import('node:fs')
+    expect(fs.readFileSync('src/app/admin/orders/[id]/slip/page.tsx', 'utf8')).toContain('slip.contentsDescription')
+  })
 })

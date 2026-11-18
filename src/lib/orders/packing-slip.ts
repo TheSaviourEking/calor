@@ -14,6 +14,8 @@ export interface PackingSlip {
   plainPackaging: boolean
   returnName: string
   instructions: string | null
+  /** What the packer writes on any customs or contents line. */
+  contentsDescription: 'Contents description: generic' | 'Contents description: standard'
 }
 
 // The packer sees SKUs and quantities only: no product names, no brand.
@@ -27,5 +29,8 @@ export function buildPackingSlip(order: PackingSlipOrder): PackingSlip {
     plainPackaging: order.plainPackaging,
     returnName: shipFromName(),
     instructions: order.deliveryInstructions,
+    contentsDescription: order.discreetLabel
+      ? 'Contents description: generic'
+      : 'Contents description: standard',
   }
 }
