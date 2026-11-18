@@ -36,6 +36,7 @@ import SocialProof from "@/components/social-proof/SocialProof";
 import Link from "next/link";
 import ProductPhoto from "@/components/product/ProductPhoto";
 import type { PhotoTreatment } from "@/lib/photos/types";
+import { STATEMENT_DESCRIPTOR } from '@/lib/discretion'
 
 interface ProductImage {
   id: string;
@@ -1088,7 +1089,7 @@ export default function ProductDetailClient({
                 }
               >
                 <p className="font-body text-warm-gray text-sm leading-relaxed">
-                  Card payments show CALO CO on your statement.
+                  Card payments show {STATEMENT_DESCRIPTOR} on your statement.
                   Nothing explicit. Ever. We never store your card details.
                 </p>
               </AccordionItem>

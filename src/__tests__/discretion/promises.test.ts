@@ -17,7 +17,7 @@ vi.mock('stripe', () => ({
 }))
 
 import { createPaymentIntent } from '@/lib/payments/stripe'
-import { STATEMENT_DESCRIPTOR, DISCRETION_COPY } from '@/lib/discretion'
+import { DISCRETION_COPY } from '@/lib/discretion'
 
 describe('Stripe card descriptor', () => {
   beforeEach(() => {
@@ -30,11 +30,11 @@ describe('Stripe card descriptor', () => {
     intentsCreate.mockResolvedValue({ id: 'pi_1', client_secret: 'sec' })
   })
 
-  it('uses statement_descriptor_suffix (card-valid), never statement_descriptor', async () => {
+  it('sends neither descriptor field; the account-level descriptor prints alone', async () => {
     await createPaymentIntent('o1')
     const args = intentsCreate.mock.calls[0][0]
-    expect(args.statement_descriptor_suffix).toBe(STATEMENT_DESCRIPTOR)
     expect(args).not.toHaveProperty('statement_descriptor')
+    expect(args).not.toHaveProperty('statement_descriptor_suffix')
   })
 })
 

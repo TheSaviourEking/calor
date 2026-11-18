@@ -2,7 +2,6 @@ import Stripe from 'stripe'
 import { db } from '@/lib/db'
 import { markOrderPaid, cancelOrderAndRelease } from '@/lib/orders/lifecycle'
 import { PaymentMethodLockedError } from '@/lib/payments/locked'
-import { STATEMENT_DESCRIPTOR } from '@/lib/discretion'
 
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder')
 
@@ -36,11 +35,11 @@ export async function createPaymentIntent(orderId: string) {
       orderId: order.id,
       reference: order.reference,
     },
-    // Stripe rejects `statement_descriptor` on card charges (see the
-    // PaymentIntentsResource types in stripe v20: "Setting this value for a
-    // card charge returns an error"). Cards use the account-level descriptor
-    // plus this suffix, so the Stripe dashboard descriptor must be set to "CALO CO"
-    statement_descriptor_suffix: STATEMENT_DESCRIPTOR,
+    // No statement_descriptor here: Stripe rejects it on card charges (stripe v20
+    // PaymentIntentsResource types: "Setting this value for a card charge returns
+    // an error"). We also send no suffix, because a suffix is appended to the
+    // account descriptor and would print "CALO CO* CALO CO". The account-level
+    // descriptor alone prints, so the Stripe dashboard must be set to CALO CO (no period).
     description: `calo. order ${order.reference}`,
   })
 

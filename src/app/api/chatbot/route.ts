@@ -728,12 +728,14 @@ async function generateIntentResponse(
       break
 
     case 'privacy_security':
+      const bankAccountName = getBankDetails('DEFAULT')?.accountName
       content = [
         DISCRETION_COPY.cardStatement,
-        DISCRETION_COPY.bankTransfer(getBankDetails('DEFAULT')?.accountName),
+        // Assumes one account name across regions (the DEFAULT entry)
+        bankAccountName && DISCRETION_COPY.bankTransfer(bankAccountName),
         DISCRETION_COPY.crypto,
         DISCRETION_COPY.packaging(),
-      ].join('\n\n')
+      ].filter(Boolean).join('\n\n')
       suggestedActions = ['browse_products', 'shipping_policy']
       break
 

@@ -28,6 +28,13 @@ describe('POST /api/sessions/revoke-others', () => {
     expect(db.session.deleteMany).not.toHaveBeenCalled()
   })
 
+  it('401s when the session cookie is missing', async () => {
+    cookieGet.mockReturnValue(undefined)
+    const res = await POST()
+    expect(res.status).toBe(401)
+    expect(db.session.deleteMany).not.toHaveBeenCalled()
+  })
+
   it('deletes the customer\'s other sessions and keeps the current one', async () => {
     const res = await POST()
     expect(res.status).toBe(200)

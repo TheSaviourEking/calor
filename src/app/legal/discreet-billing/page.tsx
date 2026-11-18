@@ -7,6 +7,7 @@ import { getBankDetails } from '@/lib/payments/methods'
 export const dynamic = 'force-dynamic'
 
 export default function DiscreetBillingPage() {
+  // Assumes one account name across regions (the DEFAULT entry)
   const bankAccountName = getBankDetails('DEFAULT')?.accountName
   return (
     <ClientWrapper>
@@ -98,7 +99,7 @@ export default function DiscreetBillingPage() {
                 What about crypto and bank transfers?
               </h3>
               <p className="font-body text-warm-gray text-base leading-relaxed">
-                {DISCRETION_COPY.crypto} {DISCRETION_COPY.bankTransfer(bankAccountName)}
+                {DISCRETION_COPY.crypto} {bankAccountName && DISCRETION_COPY.bankTransfer(bankAccountName)}
               </p>
             </div>
           </div>

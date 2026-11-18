@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import ProductPhoto from '@/components/product/ProductPhoto'
 import { X, Plus, Minus, Trash2, ArrowRight } from 'lucide-react'
 import { useCartStore, useLocaleStore } from '@/stores'
+import { STATEMENT_DESCRIPTOR } from '@/lib/discretion'
 
 export default function CartDrawer() {
   const {
@@ -66,7 +67,7 @@ export default function CartDrawer() {
         {/* Discreet Shipping Notice */}
         <div className="px-6 py-3 bg-cream/50 border-b border-sand">
           <p className="font-body text-warm-gray text-xs text-center tracking-wide">
-            Ships in plain packaging. Card payments show CALO CO
+            Ships in plain packaging. Card payments show {STATEMENT_DESCRIPTOR}
           </p>
         </div>
 
