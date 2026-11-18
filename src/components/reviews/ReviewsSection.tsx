@@ -13,11 +13,7 @@ interface Review {
   helpfulCount: number
   notHelpfulCount: number
   createdAt: string
-  customer: {
-    firstName: string
-    lastName: string
-  } | null
-  guestName: string | null
+  authorName: string
 }
 
 interface ReviewSummary {
@@ -353,9 +349,7 @@ export default function ReviewsSection({
 
                 <div className="flex items-center gap-2 mb-3">
                   <span className="font-body text-charcoal text-sm">
-                    {review.customer
-                      ? `${review.customer.firstName} ${review.customer.lastName.charAt(0)}.`
-                      : review.guestName || 'Anonymous'}
+                    {review.authorName}
                   </span>
                   {review.isVerifiedPurchase && (
                     <span className="flex items-center gap-1 text-green-700 text-xs font-body">

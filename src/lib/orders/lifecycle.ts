@@ -27,6 +27,7 @@ export async function sendOrderConfirmationFor(orderId: string): Promise<void> {
       quantity: item.quantity,
       price: item.priceCents,
     })),
+    plainPackaging: order.plainPackaging,
   })
 }
 

@@ -2,24 +2,27 @@ import { db } from '@/lib/db'
 import ClientWrapper from '@/components/layout/ClientWrapper'
 import { Package, Truck, CheckCircle, MapPin } from 'lucide-react'
 import Link from 'next/link'
+import { getSession } from '@/lib/auth/session'
+import { getOrderView } from '@/lib/orders/order-view'
+import { packagingNotice } from '@/lib/discretion'
 
 interface PageProps {
   params: Promise<{ reference: string }>
 }
 
-async function getOrder(reference: string) {
-  return db.order.findUnique({
-    where: { reference },
-    include: {
-      items: { include: { product: true } },
-      address: true,
-    },
+async function getViewer() {
+  const session = await getSession()
+  if (!session) return { customerId: null, isAdmin: false }
+  const customer = await db.customer.findUnique({
+    where: { id: session.customerId },
+    select: { isAdmin: true },
   })
+  return { customerId: session.customerId, isAdmin: customer?.isAdmin ?? false }
 }
 
 export default async function OrderTrackingPage({ params }: PageProps) {
   const { reference } = await params
-  const order = await getOrder(reference)
+  const order = await getOrderView(reference, await getViewer())
 
   if (!order) {
     return (
@@ -44,6 +47,7 @@ export default async function OrderTrackingPage({ params }: PageProps) {
     { key: 'DELIVERED', label: 'Delivered', icon: MapPin },
   ]
 
+  const full = order.full
   const currentStepIndex = statusSteps.findIndex(s => s.key === order.status)
 
   return (
@@ -59,6 +63,11 @@ export default async function OrderTrackingPage({ params }: PageProps) {
           <p className="font-body text-warm-gray text-sm mb-8">
             Order #{order.reference}
           </p>
+          {order.trackingNumber && (
+            <p className="font-body text-warm-gray text-sm mb-8 -mt-6">
+              Tracking number: {order.trackingNumber}
+            </p>
+          )}
 
           {/* Status Timeline */}
           <div className="bg-warm-white p-8 border border-sand mb-8">
@@ -95,6 +104,7 @@ export default async function OrderTrackingPage({ params }: PageProps) {
           </div>
 
           {/* Order Details */}
+          {full ? (
           <div className="grid md:grid-cols-2 gap-8">
             {/* Items */}
             <div className="bg-warm-white p-6 border border-sand">
@@ -102,7 +112,7 @@ export default async function OrderTrackingPage({ params }: PageProps) {
                 Order Items
               </h2>
               <div className="space-y-4">
-                {order.items.map((item, index) => (
+                {full.items.map((item, index) => (
                   <div key={index} className="flex justify-between">
                     <div>
                       <p className="font-body text-charcoal text-sm">{item.name}</p>
@@ -117,7 +127,7 @@ export default async function OrderTrackingPage({ params }: PageProps) {
                   <div className="flex justify-between">
                     <p className="font-body text-charcoal">Total</p>
                     <p className="font-display text-charcoal text-lg" style={{ fontWeight: 400 }}>
-                      ${(order.totalCents / 100).toFixed(2)}
+                      ${(full.totalCents / 100).toFixed(2)}
                     </p>
                   </div>
                 </div>
@@ -130,22 +140,38 @@ export default async function OrderTrackingPage({ params }: PageProps) {
                 Shipping Address
               </h2>
               <p className="font-body text-charcoal text-sm">
-                {order.address.line1}
-                {order.address.line2 && <><br />{order.address.line2}</>}
+                {full.address.line1}
+                {full.address.line2 && <><br />{full.address.line2}</>}
                 <br />
-                {order.address.city}, {order.address.state} {order.address.postcode}
+                {full.address.city}, {full.address.state} {full.address.postcode}
                 <br />
-                {order.address.country}
+                {full.address.country}
               </p>
 
-              <div className="mt-6 p-4 bg-cream">
-                <p className="font-body text-warm-gray text-xs">
-                  <strong className="text-charcoal">Discreet Packaging</strong><br />
-                  Your order will arrive in plain, unmarked packaging with no product names visible.
-                </p>
-              </div>
+              {packagingNotice(full.plainPackaging) && (
+                <div className="mt-6 p-4 bg-cream">
+                  <p className="font-body text-warm-gray text-xs">
+                    <strong className="text-charcoal">Discreet Packaging</strong><br />
+                    {packagingNotice(full.plainPackaging)}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
+          ) : (
+          <div className="bg-warm-white p-6 border border-sand">
+            <p className="font-body text-warm-gray text-sm">
+              <Link
+                href={`/account?redirect=${encodeURIComponent(`/order/${order.reference}`)}`}
+                className="text-terracotta hover:underline"
+                style={{ color: '#A35A3F' }}
+              >
+                Sign in
+              </Link>{' '}
+              to see what&apos;s inside and where it&apos;s going.
+            </p>
+          </div>
+          )}
         </div>
       </div>
     </ClientWrapper>

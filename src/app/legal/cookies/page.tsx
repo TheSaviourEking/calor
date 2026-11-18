@@ -158,7 +158,7 @@ export default function CookiesPage() {
                 Discreet by Design
               </h2>
               <p className="font-body text-warm-gray text-base leading-relaxed">
-                Our cookies are designed with discretion in mind. Browser history and cookies will show references to &quot;calo.&quot; or &quot;CALO CO&quot; only — never product names or categories. Your privacy is built into everything we do.
+                Our cookies keep you signed in and remember your bag and preferences. Your browser history will still list the calo. pages you visit, including product pages, so use a private window on a shared device.
               </p>
             </section>
 

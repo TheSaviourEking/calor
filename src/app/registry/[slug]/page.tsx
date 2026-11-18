@@ -2,13 +2,23 @@ import { Suspense } from 'react'
 import PublicRegistryClient from './PublicRegistryClient'
 import { db } from '@/lib/db'
 import { serialise } from '@/lib/serialise'
+import { publicDisplayName } from '@/lib/discretion'
+import { registryMetadata } from '@/lib/public-metadata'
+import { toPublicContribution } from '@/lib/registry-public'
 import { PUBLIC_IMAGE_SELECT } from '@/lib/photos/public-image'
 
 export const dynamic = 'force-dynamic'
 
-export const metadata = {
-  title: 'Gift Registry | calo.',
-  description: 'View and purchase gifts from this registry.',
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+  const registry = await db.giftRegistry.findUnique({
+    where: { slug },
+    select: { title: true, status: true, isPublic: true, password: true, customer: { select: { nickname: true, firstName: true, lastName: true } } },
+  })
+  if (!registry || registry.status !== 'active' || (!registry.isPublic && registry.password)) {
+    return { title: 'Gift Registry | calo.', description: 'View and purchase gifts from this registry.' }
+  }
+  return registryMetadata(registry.title, publicDisplayName(registry.customer, 'a calo. member'))
 }
 
 export default async function PublicRegistryPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -20,6 +30,7 @@ export default async function PublicRegistryPage({ params }: { params: Promise<{
       customer: {
         select: {
           id: true,
+          nickname: true,
           firstName: true,
           lastName: true,
         },
@@ -98,10 +109,12 @@ export default async function PublicRegistryPage({ params }: { params: Promise<{
     allowGiftMessages: registry.allowGiftMessages,
     allowPartialPurchases: registry.allowPartialPurchases,
     showPurchaserInfo: registry.showPurchaserInfo,
-    ownerName: `${registry.customer.firstName} ${registry.customer.lastName}`,
+    ownerName: publicDisplayName(registry.customer, 'A calo. member'),
     events: registry.events,
     items: itemsToShow.map(item => ({
       ...item,
+      purchases: undefined,
+      contributions: item.contributions.map(toPublicContribution),
       imageUrl: item.imageUrl || item.product?.images[0]?.url,
       remaining: item.quantity - item.purchasedCount,
       product: item.product ? {

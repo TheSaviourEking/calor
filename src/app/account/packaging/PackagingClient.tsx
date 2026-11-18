@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { 
-  Package, Eye, Truck, Mail, Gift, Check, Loader2, 
+  Package, Eye, Gift, Check, Loader2,
   Shield
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -26,17 +26,15 @@ export default function PackagingClient() {
   const [saving, setSaving] = useState(false)
   const [_preference, setPreference] = useState<PackagingPreference | null>(null)
   
-  // Form state with defaults
-  const [senderName, setSenderName] = useState('')
-  const [senderNameEnabled, setSenderNameEnabled] = useState(false)
+  // Form state with defaults. Only choices fulfilment actually honours are
+  // offered: plain packaging, discreet label and delivery instructions travel
+  // with each order to the packing slip. Sender name, signature and delivery
+  // day controls stay hidden until fulfilment can act on them.
   const [plainPackaging, setPlainPackaging] = useState(true)
   const [discreteLabel, setDiscreteLabel] = useState(true)
-  const [requireSignature, setRequireSignature] = useState(false)
   const [deliveryInstructions, setDeliveryInstructions] = useState('')
   const [includeGiftNote, setIncludeGiftNote] = useState(false)
   const [defaultGiftMessage, setDefaultGiftMessage] = useState('')
-  const [avoidWeekends, setAvoidWeekends] = useState(false)
-  const [preferredDays, setPreferredDays] = useState<string[]>([])
 
   useEffect(() => {
     fetchData()
@@ -49,33 +47,17 @@ export default function PackagingClient() {
       
       if (data.preference) {
         setPreference(data.preference)
-        setSenderName(data.preference.senderName || '')
-        setSenderNameEnabled(data.preference.senderNameEnabled || false)
         setPlainPackaging(data.preference.plainPackaging ?? true)
         setDiscreteLabel(data.preference.discreteLabel ?? true)
-        setRequireSignature(data.preference.requireSignature || false)
         setDeliveryInstructions(data.preference.deliveryInstructions || '')
         setIncludeGiftNote(data.preference.includeGiftNote || false)
         setDefaultGiftMessage(data.preference.defaultGiftMessage || '')
-        setAvoidWeekends(data.preference.avoidWeekends || false)
-        
-        if (data.preference.preferredDeliveryDays) {
-          setPreferredDays(JSON.parse(data.preference.preferredDeliveryDays))
-        }
       }
     } catch (error) {
       console.error('Failed to fetch packaging preferences:', error)
     } finally {
       setLoading(false)
     }
-  }
-
-  const handleDayToggle = (day: string) => {
-    setPreferredDays(prev => 
-      prev.includes(day) 
-        ? prev.filter(d => d !== day)
-        : [...prev, day]
-    )
   }
 
   const handleSave = async () => {
@@ -85,16 +67,11 @@ export default function PackagingClient() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          senderName,
-          senderNameEnabled,
           plainPackaging,
           discreteLabel,
-          requireSignature,
           deliveryInstructions,
           includeGiftNote,
           defaultGiftMessage,
-          preferredDeliveryDays: preferredDays,
-          avoidWeekends
         })
       })
 
@@ -111,8 +88,6 @@ export default function PackagingClient() {
       setSaving(false)
     }
   }
-
-  const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
 
   if (loading) {
     return (
@@ -144,8 +119,8 @@ export default function PackagingClient() {
           <div>
             <p className="font-body text-charcoal font-medium">Your Privacy Matters</p>
             <p className="font-body text-warm-gray text-sm mt-1">
-              All orders ship in plain, unmarked packaging by default. These preferences help us 
-              customize your delivery experience even further.
+              Orders ship in plain packaging by default. Your choices here travel with each
+              order to the people who pack it.
             </p>
           </div>
         </div>
@@ -180,9 +155,9 @@ export default function PackagingClient() {
               <div className="flex items-center gap-3">
                 <Eye className="h-5 w-5 text-warm-gray" />
                 <div>
-                  <p className="font-body text-charcoal text-sm">Discrete Label</p>
+                  <p className="font-body text-charcoal text-sm">Discreet Label</p>
                   <p className="font-body text-warm-gray text-xs">
-                    Generic product description on shipping label
+                    Contents described generically on the packing slip
                   </p>
                 </div>
               </div>
@@ -193,35 +168,6 @@ export default function PackagingClient() {
                 className="w-5 h-5 accent-terracotta"
               />
             </label>
-
-            <div className="p-4 border border-sand">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <Mail className="h-5 w-5 text-warm-gray" />
-                  <div>
-                    <p className="font-body text-charcoal text-sm">Custom Sender Name</p>
-                    <p className="font-body text-warm-gray text-xs">
-                      Use a different name on the return address
-                    </p>
-                  </div>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={senderNameEnabled}
-                  onChange={(e) => setSenderNameEnabled(e.target.checked)}
-                  className="w-5 h-5 accent-terracotta"
-                />
-              </div>
-              {senderNameEnabled && (
-                <input
-                  type="text"
-                  value={senderName}
-                  onChange={(e) => setSenderName(e.target.value)}
-                  placeholder="Enter sender name"
-                  className="w-full px-3 py-2 border border-sand bg-cream font-body text-sm focus:outline-none focus:border-terracotta"
-                />
-              )}
-            </div>
           </div>
         </div>
 
@@ -231,24 +177,6 @@ export default function PackagingClient() {
             Delivery Settings
           </h2>
           <div className="space-y-4">
-            <label className="flex items-center justify-between p-4 border border-sand cursor-pointer hover:border-terracotta/50">
-              <div className="flex items-center gap-3">
-                <Truck className="h-5 w-5 text-warm-gray" />
-                <div>
-                  <p className="font-body text-charcoal text-sm">Require Signature</p>
-                  <p className="font-body text-warm-gray text-xs">
-                    Package must be signed for on delivery
-                  </p>
-                </div>
-              </div>
-              <input
-                type="checkbox"
-                checked={requireSignature}
-                onChange={(e) => setRequireSignature(e.target.checked)}
-                className="w-5 h-5 accent-terracotta"
-              />
-            </label>
-
             <div className="p-4 border border-sand">
               <p className="font-body text-charcoal text-sm mb-2">Delivery Instructions</p>
               <p className="font-body text-warm-gray text-xs mb-3">
@@ -261,40 +189,6 @@ export default function PackagingClient() {
                 className="w-full px-3 py-2 border border-sand bg-cream font-body text-sm min-h-[80px] focus:outline-none focus:border-terracotta resize-none"
               />
             </div>
-
-            <div className="p-4 border border-sand">
-              <p className="font-body text-charcoal text-sm mb-3">Preferred Delivery Days</p>
-              <div className="flex flex-wrap gap-2">
-                {days.map((day) => (
-                  <button
-                    key={day}
-                    onClick={() => handleDayToggle(day)}
-                    className={`px-4 py-2 border font-body text-xs uppercase tracking-wider transition-colors ${
-                      preferredDays.includes(day)
-                        ? 'border-terracotta bg-terracotta/10 text-charcoal'
-                        : 'border-sand text-warm-gray hover:border-terracotta/50'
-                    }`}
-                  >
-                    {day}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <label className="flex items-center justify-between p-4 border border-sand cursor-pointer hover:border-terracotta/50">
-              <div>
-                <p className="font-body text-charcoal text-sm">Avoid Weekend Delivery</p>
-                <p className="font-body text-warm-gray text-xs">
-                  Only deliver on weekdays
-                </p>
-              </div>
-              <input
-                type="checkbox"
-                checked={avoidWeekends}
-                onChange={(e) => setAvoidWeekends(e.target.checked)}
-                className="w-5 h-5 accent-terracotta"
-              />
-            </label>
           </div>
         </div>
 

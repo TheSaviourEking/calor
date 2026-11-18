@@ -1,4 +1,5 @@
 import { CreditCard, Building2, Bitcoin, Lock } from 'lucide-react'
+import { STATEMENT_DESCRIPTOR } from '@/lib/discretion'
 
 const paymentMethods = [
   {
@@ -36,7 +37,7 @@ export default function PaymentTrust() {
             Pay your way
           </h2>
           <p className="font-body text-warm-gray text-base max-w-lg mx-auto">
-            Your bank statement shows &quot;CALO CO.&quot; only. Nothing explicit. Ever.
+            Card payments show {STATEMENT_DESCRIPTOR} on your statement. Nothing explicit.
           </p>
         </div>
 

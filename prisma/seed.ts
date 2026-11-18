@@ -358,7 +358,7 @@ async function main() {
       safetyInfo: JSON.stringify({
         ageRestriction: '18+',
         contentWarning: 'Audio content of an explicit sexual nature',
-        privacy: ['Private listening history', 'Discreet billing', 'Incognito mode available'],
+        privacy: ['Discreet billing'],
         warnings: ['Adult content', 'Headphones recommended']
       }),
       cleaningGuide: 'N/A - Digital product.',
@@ -379,7 +379,7 @@ async function main() {
         instructorCredentials: 'Licensed Clinical Psychologist, PhD',
         ageRestriction: '18+',
         contentWarning: 'Contains nudity and explicit educational content',
-        privacy: ['Private viewing history', 'Discreet billing'],
+        privacy: ['Discreet billing'],
         warnings: ['For couples only', 'Some exercises may bring up difficult emotions', 'Not a substitute for therapy']
       }),
       cleaningGuide: 'N/A - Digital product.',

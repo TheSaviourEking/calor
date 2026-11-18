@@ -35,7 +35,11 @@ export async function createPaymentIntent(orderId: string) {
       orderId: order.id,
       reference: order.reference,
     },
-    statement_descriptor: 'CALO CO',
+    // No statement_descriptor here: Stripe rejects it on card charges (stripe v20
+    // PaymentIntentsResource types: "Setting this value for a card charge returns
+    // an error"). We also send no suffix, because a suffix is appended to the
+    // account descriptor and would print "CALO CO* CALO CO". The account-level
+    // descriptor alone prints, so the Stripe dashboard must be set to CALO CO (no period).
     description: `calo. order ${order.reference}`,
   })
 

@@ -22,6 +22,7 @@ import { useCartStore, useLocaleStore, useCheckoutStore } from "@/stores";
 import { toast } from "sonner";
 import AddressAutocomplete from "@/components/checkout/AddressAutocomplete";
 import Link from "next/link";
+import { STATEMENT_DESCRIPTOR } from '@/lib/discretion'
 
 interface GiftWrappingOption {
   id: string;
@@ -812,7 +813,7 @@ export default function CheckoutClient({
                 <div className="flex items-center gap-2">
                   <CreditCard className="w-4 h-4 text-terracotta" />
                   <span className="font-body text-warm-gray text-xs">
-                    Statement shows CALO CO.
+                    Card payments show {STATEMENT_DESCRIPTOR}
                   </span>
                 </div>
               </div>

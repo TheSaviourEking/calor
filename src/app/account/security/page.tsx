@@ -1,12 +1,33 @@
 "use client";
 
 import { useState } from "react";
-import { Key, Bell, Eye, Lock, Smartphone } from "lucide-react";
+import { Eye, Lock } from "lucide-react";
 import Link from "next/link";
+import NicknameSection from "./NicknameSection";
+import ChangePasswordSection from "./ChangePasswordSection";
+import DeleteAccountDialog from "./DeleteAccountDialog";
 
 export default function SecurityPage() {
-  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
-  const [loginAlerts, setLoginAlerts] = useState(true);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [revoking, setRevoking] = useState(false);
+  const [revokeMessage, setRevokeMessage] = useState<string | null>(null);
+
+  async function signOutOthers() {
+    setRevoking(true);
+    setRevokeMessage(null);
+    try {
+      const res = await fetch("/api/sessions/revoke-others", { method: "POST" });
+      setRevokeMessage(
+        res.ok
+          ? "Signed out of all other sessions."
+          : "Could not sign out other sessions. Please try again."
+      );
+    } catch {
+      setRevokeMessage("Could not sign out other sessions. Please try again.");
+    } finally {
+      setRevoking(false);
+    }
+  }
 
   return (
     <>
@@ -20,106 +41,9 @@ export default function SecurityPage() {
         Protect your account and manage your privacy preferences.
       </p>
 
-      {/* Change Password */}
-      <div className="bg-warm-white p-6 border border-sand mb-6">
-        <div className="flex items-center gap-3 mb-4">
-          <Key className="w-5 h-5 text-terracotta" />
-          <h3
-            className="font-display text-charcoal text-lg"
-            style={{ fontWeight: 400 }}
-          >
-            Change Password
-          </h3>
-        </div>
-        <form className="space-y-4">
-          <input
-            type="password"
-            placeholder="Current password"
-            className="w-full px-4 py-3 border border-sand bg-warm-white font-body text-sm focus:outline-none focus:border-terracotta"
-          />
-          <input
-            type="password"
-            placeholder="New password"
-            className="w-full px-4 py-3 border border-sand bg-warm-white font-body text-sm focus:outline-none focus:border-terracotta"
-          />
-          <input
-            type="password"
-            placeholder="Confirm new password"
-            className="w-full px-4 py-3 border border-sand bg-warm-white font-body text-sm focus:outline-none focus:border-terracotta"
-          />
-          <button
-            type="submit"
-            className="bg-charcoal text-cream px-6 py-3 font-body text-sm uppercase tracking-wider hover:bg-terracotta transition-colors"
-          >
-            Update Password
-          </button>
-        </form>
-      </div>
+      <NicknameSection />
 
-      {/* Two-Factor Auth */}
-      <div className="bg-warm-white p-6 border border-sand mb-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Smartphone className="w-5 h-5 text-terracotta" />
-            <div>
-              <h3
-                className="font-display text-charcoal text-lg"
-                style={{ fontWeight: 400 }}
-              >
-                Two-Factor Authentication
-              </h3>
-              <p className="font-body text-warm-gray text-sm">
-                Add an extra layer of security to your account.
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={() => setTwoFactorEnabled(!twoFactorEnabled)}
-            className={`relative w-12 h-6 rounded-full transition-colors ${
-              twoFactorEnabled ? "bg-terracotta" : "bg-sand"
-            }`}
-          >
-            <span
-              className={`absolute top-1 w-4 h-4 bg-white transition-transform ${
-                twoFactorEnabled ? "left-7" : "left-1"
-              }`}
-            />
-          </button>
-        </div>
-      </div>
-
-      {/* Login Alerts */}
-      <div className="bg-warm-white p-6 border border-sand mb-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Bell className="w-5 h-5 text-terracotta" />
-            <div>
-              <h3
-                className="font-display text-charcoal text-lg"
-                style={{ fontWeight: 400 }}
-              >
-                Login Alerts
-              </h3>
-              <p className="font-body text-warm-gray text-sm">
-                Get notified when someone signs into your account from a new
-                device.
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={() => setLoginAlerts(!loginAlerts)}
-            className={`relative w-12 h-6 rounded-full transition-colors ${
-              loginAlerts ? "bg-terracotta" : "bg-sand"
-            }`}
-          >
-            <span
-              className={`absolute top-1 w-4 h-4 bg-white transition-transform ${
-                loginAlerts ? "left-7" : "left-1"
-              }`}
-            />
-          </button>
-        </div>
-      </div>
+      <ChangePasswordSection />
 
       {/* Privacy */}
       <div className="bg-warm-white p-6 border border-sand mb-6">
@@ -145,10 +69,18 @@ export default function SecurityPage() {
           >
             Discreet Billing →
           </Link>
-          <button className="block font-body text-charcoal text-sm hover:text-terracotta">
+          <a
+            href="/api/account/export"
+            download
+            className="block font-body text-charcoal text-sm hover:text-terracotta"
+          >
             Download My Data →
-          </button>
-          <button className="block font-body text-ember text-sm hover:text-terracotta">
+          </a>
+          <button
+            type="button"
+            onClick={() => setDeleteOpen(true)}
+            className="block font-body text-ember text-sm hover:text-terracotta"
+          >
             Delete Account →
           </button>
         </div>
@@ -169,10 +101,22 @@ export default function SecurityPage() {
           Sign out of all other sessions. This will not sign you out of your
           current session.
         </p>
-        <button className="border border-ember text-ember px-6 py-3 font-body text-sm uppercase tracking-wider hover:bg-ember hover:text-warm-white transition-colors">
+        <button
+          type="button"
+          onClick={signOutOthers}
+          disabled={revoking}
+          className="border border-ember text-ember px-6 py-3 font-body text-sm uppercase tracking-wider hover:bg-ember hover:text-warm-white transition-colors disabled:opacity-50"
+        >
           Sign Out All Other Sessions
         </button>
+        {revokeMessage && (
+          <p role="status" className="font-body text-warm-gray text-sm mt-4">
+            {revokeMessage}
+          </p>
+        )}
       </div>
+
+      {deleteOpen && <DeleteAccountDialog onClose={() => setDeleteOpen(false)} />}
     </>
   );
 }

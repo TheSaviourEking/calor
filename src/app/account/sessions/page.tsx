@@ -115,7 +115,6 @@ export default async function SessionsPage() {
         <ul className="font-body text-warm-gray text-sm space-y-2">
           <li>Sign out of sessions you do not recognize</li>
           <li>Use a strong, unique password for your account</li>
-          <li>Enable two-factor authentication when available</li>
           <li>Contact support if you see suspicious activity</li>
         </ul>
       </div>

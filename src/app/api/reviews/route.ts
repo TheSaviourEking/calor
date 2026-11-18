@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getSession } from '@/lib/auth/session'
+import { REVIEW_AUTHOR_SELECT, toPublicReview } from '@/lib/reviews/public-review'
 
 export async function GET(request: NextRequest) {
   try {
@@ -38,12 +39,7 @@ export async function GET(request: NextRequest) {
     const reviews = await db.review.findMany({ /* take: handled */
       where,
       include: {
-        customer: {
-          select: {
-            firstName: true,
-            lastName: true,
-          },
-        },
+        customer: { select: REVIEW_AUTHOR_SELECT },
       },
       orderBy: { createdAt: 'desc' },
       take: 50,
@@ -77,7 +73,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ reviews, summary })
+    return NextResponse.json({ reviews: reviews.map(toPublicReview), summary })
   } catch (error) {
     console.error('Reviews fetch error:', error)
     return NextResponse.json(
@@ -166,18 +162,13 @@ export async function POST(request: NextRequest) {
         isApproved: false, // Reviews need admin approval
       },
       include: {
-        customer: {
-          select: {
-            firstName: true,
-            lastName: true,
-          },
-        },
+        customer: { select: REVIEW_AUTHOR_SELECT },
       },
     })
 
     return NextResponse.json({
       success: true,
-      review,
+      review: toPublicReview(review),
       message: 'Review submitted successfully. It will be visible after moderation.',
     })
   } catch (error) {

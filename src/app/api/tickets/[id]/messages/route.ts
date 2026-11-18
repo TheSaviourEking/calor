@@ -68,9 +68,10 @@ export async function POST(
     })
 
     // Update ticket
-    const updateData: Record<string, unknown> = {
-      responseCount: { increment: 1 }
-    }
+    // Staff-only notes are not responses; counting them would tell the customer one exists
+    const updateData: Record<string, unknown> = internalMessage
+      ? {}
+      : { responseCount: { increment: 1 } }
 
     // Set first response time if admin's first reply
     if (senderType === 'admin' && !ticket.firstResponseAt && !internalMessage) {

@@ -15,15 +15,10 @@ export async function GET(request: NextRequest) {
       where.isLive = true
     }
 
+    // Hosts appear under their displayName; the account's real name never leaves
     const hosts = await db.streamHost.findMany({ /* take: handled */
       where,
       include: {
-        customer: {
-          select: {
-            firstName: true,
-            lastName: true,
-          },
-        },
         _count: {
           select: {
             streams: true,

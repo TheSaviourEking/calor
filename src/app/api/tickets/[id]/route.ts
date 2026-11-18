@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getSession } from '@/lib/auth'
+import { CUSTOMER_TICKET_OMIT } from '@/lib/support/customer-tickets'
 
 // Get a specific ticket
 export async function GET(
@@ -15,12 +16,17 @@ export async function GET(
       ? await db.customer.findUnique({ where: { id: session.customerId } })
       : null
 
+    const isStaff = !!customer?.isAdmin
+
     const ticket = await db.supportTicket.findUnique({
       where: { id },
+      ...(isStaff ? {} : { omit: CUSTOMER_TICKET_OMIT }),
       include: {
         customer: { select: { id: true, firstName: true, lastName: true, email: true } },
         category: true,
         messages: {
+          // Staff-only messages never reach the customer
+          ...(isStaff ? {} : { where: { isInternal: false } }),
           orderBy: { createdAt: 'asc' }
         }
       }
@@ -30,9 +36,9 @@ export async function GET(
       return NextResponse.json({ error: 'Ticket not found' }, { status: 404 })
     }
 
-    // Check access
-    if (!customer?.isAdmin && ticket.customerId !== session?.customerId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+    // Not yours: indistinguishable from a ticket that does not exist
+    if (!isStaff && (!session?.customerId || ticket.customerId !== session.customerId)) {
+      return NextResponse.json({ error: 'Ticket not found' }, { status: 404 })
     }
 
     return NextResponse.json({ ticket })

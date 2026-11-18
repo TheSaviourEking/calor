@@ -122,6 +122,7 @@ model Customer {
   appleId           String?  @unique
   appleEmail        String?
   authProvider      String   @default("email") // "email", "google", "apple"
+  nickname          String?  @unique // public display name; case-insensitive uniqueness also enforced by lower() index
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
   addresses         Address[]
@@ -234,6 +235,10 @@ model Order {
   // Delivery
   estimatedDelivery DateTime?
   trackingNumber  String?
+  // Discretion
+  plainPackaging  Boolean     @default(true)
+  discreetLabel   Boolean     @default(true)
+  deliveryInstructions String?
   // Loyalty
   loyaltyPointsEarned Int    @default(0)
   loyaltyPointsUsed   Int    @default(0)

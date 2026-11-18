@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { requireCustomer, requireAdminUser } from '@/lib/auth/guards'
+import { publicDisplayName } from '@/lib/discretion'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -14,12 +15,6 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const host = await db.streamHost.findUnique({
       where: { id },
       include: {
-        customer: {
-          select: {
-            firstName: true,
-            lastName: true,
-          },
-        },
         streams: {
           where: {
             status: { in: ['live', 'scheduled', 'ended'] },
@@ -40,7 +35,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           take: 5,
           include: {
             customer: {
-              select: { firstName: true },
+              select: { nickname: true, firstName: true, lastName: true },
             },
           },
         },
@@ -57,7 +52,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Host not found' }, { status: 404 })
     }
 
-    return NextResponse.json({ host })
+    // Reviewers appear by public display name only (never a real name or account id)
+    const reviews = host.reviews.map(({ customer, customerId: _customerId, ...review }) => ({
+      ...review,
+      customerName: publicDisplayName(customer),
+    }))
+
+    return NextResponse.json({ host: { ...host, reviews } })
   } catch (error) {
     console.error('Error fetching host:', error)
     return NextResponse.json(

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Gift, CreditCard, Clock, CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
+import { STATEMENT_DESCRIPTOR } from '@/lib/discretion'
 
 const presetAmounts = [
   { value: 2500, label: '$25' },
@@ -382,7 +383,7 @@ export default function GiftCardsClient() {
               <AlertCircle className="w-5 h-5 text-terracotta" />
             </div>
             <h3 className="font-body text-charcoal text-sm font-medium mb-1">Discreet Billing</h3>
-            <p className="font-body text-warm-gray text-xs">Shows &quot;CALO CO&quot; only</p>
+            <p className="font-body text-warm-gray text-xs">Card payments show {STATEMENT_DESCRIPTOR}</p>
           </div>
         </div>
       </div>

@@ -3,6 +3,7 @@ import { db } from '@/lib/db'
 import { randomBytes } from 'crypto'
 import { config } from '@/lib/config'
 import { createSession } from '@/lib/auth/session'
+import { uniqueGeneratedNickname } from '@/lib/nickname'
 
 // Google OAuth callback
 export async function GET(request: NextRequest) {
@@ -88,6 +89,7 @@ export async function GET(request: NextRequest) {
             email: googleUser.email,
             firstName: nameParts[0] || googleUser.given_name || 'User',
             lastName: nameParts.slice(1).join(' ') || googleUser.family_name || '',
+            nickname: await uniqueGeneratedNickname(),
             googleId: googleUser.id,
             googleEmail: googleUser.email,
             authProvider: 'google',

@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getSession } from '@/lib/auth/session'
 import bcrypt from 'bcryptjs'
+import { publicDisplayName } from '@/lib/discretion'
+import { toPublicContribution } from '@/lib/registry-public'
 import { PUBLIC_IMAGE_SELECT } from '@/lib/photos/public-image'
 
 interface RouteParams {
@@ -25,6 +27,7 @@ export async function GET(request: Request, { params }: RouteParams) {
         customer: {
           select: {
             id: true,
+            nickname: true,
             firstName: true,
             lastName: true,
           },
@@ -128,7 +131,7 @@ export async function GET(request: Request, { params }: RouteParams) {
         allowPartialPurchases: registry.allowPartialPurchases,
         allowThankYouNotes: includeAll ? registry.allowThankYouNotes : undefined,
         showPurchaserInfo: registry.showPurchaserInfo,
-        ownerName: `${registry.customer.firstName} ${registry.customer.lastName}`,
+        ownerName: publicDisplayName(registry.customer, 'A calo. member'),
         events: registry.events,
         items: itemsToShow.map(item => ({
           id: item.id,
@@ -153,7 +156,7 @@ export async function GET(request: Request, { params }: RouteParams) {
             category: item.product.category,
           } : null,
           purchases: includeAll ? item.purchases : undefined,
-          contributions: item.contributions,
+          contributions: item.contributions.map(toPublicContribution),
           contributionTotal: item.contributions.reduce((sum, c) => sum + c.amountCents, 0),
         })),
         guests: includeAll ? registry.guests : undefined,

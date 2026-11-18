@@ -185,9 +185,18 @@ export async function POST(request: NextRequest) {
           })
         }
 
+        // Packaging travels with the order, read inside the transaction so
+        // the packer sees the choice made at the time of purchase
+        const packaging = customerId
+          ? await tx.packagingPreference.findUnique({ where: { customerId } })
+          : null
+
         const newOrder = await tx.order.create({
           data: {
             reference,
+            plainPackaging: packaging?.plainPackaging ?? true,
+            discreetLabel: packaging?.discreteLabel ?? true,
+            deliveryInstructions: packaging?.deliveryInstructions ?? null,
             customerId,
             guestEmail,
             addressId: address.id,

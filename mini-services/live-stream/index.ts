@@ -5,6 +5,7 @@ import { createClient } from 'redis'
 import { createAdapter } from '@socket.io/redis-adapter'
 import { createServiceLogger } from '../logger'
 import { verifyRealtimeToken, type RealtimeUser } from '../realtime-token'
+import { publicDisplayName } from './display-name'
 import { canControlStream, cleanMessage, createRateLimiter } from '../authz'
 
 const log = createServiceLogger('live-stream')
@@ -284,20 +285,35 @@ io.on('connection', (socket) => {
         },
         include: {
           customer: {
-            select: { firstName: true },
+            select: { nickname: true, firstName: true, lastName: true },
           },
         },
       })
 
+      // Only display fields leave the server: no customer id, no real name
+      const publicMessage = {
+        id: chatMessage.id,
+        streamId: chatMessage.streamId,
+        message: chatMessage.message,
+        type: chatMessage.type,
+        isPinned: chatMessage.isPinned,
+        isHighlighted: chatMessage.isHighlighted,
+        reactionCounts: chatMessage.reactionCounts,
+        createdAt: chatMessage.createdAt,
+        displayName: chatMessage.customer
+          ? publicDisplayName(chatMessage.customer)
+          : chatMessage.guestName || 'Guest',
+      }
+
       // If moderated, only send to host
       if (stream.moderatedChat) {
-        socket.emit('message_pending', { message: chatMessage })
+        socket.emit('message_pending', { message: publicMessage })
         // TODO: Send to host for moderation
       } else {
         // Broadcast to all viewers
         io.to(`stream:${streamId}`).emit('new_message', {
           streamId,
-          message: chatMessage,
+          message: publicMessage,
         })
       }
 

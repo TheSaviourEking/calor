@@ -48,7 +48,7 @@ export default function TermsPage() {
                 4. Shipping
               </h2>
               <p className="font-body text-warm-gray text-base leading-relaxed">
-                Orders are shipped in plain, unmarked packaging. Shipping times are estimates and not guaranteed. We are not responsible for delays caused by shipping carriers or customs.
+                Orders ship in plain, unmarked packaging by default. Shipping times are estimates and not guaranteed. We are not responsible for delays caused by shipping carriers or customs.
               </p>
             </section>
 

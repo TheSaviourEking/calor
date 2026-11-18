@@ -1,5 +1,6 @@
 import { Resend } from 'resend'
 import { config } from '@/lib/config'
+import { EMAIL_PREHEADERS, EMAIL_SUBJECTS, STATEMENT_DESCRIPTOR, withPreheader } from '@/lib/discretion'
 
 // Initialize Resend with API key
 const resendApiKey = config.resend.apiKey
@@ -61,8 +62,10 @@ async function sendEmail(
   from: string,
   subject: string,
   html: string,
-  type: string
+  type: string,
+  preheader: string
 ): Promise<{ success: boolean; error?: string }> {
+  html = withPreheader(html, preheader)
   if (!isEmailEnabled) {
     const msg = 'Email service not configured - skipping email'
     console.warn(`[EMAIL] ⚠ ${type} → ${to} | ${subject} | ${msg}`)
@@ -106,19 +109,21 @@ interface OrderEmailData {
     quantity: number
     price: number
   }>
+  // Defaults to true; false when the customer chose branded packaging
+  plainPackaging?: boolean
 }
 
 export async function sendOrderConfirmation(data: OrderEmailData): Promise<{ success: boolean; error?: string }> {
-  const { customerEmail, customerName, orderReference, total, currency, items } = data
+  const { customerEmail, customerName, orderReference, total, currency, items, plainPackaging = true } = data
 
   const itemsList = items
-    .map((item) => `<tr><td style="padding: 8px 0;">${item.name}</td><td style="padding: 8px 0; text-align: center;">${item.quantity}</td><td style="padding: 8px 0; text-align: right;">$${(item.price / 100).toFixed(2)}</td></tr>`)
+    .map((item) => `<tr><td style="padding: 8px 0;">${escapeHtml(item.name)}</td><td style="padding: 8px 0; text-align: center;">${item.quantity}</td><td style="padding: 8px 0; text-align: right;">$${(item.price / 100).toFixed(2)}</td></tr>`)
     .join('')
 
   return sendEmail(
     customerEmail,
     'calo. <orders@calo.one>',
-    'Your calo. order is confirmed',
+    EMAIL_SUBJECTS.orderConfirmed,
     `
       <!DOCTYPE html>
       <html>
@@ -139,11 +144,11 @@ export async function sendOrderConfirmation(data: OrderEmailData): Promise<{ suc
       </head>
       <body>
         <div class="container">
-          <h1>Hi ${customerName},</h1>
+          <h1>Hi ${escapeHtml(customerName)},</h1>
           <p>Your order is confirmed and on its way to you.</p>
-          
-          <p class="order-ref">Order #${orderReference}</p>
-          
+
+          <p class="order-ref">Order #${escapeHtml(orderReference)}</p>
+
           <table>
             <thead>
               <tr>
@@ -156,16 +161,16 @@ export async function sendOrderConfirmation(data: OrderEmailData): Promise<{ suc
               ${itemsList}
             </tbody>
           </table>
-          
+
           <p class="total">Total: $${(total / 100).toFixed(2)} ${currency}</p>
-          
-          <div class="note">
+
+          ${plainPackaging ? `<div class="note">
             <strong>Discreet Delivery</strong><br>
             Your order will arrive in plain, unmarked packaging. No product names visible on the outside.
-          </div>
-          
+          </div>` : ''}
+
           <a href="${config.app.baseUrl}/account/orders" class="button">Track Your Order</a>
-          
+
           <div class="footer">
             <p>If you have any questions, reply to this email.</p>
             <p>The calo. team</p>
@@ -174,7 +179,8 @@ export async function sendOrderConfirmation(data: OrderEmailData): Promise<{ suc
       </body>
       </html>
     `,
-    'ORDER_CONFIRMATION'
+    'ORDER_CONFIRMATION',
+    EMAIL_PREHEADERS.orderConfirmed
   )
 }
 
@@ -222,7 +228,7 @@ export async function sendBankTransferInstructions(
   return sendEmail(
     customerEmail,
     'calo. <orders@calo.one>',
-    `Payment instructions for your calo. order ${orderReference}`,
+    EMAIL_SUBJECTS.paymentInstructions,
     `
       <!DOCTYPE html>
       <html>
@@ -269,7 +275,8 @@ export async function sendBankTransferInstructions(
       </body>
       </html>
     `,
-    'BANK_TRANSFER_INSTRUCTIONS'
+    'BANK_TRANSFER_INSTRUCTIONS',
+    EMAIL_PREHEADERS.paymentInstructions
   )
 }
 
@@ -299,26 +306,26 @@ export async function sendWelcomeEmail(email: string, firstName: string): Promis
         <div class="container">
           <h1>Welcome, ${firstName}</h1>
           <p>Thank you for creating a calo. account. You now have access to:</p>
-          
+
           <div class="feature">
             <strong>Order History</strong><br>
             <span style="color: #6B5D56; font-size: 14px;">Track all your orders in one place.</span>
           </div>
-          
+
           <div class="feature">
             <strong>Wishlist</strong><br>
             <span style="color: #6B5D56; font-size: 14px;">Save items for later and get notified of price changes.</span>
           </div>
-          
+
           <div class="feature">
             <strong>Express Checkout</strong><br>
             <span style="color: #6B5D56; font-size: 14px;">Faster checkout with saved addresses and payment methods.</span>
           </div>
-          
-          <p style="margin-top: 30px;">We take your privacy seriously. Your bank statement will always show "CALO CO." only.</p>
-          
+
+          <p style="margin-top: 30px;">We take your privacy seriously. Card payments show ${STATEMENT_DESCRIPTOR}.</p>
+
           <a href="${config.app.baseUrl}/account" class="button">Visit Your Account</a>
-          
+
           <div class="footer">
             <p>Warmth lives here.</p>
             <p>The calo. team</p>
@@ -327,7 +334,8 @@ export async function sendWelcomeEmail(email: string, firstName: string): Promis
       </body>
       </html>
     `,
-    'WELCOME'
+    'WELCOME',
+    EMAIL_PREHEADERS.welcome
   )
 }
 
@@ -365,17 +373,17 @@ export async function sendPasswordResetEmail(data: {
         <div class="container">
           <h1>Hi ${customerName},</h1>
           <p>We received a request to reset your password. Click the button below to create a new password:</p>
-          
+
           <a href="${resetUrl}" class="button">Reset Password</a>
-          
+
           <p style="font-size: 14px; color: #6B5D56;">Or copy this link into your browser:</p>
           <p class="link">${resetUrl}</p>
-          
+
           <div class="warning">
             <strong>This link will expire in 1 hour.</strong><br>
             If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged.
           </div>
-          
+
           <div class="footer">
             <p>For your security, we'll never ask for your password via email.</p>
             <p>The calo. team</p>
@@ -384,7 +392,8 @@ export async function sendPasswordResetEmail(data: {
       </body>
       </html>
     `,
-    'PASSWORD_RESET'
+    'PASSWORD_RESET',
+    EMAIL_PREHEADERS.passwordReset
   )
 }
 
@@ -422,29 +431,29 @@ export async function sendVerificationEmail(data: {
         <div class="container">
           <h1>Hi ${customerName},</h1>
           <p>Thanks for creating a calo. account. Please verify your email address to get started:</p>
-          
+
           <a href="${verifyUrl}" class="button">Verify Email</a>
-          
+
           <p style="font-size: 14px; color: #6B5D56;">Or copy this link into your browser:</p>
           <p class="link">${verifyUrl}</p>
-          
+
           <p style="margin-top: 30px; font-size: 14px; color: #2C2C2C;">Once verified, you'll have access to:</p>
-          
+
           <div class="feature">
             <strong>Order Tracking</strong><br>
             <span style="color: #6B5D56; font-size: 14px;">Track all your orders in one place.</span>
           </div>
-          
+
           <div class="feature">
             <strong>Wishlist</strong><br>
             <span style="color: #6B5D56; font-size: 14px;">Save favorites and get notified of price changes.</span>
           </div>
-          
+
           <div class="feature">
             <strong>Exclusive Offers</strong><br>
             <span style="color: #6B5D56; font-size: 14px;">Get early access to sales and new products.</span>
           </div>
-          
+
           <div class="footer">
             <p>This link will expire in 24 hours.</p>
             <p>If you didn't create an account, you can safely ignore this email.</p>
@@ -454,7 +463,8 @@ export async function sendVerificationEmail(data: {
       </body>
       </html>
     `,
-    'EMAIL_VERIFICATION'
+    'EMAIL_VERIFICATION',
+    EMAIL_PREHEADERS.verification
   )
 }
 
@@ -468,13 +478,15 @@ export async function sendShippingNotification(data: {
   orderReference: string
   trackingNumber: string
   estimatedDelivery: string
+  // Defaults to true; false when the customer chose branded packaging
+  plainPackaging?: boolean
 }): Promise<{ success: boolean; error?: string }> {
-  const { customerEmail, customerName, orderReference, trackingNumber, estimatedDelivery } = data
+  const { customerEmail, customerName, orderReference, trackingNumber, estimatedDelivery, plainPackaging = true } = data
 
   return sendEmail(
     customerEmail,
     'calo. <orders@calo.one>',
-    'Your order is on its way',
+    EMAIL_SUBJECTS.shipped,
     `
       <!DOCTYPE html>
       <html>
@@ -493,21 +505,21 @@ export async function sendShippingNotification(data: {
         <div class="container">
           <h1>Hi ${customerName},</h1>
           <p>Great news! Your order has been shipped and is on its way to you.</p>
-          
+
           <p style="color: #C75B39; font-size: 14px; letter-spacing: 0.1em;">Order #${orderReference}</p>
-          
+
           <div class="tracking-box">
             <p style="margin: 0; color: #6B5D56; font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em;">Tracking Number</p>
             <p class="tracking-number">${trackingNumber}</p>
           </div>
-          
+
           <p><strong>Estimated Delivery:</strong> ${estimatedDelivery}</p>
-          
-          <div class="note">
+
+          ${plainPackaging ? `<div class="note">
             <strong>Discreet Packaging</strong><br>
             Your order is on its way in plain, unmarked packaging. No product names or brand visible on the outside.
-          </div>
-          
+          </div>` : ''}
+
           <div class="footer">
             <p>Track your order at ${config.app.baseUrl}/track-order</p>
             <p>The calo. team</p>
@@ -516,7 +528,8 @@ export async function sendShippingNotification(data: {
       </body>
       </html>
     `,
-    'SHIPPING_NOTIFICATION'
+    'SHIPPING_NOTIFICATION',
+    EMAIL_PREHEADERS.shipped
   )
 }
 
@@ -540,7 +553,7 @@ export async function sendGiftCardEmail(data: {
   return sendEmail(
     recipientEmail,
     'calo. <gifts@calo.one>',
-    `You've received a gift card from ${senderName}`,
+    EMAIL_SUBJECTS.giftCard,
     `
       <!DOCTYPE html>
       <html>
@@ -563,31 +576,31 @@ export async function sendGiftCardEmail(data: {
           <h1>You've received a gift</h1>
           <p>Hi ${safeRecipientName},</p>
           <p>${safeSenderName} has sent you a calo. gift card.</p>
-          
+
           <div class="gift-box">
             <p class="value">Gift Card Value: $${(value / 100).toFixed(2)}</p>
             <p style="color: #6B5D56; font-size: 13px; margin-bottom: 5px;">Your Gift Card Code:</p>
             <p class="code">${code}</p>
           </div>
-          
+
           ${safeMessage ? `
           <div class="message-box">
             <p style="margin: 0;">"${safeMessage}"</p>
             <p style="margin-top: 10px; font-style: normal; font-size: 13px;">— ${safeSenderName}</p>
           </div>
           ` : ''}
-          
+
           <p style="font-size: 14px; color: #6B5D56;">
             Use this code at checkout to redeem your gift card. It never expires until used.
           </p>
-          
+
           <a href="${config.app.baseUrl}" class="button">Start Shopping</a>
-          
+
           <div class="discreet">
             <strong>Discreet Shopping</strong><br>
-            Your order will arrive in plain, unmarked packaging. Bank statements show only "CALO CO."
+            Orders ship in plain packaging by default. Card payments show ${STATEMENT_DESCRIPTOR}.
           </div>
-          
+
           <div class="footer">
             <p>This gift card was purchased on calo.one</p>
             <p>Questions? Contact us at support@calo.one</p>
@@ -597,7 +610,8 @@ export async function sendGiftCardEmail(data: {
       </body>
       </html>
     `,
-    'GIFT_CARD'
+    'GIFT_CARD',
+    EMAIL_PREHEADERS.giftCard
   )
 }
 
@@ -617,14 +631,13 @@ export async function sendAbandonedCartEmail(data: {
 }): Promise<{ success: boolean; error?: string }> {
   const { email, name, cartData, discountCode, discountPercent } = data
 
-  const itemsList = cartData.items
-    .map((item) => `<tr><td style="padding: 8px 0;">${escapeHtml(item.name)} x${item.quantity}</td><td style="padding: 8px 0; text-align: right;">$${(item.price / 100).toFixed(2)}</td></tr>`)
-    .join('')
+  const itemCount = cartData.items.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0)
+  const itemLabel = `${itemCount} ${itemCount === 1 ? 'item' : 'items'}`
 
   return sendEmail(
     email,
     'calo. <hello@calo.one>',
-    `You left something behind... ${discountPercent}% off inside`,
+    EMAIL_SUBJECTS.abandonedCart,
     `
       <!DOCTYPE html>
       <html>
@@ -645,31 +658,30 @@ export async function sendAbandonedCartEmail(data: {
         <div class="container">
           <h1>Hi ${escapeHtml(name)},</h1>
           <p>We noticed you left something in your cart. Come back and complete your purchase with a special ${discountPercent}% discount just for you.</p>
-          
+
           <div class="discount-box">
             <p style="margin: 0; color: #F8F5F0; font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em;">Your exclusive code</p>
             <p class="discount-code">${discountCode}</p>
             <p style="margin: 5px 0 0 0; color: #F8F5F0; font-size: 12px;">${discountPercent}% off your entire order</p>
           </div>
-          
+
           <div class="cart-summary">
-            <p style="margin: 0 0 10px 0; font-weight: 500; color: #2C2C2C;">Your cart (${cartData.items.length} items)</p>
+            <p style="margin: 0 0 10px 0; font-weight: 500; color: #2C2C2C;">Your bag (${itemLabel})</p>
             <table style="width: 100%; font-size: 14px; color: #2C2C2C;">
-              ${itemsList}
               <tr style="border-top: 1px solid #E8E2D9;">
                 <td style="padding: 10px 0; font-weight: 500;">Total</td>
                 <td style="padding: 10px 0; text-align: right; font-weight: 500;">$${(cartData.total / 100).toFixed(2)}</td>
               </tr>
             </table>
           </div>
-          
+
           <a href="${config.app.baseUrl}/checkout" class="button">Complete Your Order</a>
-          
+
           <div class="discreet">
             <strong>Discreet Delivery</strong><br>
-            All orders ship in plain packaging. Your privacy is our priority.
+            Orders ship in plain packaging by default.
           </div>
-          
+
           <div class="footer">
             <p>This offer expires in 7 days. Code can only be used once.</p>
             <p>If you didn't add these items to your cart, you can safely ignore this email.</p>
@@ -679,7 +691,8 @@ export async function sendAbandonedCartEmail(data: {
       </body>
       </html>
     `,
-    'ABANDONED_CART'
+    'ABANDONED_CART',
+    EMAIL_PREHEADERS.abandonedCart
   )
 }
 
@@ -700,7 +713,7 @@ export async function sendPriceDropAlert(data: {
   return sendEmail(
     email,
     'calo. <alerts@calo.one>',
-    `Price Drop: ${productName}`,
+    EMAIL_SUBJECTS.priceDrop,
     `
       <!DOCTYPE html>
       <html>
@@ -719,18 +732,18 @@ export async function sendPriceDropAlert(data: {
       <body>
         <div class="container">
           <h1>Hi ${escapeHtml(customerName)},</h1>
-          <p>Good news! An item on your wishlist has dropped in price.</p>
-          
-          <p style="font-size: 18px; font-weight: 500;">${escapeHtml(productName)}</p>
-          
+          <p>Something you saved has a new price.</p>
+
           <div class="price-box">
             <span class="old-price">$${(originalPrice / 100).toFixed(2)}</span>
             <br>
             <span class="new-price">$${(newPrice / 100).toFixed(2)}</span>
           </div>
-          
+
+          <p style="font-size: 18px; font-weight: 500;">${escapeHtml(productName)}</p>
+
           <a href="${config.app.baseUrl}/product/${productSlug}" class="button">Shop Now</a>
-          
+
           <div class="footer">
             <p>You received this because you set a price drop alert.</p>
             <p>The calo. team</p>
@@ -739,7 +752,8 @@ export async function sendPriceDropAlert(data: {
       </body>
       </html>
     `,
-    'PRICE_DROP_ALERT'
+    'PRICE_DROP_ALERT',
+    EMAIL_PREHEADERS.priceDrop
   )
 }
 
@@ -758,7 +772,7 @@ export async function sendBackInStockAlert(data: {
   return sendEmail(
     email,
     'calo. <alerts@calo.one>',
-    `Back in Stock: ${productName}`,
+    EMAIL_SUBJECTS.backInStock,
     `
       <!DOCTYPE html>
       <html>
@@ -774,12 +788,12 @@ export async function sendBackInStockAlert(data: {
       <body>
         <div class="container">
           <h1>Hi ${escapeHtml(customerName)},</h1>
-          <p>Great news! <strong>${escapeHtml(productName)}</strong> is back in stock.</p>
-          
-          <p>Don't wait - popular items sell out quickly.</p>
-          
+          <p>Something you saved is available again.</p>
+
+          <p><strong>${escapeHtml(productName)}</strong> is back in stock. Popular items sell out quickly.</p>
+
           <a href="${config.app.baseUrl}/product/${productSlug}" class="button">Shop Now</a>
-          
+
           <div class="footer">
             <p>You received this because you requested a back-in-stock alert.</p>
             <p>The calo. team</p>
@@ -788,7 +802,8 @@ export async function sendBackInStockAlert(data: {
       </body>
       </html>
     `,
-    'BACK_IN_STOCK'
+    'BACK_IN_STOCK',
+    EMAIL_PREHEADERS.backInStock
   )
 }
 
@@ -850,18 +865,18 @@ export async function sendSecurityAlert(data: {
         <div class="container">
           <h1>${message.title}</h1>
           <p>${message.body}</p>
-          
+
           <div class="alert-box">
             <div class="detail"><span class="label">IP Address</span><br>${ipAddress}</div>
             <div class="detail"><span class="label">Location</span><br>${location}</div>
             <div class="detail"><span class="label">Device</span><br>${device}</div>
             <div class="detail"><span class="label">Time</span><br>${timestamp.toLocaleString()}</div>
           </div>
-          
+
           <p>If this wasn't you, please secure your account immediately by changing your password.</p>
-          
+
           <a href="${config.app.baseUrl}/account/security" class="button">Review Account Activity</a>
-          
+
           <div class="footer">
             <p>If you have any questions, contact security@calo.one</p>
             <p>The calo. team</p>
@@ -870,6 +885,7 @@ export async function sendSecurityAlert(data: {
       </body>
       </html>
     `,
-    'SECURITY_ALERT'
+    'SECURITY_ALERT',
+    EMAIL_PREHEADERS.securityAlert
   )
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { publicDisplayName } from '@/lib/discretion'
 
 // GET /api/streams/[id]/chat - Get chat history
 export async function GET(
@@ -34,7 +35,7 @@ export async function GET(
         isHighlighted: true,
         reactionCounts: true,
         guestName: true,
-        customer: { select: { firstName: true } },
+        customer: { select: { nickname: true, firstName: true, lastName: true } },
       },
     })
 
@@ -49,7 +50,7 @@ export async function GET(
         isPinned: m.isPinned,
         isHighlighted: m.isHighlighted,
         reactionCounts: m.reactionCounts,
-        displayName: m.customer?.firstName || m.guestName || 'Guest',
+        displayName: m.customer ? publicDisplayName(m.customer) : m.guestName || 'Guest',
       })),
     })
   } catch (error) {

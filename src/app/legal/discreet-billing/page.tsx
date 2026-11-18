@@ -1,7 +1,14 @@
 import ClientWrapper from '@/components/layout/ClientWrapper'
 import { Shield, Package, CreditCard, Lock } from 'lucide-react'
+import { DISCRETION_COPY } from '@/lib/discretion'
+import { getBankDetails } from '@/lib/payments/methods'
+
+// Reads SHIP_FROM_NAME and BANK_TRANSFER_DETAILS, so render per request
+export const dynamic = 'force-dynamic'
 
 export default function DiscreetBillingPage() {
+  // Assumes one account name across regions (the DEFAULT entry)
+  const bankAccountName = getBankDetails('DEFAULT')?.accountName
   return (
     <ClientWrapper>
       <div className="min-h-screen pt-20 bg-warm-white">
@@ -19,11 +26,11 @@ export default function DiscreetBillingPage() {
           {/* Bank Statement Preview */}
           <div className="bg-charcoal p-8 mb-12">
             <p className="font-body text-warm-gray text-xs uppercase tracking-wider mb-4">
-              Your bank statement will show:
+              Card payments show:
             </p>
             <div className="bg-warm-white p-4 inline-block">
               <p className="font-display text-charcoal text-lg" style={{ fontWeight: 400 }}>
-                CALO CO.
+                CALO CO
               </p>
               <p className="font-body text-warm-gray text-sm">$XXX.XX</p>
             </div>
@@ -37,7 +44,7 @@ export default function DiscreetBillingPage() {
                 Bank Statements
               </h3>
               <p className="font-body text-warm-gray text-sm leading-relaxed">
-                All charges appear as CALO CO. only. No product names, no category hints, nothing explicit.
+                {DISCRETION_COPY.cardStatement} We never send product names to your card issuer.
               </p>
             </div>
 
@@ -47,7 +54,7 @@ export default function DiscreetBillingPage() {
                 Shipping Packaging
               </h3>
               <p className="font-body text-warm-gray text-sm leading-relaxed">
-                Plain boxes with no logos or product names. Sender shows as CC Fulfillment, not calo..
+                {DISCRETION_COPY.packaging()}
               </p>
             </div>
 
@@ -57,7 +64,7 @@ export default function DiscreetBillingPage() {
                 Email Privacy
               </h3>
               <p className="font-body text-warm-gray text-sm leading-relaxed">
-                Email subjects say Your calo. order only. No product names visible in previews.
+                Email subjects and previews never name what you bought.
               </p>
             </div>
 
@@ -83,25 +90,16 @@ export default function DiscreetBillingPage() {
                 What if I share a bank account?
               </h3>
               <p className="font-body text-warm-gray text-base leading-relaxed">
-                The charge will show only as CALO CO. There is nothing to indicate what was purchased.
+                {DISCRETION_COPY.cardStatement} We send no product names, so nothing on the statement says what was purchased.
               </p>
             </div>
 
             <div className="border-b border-sand pb-6">
               <h3 className="font-body text-charcoal text-sm uppercase tracking-wider mb-2">
-                Can I use a different billing name?
+                What about crypto and bank transfers?
               </h3>
               <p className="font-body text-warm-gray text-base leading-relaxed">
-                Yes. You can specify a different billing name during checkout. The charge will appear under the name you provide.
-              </p>
-            </div>
-
-            <div className="border-b border-sand pb-6">
-              <h3 className="font-body text-charcoal text-sm uppercase tracking-wider mb-2">
-                What about crypto payments?
-              </h3>
-              <p className="font-body text-warm-gray text-base leading-relaxed">
-                Cryptocurrency payments offer maximum privacy. Monero transactions are completely untraceable. No personal information is linked to the transaction.
+                {DISCRETION_COPY.crypto} {bankAccountName && DISCRETION_COPY.bankTransfer(bankAccountName)}
               </p>
             </div>
           </div>

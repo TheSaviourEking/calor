@@ -36,6 +36,7 @@ import SocialProof from "@/components/social-proof/SocialProof";
 import Link from "next/link";
 import ProductPhoto from "@/components/product/ProductPhoto";
 import type { PhotoTreatment } from "@/lib/photos/types";
+import { STATEMENT_DESCRIPTOR } from '@/lib/discretion'
 
 interface ProductImage {
   id: string;
@@ -590,7 +591,7 @@ export default function ProductDetailClient({
                   ))}
                 </div>
                 <p className="font-body text-xs text-warm-gray mt-3">
-                  Plain, unmarked packaging. No product names visible.
+                  Plain, unmarked packaging by default. No product names on the outside.
                 </p>
               </div>
             )}
@@ -847,7 +848,7 @@ export default function ProductDetailClient({
             <div className="flex items-center gap-3 py-4 border-t border-sand">
               <Package className="w-5 h-5 text-terracotta" />
               <p className="font-body text-warm-gray text-sm">
-                Ships in plain packaging. No product names visible.
+                Ships in plain packaging by default. No product names on the outside.
               </p>
             </div>
 
@@ -1061,7 +1062,7 @@ export default function ProductDetailClient({
                     <p className="font-body text-warm-gray text-sm">
                       Free standard shipping on orders over $75. Delivered in{" "}
                       {product.estimatedDeliveryDays || "2-5"} business days in
-                      plain, unmarked packaging.
+                      plain, unmarked packaging by default.
                     </p>
                   </div>
                   <div>
@@ -1088,7 +1089,7 @@ export default function ProductDetailClient({
                 }
               >
                 <p className="font-body text-warm-gray text-sm leading-relaxed">
-                  Your bank statement will show &quot;CALO CO.&quot; only.
+                  Card payments show {STATEMENT_DESCRIPTOR} on your statement.
                   Nothing explicit. Ever. We never store your card details.
                 </p>
               </AccordionItem>
