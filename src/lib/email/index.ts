@@ -631,7 +631,7 @@ export async function sendAbandonedCartEmail(data: {
 }): Promise<{ success: boolean; error?: string }> {
   const { email, name, cartData, discountCode, discountPercent } = data
 
-  const itemCount = cartData.items.length
+  const itemCount = cartData.items.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0)
   const itemLabel = `${itemCount} ${itemCount === 1 ? 'item' : 'items'}`
 
   return sendEmail(

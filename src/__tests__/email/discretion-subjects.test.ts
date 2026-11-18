@@ -63,7 +63,7 @@ describe('neutral email subjects', () => {
     })
     const { subject, html } = lastCall()
     expect(subject).toBe(EMAIL_SUBJECTS.abandonedCart)
-    expect(html).toContain('2 items')
+    expect(html).toContain('3 items')
     expect(html).not.toContain(PRODUCT)
     expect(html).not.toContain('Secret Thing')
     expect(html).toContain('/checkout')
