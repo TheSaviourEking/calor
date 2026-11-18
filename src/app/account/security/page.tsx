@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Key, Bell, Eye, Lock, Smartphone } from "lucide-react";
+import { Key, Bell, Eye, Lock } from "lucide-react";
 import Link from "next/link";
 import NicknameSection from "./NicknameSection";
+import DeleteAccountDialog from "./DeleteAccountDialog";
 
 export default function SecurityPage() {
-  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [loginAlerts, setLoginAlerts] = useState(true);
 
   return (
@@ -57,38 +58,6 @@ export default function SecurityPage() {
             Update Password
           </button>
         </form>
-      </div>
-
-      {/* Two-Factor Auth */}
-      <div className="bg-warm-white p-6 border border-sand mb-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Smartphone className="w-5 h-5 text-terracotta" />
-            <div>
-              <h3
-                className="font-display text-charcoal text-lg"
-                style={{ fontWeight: 400 }}
-              >
-                Two-Factor Authentication
-              </h3>
-              <p className="font-body text-warm-gray text-sm">
-                Add an extra layer of security to your account.
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={() => setTwoFactorEnabled(!twoFactorEnabled)}
-            className={`relative w-12 h-6 rounded-full transition-colors ${
-              twoFactorEnabled ? "bg-terracotta" : "bg-sand"
-            }`}
-          >
-            <span
-              className={`absolute top-1 w-4 h-4 bg-white transition-transform ${
-                twoFactorEnabled ? "left-7" : "left-1"
-              }`}
-            />
-          </button>
-        </div>
       </div>
 
       {/* Login Alerts */}
@@ -148,10 +117,18 @@ export default function SecurityPage() {
           >
             Discreet Billing →
           </Link>
-          <button className="block font-body text-charcoal text-sm hover:text-terracotta">
+          <a
+            href="/api/account/export"
+            download
+            className="block font-body text-charcoal text-sm hover:text-terracotta"
+          >
             Download My Data →
-          </button>
-          <button className="block font-body text-ember text-sm hover:text-terracotta">
+          </a>
+          <button
+            type="button"
+            onClick={() => setDeleteOpen(true)}
+            className="block font-body text-ember text-sm hover:text-terracotta"
+          >
             Delete Account →
           </button>
         </div>
@@ -176,6 +153,8 @@ export default function SecurityPage() {
           Sign Out All Other Sessions
         </button>
       </div>
+
+      {deleteOpen && <DeleteAccountDialog onClose={() => setDeleteOpen(false)} />}
     </>
   );
 }
